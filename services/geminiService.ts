@@ -1,29 +1,35 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Always use the API key directly from process.env.API_KEY as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const parseSemanticSearch = async (description: string) => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Extract real estate search parameters from the following description: "${description}"`,
+      contents: `You are an expert real estate investment analyst. Analyze this property info and provide a detailed structured report: "${description}"`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING, description: 'A short descriptive title' },
-            minPrice: { type: Type.NUMBER },
-            maxPrice: { type: Type.NUMBER },
+            title: { type: Type.STRING, description: 'Short catchy title for the property' },
+            price: { type: Type.NUMBER },
             rooms: { type: Type.INTEGER },
             bathrooms: { type: Type.INTEGER },
-            features: { type: Type.ARRAY, items: { type: Type.STRING } },
-            location: { type: Type.STRING },
-            sqft: { type: Type.INTEGER }
+            location: { type: Type.STRING, description: 'Neighborhood and city' },
+            sqft: { type: Type.INTEGER, description: 'Size in square meters' },
+            dealScore: { type: Type.NUMBER, description: 'Investment potential score from 0 to 100' },
+            analysis: {
+              type: Type.OBJECT,
+              properties: {
+                pros: { type: Type.ARRAY, items: { type: Type.STRING } },
+                cons: { type: Type.ARRAY, items: { type: Type.STRING } },
+                strategy: { type: Type.STRING, description: 'One sentence advice for the buyer' }
+              }
+            }
           },
-          required: ["title"]
+          required: ["title", "price", "dealScore"]
         }
       }
     });
