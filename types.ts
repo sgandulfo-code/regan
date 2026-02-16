@@ -1,17 +1,21 @@
 
-export enum PropertyStatus {
-  WISHLIST = 'Wishlist',
-  CONTACTED = 'Contacted',
-  VISITED = 'Visited',
-  OFFERED = 'Offered',
-  DISCARDED = 'Discarded'
-}
+export const PropertyStatus = {
+  WISHLIST: 'Wishlist',
+  CONTACTED: 'Contacted',
+  VISITED: 'Visited',
+  OFFERED: 'Offered',
+  DISCARDED: 'Discarded'
+} as const;
 
-export enum UserRole {
-  BUYER = 'Buyer',
-  ARCHITECT = 'Architect',
-  CONTRACTOR = 'Contractor'
-}
+export type PropertyStatus = typeof PropertyStatus[keyof typeof PropertyStatus];
+
+export const UserRole = {
+  BUYER: 'Buyer',
+  ARCHITECT: 'Architect',
+  CONTRACTOR: 'Contractor'
+} as const;
+
+export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 export interface RenovationItem {
   id: string;
