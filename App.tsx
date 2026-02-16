@@ -1,18 +1,20 @@
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
 import FolderFormModal from './components/FolderFormModal';
+import PropertyMapView from './components/PropertyMapView';
 import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
 import { MOCK_PROPERTIES, ICONS, MOCK_USER, MOCK_FOLDERS } from './constants';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [folders, setFolders] = useState<SearchFolder[]>(MOCK_FOLDERS);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -210,6 +212,29 @@ const App: React.FC = () => {
 
           {activeTab === 'properties' && (
             <div className="space-y-8 animate-in fade-in duration-700">
+              {activeFolderId && (
+                <div className="flex items-center justify-between bg-white p-2 rounded-2xl border border-slate-200 w-fit mx-auto shadow-sm">
+                  <button 
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      viewMode === 'list' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    List View
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('map')}
+                    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <MapIcon className="w-3.5 h-3.5" />
+                    Spatial Map
+                  </button>
+                </div>
+              )}
+
               {filteredProperties.length === 0 ? (
                 <div className="bg-white rounded-[3rem] border border-slate-200 p-20 text-center">
                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
@@ -220,17 +245,26 @@ const App: React.FC = () => {
                    <button onClick={() => setActiveTab('search')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black hover:bg-indigo-700 shadow-xl transition-all">Go to Smart Search</button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {filteredProperties.map(p => (
-                    <PropertyCard 
-                      key={p.id} 
-                      property={p} 
-                      onSelect={setSelectedProperty} 
-                      onStatusChange={handleUpdateStatus}
-                      isEditable={currentUser.role === UserRole.BUYER}
+                <>
+                  {viewMode === 'list' ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredProperties.map(p => (
+                        <PropertyCard 
+                          key={p.id} 
+                          property={p} 
+                          onSelect={setSelectedProperty} 
+                          onStatusChange={handleUpdateStatus}
+                          isEditable={currentUser.role === UserRole.BUYER}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <PropertyMapView 
+                      properties={filteredProperties} 
+                      onSelectProperty={setSelectedProperty} 
                     />
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -260,7 +294,7 @@ const App: React.FC = () => {
         onConfirm={handleCreateFolder} 
       />
 
-      {/* Property Details Modal (Rest unchanged) */}
+      {/* Property Details Modal */}
       {selectedProperty && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
           <div className="bg-white w-full max-w-6xl max-h-[92vh] rounded-[3rem] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-in fade-in zoom-in duration-300">
