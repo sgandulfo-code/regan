@@ -67,12 +67,17 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleConfirm = () => {
     if (!analysisResult) return;
     
-    // Fix: Added folderId to satisfy the Property interface requirements.
+    const isInputUrl = input.trim().startsWith('http');
+    // Generar captura de pantalla si es URL, de lo contrario usar placeholder arquitectónico
+    const propertyImage = isInputUrl 
+      ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`
+      : `https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80`;
+
     const newProp: Property = {
       id: Math.random().toString(36).substr(2, 9),
       folderId: '',
       title: editedData.title,
-      url: input.startsWith('http') ? input : '',
+      url: isInputUrl ? input.trim() : '',
       address: editedData.location,
       exactAddress: editedData.exactAddress,
       price: editedData.price,
@@ -91,7 +96,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
       rating: Math.round(analysisResult.dealScore / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
       renovationCosts: [],
-      images: [`https://picsum.photos/seed/${editedData.title}/800/600`],
+      images: [propertyImage],
       createdAt: new Date().toISOString(),
     };
     
