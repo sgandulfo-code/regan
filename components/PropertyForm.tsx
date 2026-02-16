@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler, Info } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 
@@ -12,7 +12,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const [input, setInput] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [activeRefTab, setActiveRefTab] = useState<'preview' | 'source'>('preview');
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
   
   const [editedData, setEditedData] = useState<any>({
     title: '',
@@ -33,7 +33,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   });
 
   useEffect(() => {
-    if (analysisResult) {
+    if (analysisResult && !analysisResult.error) {
       setEditedData({
         title: analysisResult.title || '',
         price: analysisResult.price || 0,
@@ -57,9 +57,17 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleAnalyze = async () => {
     if (!input.trim()) return;
     setIsAnalyzing(true);
+    setErrorStatus(null);
+    
     const result = await parseSemanticSearch(input);
-    if (result) {
+    
+    if (result?.error === 'QUOTA_EXCEEDED') {
+      setErrorStatus('AI Quota Exceeded. Please wait 60 seconds or try again later.');
+      setAnalysisResult(null);
+    } else if (result) {
       setAnalysisResult(result);
+    } else {
+      setErrorStatus('Unexpected error during extraction. Please try again.');
     }
     setIsAnalyzing(false);
   };
@@ -67,18 +75,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleConfirm = () => {
     if (!analysisResult) return;
     
-    const isInputUrl = input.trim().startsWith('http');
-    
-    // Generamos el screenshot del link si es una URL válida
-    const propertyImage = isInputUrl 
-      ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`
-      : `https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80`;
+    // Generamos imagen de satélite basada en la dirección extraída
+    const addressForMap = editedData.exactAddress || editedData.location || 'Madrid';
+    const propertyImage = `https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(addressForMap)}&zoom=19&size=1200x800&maptype=satellite&markers=color:red%7C${encodeURIComponent(addressForMap)}&key=`;
 
     const newProp: Property = {
       id: Math.random().toString(36).substr(2, 9),
       folderId: '',
       title: editedData.title,
-      url: isInputUrl ? input.trim() : '',
+      url: input.trim().startsWith('http') ? input.trim() : '',
       address: editedData.location,
       exactAddress: editedData.exactAddress,
       price: editedData.price,
@@ -105,8 +110,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
     setAnalysisResult(null);
     setInput('');
   };
-
-  const isUrl = input.trim().startsWith('http');
 
   const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => (
     <div className="space-y-1.5">
@@ -135,21 +138,32 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             <div className="w-20 h-20 bg-indigo-500 rounded-3xl shadow-xl shadow-indigo-500/20 flex items-center justify-center mx-auto mb-6">
               <Sparkles className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-4xl font-black text-white tracking-tight">AI Multi-Source Extractor</h2>
-            <p className="text-slate-400 text-lg">Paste a URL to automatically screenshot the ad and extract all technical data.</p>
-            <textarea
-              className="w-full p-8 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[160px] outline-none transition-all resize-none text-xl leading-relaxed"
-              placeholder="https://www.idealista.com/..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
+            <h2 className="text-4xl font-black text-white tracking-tight">Spatial Data Extractor</h2>
+            <p className="text-slate-400 text-lg">Automatically map location and extract technical data from any property listing.</p>
+            
+            <div className="space-y-4">
+              <textarea
+                className={`w-full p-8 bg-slate-800/50 border-2 ${errorStatus ? 'border-rose-500/50' : 'border-slate-700'} rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[160px] outline-none transition-all resize-none text-xl leading-relaxed`}
+                placeholder="Paste URL or description here..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
+              
+              {errorStatus && (
+                <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-rose-400 text-sm font-bold animate-pulse">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  {errorStatus}
+                </div>
+              )}
+            </div>
+
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing || !input.trim()}
               className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-800 transition-all flex items-center justify-center gap-3 text-lg"
             >
               {isAnalyzing ? <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div> : <Sparkles className="w-6 h-6" />}
-              {isAnalyzing ? 'Extracting Technical Data...' : 'Start Extraction & Screenshot'}
+              {isAnalyzing ? 'Connecting to AI...' : 'Analyze & Map Property'}
             </button>
           </div>
         </div>
@@ -157,30 +171,29 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
 
       {analysisResult && (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 duration-500">
-          {/* LEFT: Technical Inspector */}
           <div className="xl:col-span-8 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl relative overflow-hidden">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl">
               <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800">Technical Verification</h3>
-                  <p className="text-slate-400 font-medium text-sm">Contrast the AI extraction with the screenshot on the right.</p>
+                  <h3 className="text-2xl font-black text-slate-800">Spatial Verification</h3>
+                  <p className="text-slate-400 font-medium text-sm">Verify extraction before pinning to map.</p>
                 </div>
-                <div className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
-                  AI Certainty: {analysisResult.confidence}%
+                <div className="px-5 py-2 rounded-full text-xs font-black bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  AI Conf: {analysisResult.confidence}%
                 </div>
               </div>
 
               <div className="space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
-                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(val:any) => setEditedData({...editedData, title: val})} icon={Home} />
+                    <FormField label="Title" type="text" value={editedData.title} onChange={(val:any) => setEditedData({...editedData, title: val})} icon={Home} />
                   </div>
-                  <FormField label="Exact Address" type="text" value={editedData.exactAddress} onChange={(val:any) => setEditedData({...editedData, exactAddress: val})} icon={MapPin} />
-                  <FormField label="Neighborhood/City" type="text" value={editedData.location} onChange={(val:any) => setEditedData({...editedData, location: val})} icon={Maximize} />
+                  <FormField label="Exact Address (Map Center)" type="text" value={editedData.exactAddress} onChange={(val:any) => setEditedData({...editedData, exactAddress: val})} icon={MapPin} />
+                  <FormField label="Neighborhood" type="text" value={editedData.location} onChange={(val:any) => setEditedData({...editedData, location: val})} icon={Maximize} />
                 </div>
 
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField label="Listing Price" prefix="€" value={editedData.price} onChange={(val:any) => setEditedData({...editedData, price: val})} icon={Euro} />
+                  <FormField label="Price" prefix="€" value={editedData.price} onChange={(val:any) => setEditedData({...editedData, price: val})} icon={Euro} />
                   <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(val:any) => setEditedData({...editedData, fees: val})} icon={ShieldCheck} />
                 </div>
 
@@ -188,15 +201,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   <FormField label="Total m²" value={editedData.sqft} onChange={(val:any) => setEditedData({...editedData, sqft: val})} icon={Ruler} />
                   <FormField label="Covered m²" value={editedData.coveredSqft} onChange={(val:any) => setEditedData({...editedData, coveredSqft: val})} icon={Layers} />
                   <FormField label="Uncovered m²" value={editedData.uncoveredSqft} onChange={(val:any) => setEditedData({...editedData, uncoveredSqft: val})} icon={ChevronRight} />
-                  <FormField label="Age (Years)" value={editedData.age} onChange={(val:any) => setEditedData({...editedData, age: val})} icon={History} />
+                  <FormField label="Age" value={editedData.age} onChange={(val:any) => setEditedData({...editedData, age: val})} icon={History} />
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <FormField label="Environments" value={editedData.environments} onChange={(val:any) => setEditedData({...editedData, environments: val})} />
-                  <FormField label="Bedrooms" value={editedData.rooms} onChange={(val:any) => setEditedData({...editedData, rooms: val})} />
+                  <FormField label="Amb" value={editedData.environments} onChange={(val:any) => setEditedData({...editedData, environments: val})} />
+                  <FormField label="Dorm" value={editedData.rooms} onChange={(val:any) => setEditedData({...editedData, rooms: val})} />
                   <FormField label="Baths" value={editedData.bathrooms} onChange={(val:any) => setEditedData({...editedData, bathrooms: val})} />
                   <FormField label="Toilets" value={editedData.toilets} onChange={(val:any) => setEditedData({...editedData, toilets: val})} />
-                  <FormField label="Parking" value={editedData.parking} onChange={(val:any) => setEditedData({...editedData, parking: val})} icon={Car} />
+                  <FormField label="Park" value={editedData.parking} onChange={(val:any) => setEditedData({...editedData, parking: val})} icon={Car} />
                 </div>
               </div>
 
@@ -206,7 +219,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   className="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <CheckCircle2 className="w-6 h-6" />
-                  SAVE VALIDATED SHEET
+                  VALIDATE & PIN TO MAP
                 </button>
                 <button
                   onClick={() => setAnalysisResult(null)}
@@ -218,40 +231,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             </div>
           </div>
 
-          {/* RIGHT: Source Inspector */}
           <div className="xl:col-span-4 space-y-6">
-            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[600px] flex flex-col">
+            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[450px] flex flex-col">
               <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <div className="flex gap-2">
-                  <button onClick={() => setActiveRefTab('preview')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'preview' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Screenshot</button>
-                  <button onClick={() => setActiveRefTab('source')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'source' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Source</button>
-                </div>
-                {isUrl && <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg"><ExternalLink className="w-4 h-4" /></a>}
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Satellite Verification</p>
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editedData.exactAddress || editedData.location)}`} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg"><ExternalLink className="w-4 h-4" /></a>
               </div>
               <div className="flex-1 overflow-hidden relative">
-                {activeRefTab === 'preview' && isUrl ? (
-                  <div className="w-full h-full p-4 overflow-hidden">
-                    <img 
-                      src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`} 
-                      className="w-full h-full object-contain rounded-xl grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-700 cursor-zoom-in" 
-                      alt="Source Screenshot" 
-                    />
-                  </div>
-                ) : (
-                  <div className="p-8 font-mono text-xs text-indigo-300/60 leading-relaxed whitespace-pre-wrap overflow-y-auto h-full">
-                    {input}
-                  </div>
-                )}
-                <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[2.5rem]"></div>
+                 <iframe 
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(editedData.exactAddress || editedData.location || 'Madrid')}&t=k&z=19&ie=UTF8&iwloc=&output=embed`}
+                    className="w-full h-full border-none opacity-90 contrast-[1.2]"
+                    title="Spatial Preview"
+                 />
+                 <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[2.5rem]"></div>
               </div>
             </div>
 
             <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl">
                <div className="flex justify-between items-center mb-6">
-                 <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Verdict</p>
+                 <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">AI Verdict</p>
                  <span className="text-4xl font-black">{analysisResult.dealScore}/100</span>
                </div>
-               <div className="bg-white/10 rounded-2xl p-5 mb-0">
+               <div className="bg-white/10 rounded-2xl p-5">
                   <p className="text-sm font-medium italic leading-relaxed opacity-90">
                     "{analysisResult.analysis?.strategy}"
                   </p>

@@ -54,8 +54,11 @@ export const parseSemanticSearch = async (description: string) => {
     });
 
     return JSON.parse(response.text || '{}');
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Parsing Error:", error);
+    if (error.message?.includes('429') || error.message?.includes('quota')) {
+      return { error: 'QUOTA_EXCEEDED' };
+    }
     return null;
   }
 };
@@ -83,7 +86,7 @@ export const suggestRenovationCosts = async (propertyTitle: string, address: str
     });
 
     return JSON.parse(response.text || '[]');
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Suggestion Error:", error);
     return [];
   }
