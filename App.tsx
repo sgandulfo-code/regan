@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -80,6 +80,18 @@ const App: React.FC = () => {
     setActiveTab('properties');
     setIsFolderModalOpen(false);
   };
+
+  const DetailItem = ({ label, value, icon: Icon }: any) => (
+    <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:border-indigo-100 transition-colors">
+      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-indigo-500 shrink-0">
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+        <p className="text-sm font-black text-slate-800">{value || 'N/A'}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -321,22 +333,32 @@ const App: React.FC = () => {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                   <p className="text-sm font-black text-indigo-600 uppercase">{selectedProperty.status}</p>
+              {/* Technical Information Grid */}
+              <div className="mb-10">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Acquisition Overview</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <DetailItem label="Status" value={selectedProperty.status} icon={History} />
+                  <DetailItem label="Total Price" value={`€${selectedProperty.price.toLocaleString()}`} icon={Euro} />
+                  <DetailItem label="Monthly Fees" value={selectedProperty.fees ? `€${selectedProperty.fees.toLocaleString()}` : '€0'} icon={ShieldCheck} />
+                  <DetailItem label="AI Score" value={`${selectedProperty.rating}/5 Stars`} icon={Search} />
                 </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Surface</p>
-                   <p className="text-sm font-black text-slate-800">{selectedProperty.sqft} m²</p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Price</p>
-                   <p className="text-sm font-black text-slate-800">€{selectedProperty.price.toLocaleString()}</p>
-                </div>
-                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valuation</p>
-                   <p className="text-sm font-black text-slate-800">{selectedProperty.rating}/5 Stars</p>
+              </div>
+
+              <div className="mb-10">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Structural Details</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <DetailItem label="Environments" value={selectedProperty.environments} icon={Home} />
+                  <DetailItem label="Bedrooms" value={selectedProperty.rooms} icon={Bed} />
+                  <DetailItem label="Bathrooms" value={selectedProperty.bathrooms} icon={Bath} />
+                  <DetailItem label="Toilets" value={selectedProperty.toilets || 0} icon={Bath} />
+                  
+                  <DetailItem label="Total m²" value={`${selectedProperty.sqft} m²`} icon={Ruler} />
+                  <DetailItem label="Covered m²" value={`${selectedProperty.coveredSqft || selectedProperty.sqft} m²`} icon={Layers} />
+                  <DetailItem label="Uncovered m²" value={`${selectedProperty.uncoveredSqft || 0} m²`} icon={Layers} />
+                  <DetailItem label="Floor Level" value={selectedProperty.floor || 'Gnd'} icon={Building2} />
+                  
+                  <DetailItem label="Parking Spots" value={selectedProperty.parking || 0} icon={Car} />
+                  <DetailItem label="Age (Years)" value={selectedProperty.age || 'Unknown'} icon={Clock} />
                 </div>
               </div>
 
