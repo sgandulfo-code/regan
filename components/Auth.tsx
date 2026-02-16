@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Mail, User as UserIcon, Shield, ArrowRight, Sparkles, Building2, UserCircle } from 'lucide-react';
+import { Mail, User as UserIcon, ArrowRight, Sparkles, Building2, UserCircle, Loader2 } from 'lucide-react';
 import { User, UserRole } from '../types';
+import { dataService } from '../services/dataService';
 
 interface AuthProps {
   onLogin: (user: User) => void;
@@ -12,14 +13,15 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.BUYER);
   const [step, setStep] = useState<'email' | 'details'>('email');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     
-    // Check if user exists in local storage
-    const savedUsers = JSON.parse(localStorage.getItem('propbrain_users') || '[]');
-    const existingUser = savedUsers.find((u: User) => u.email === email);
+    setIsLoading(true);
+    const existingUser = await dataService.getProfileByEmail(email);
+    setIsLoading(false);
     
     if (existingUser) {
       onLogin(existingUser);
@@ -28,27 +30,33 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
     }
   };
 
-  const handleFullSignup = (e: React.FormEvent) => {
+  const handleFullSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email) return;
 
+    setIsLoading(true);
     const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substr(2, 9), // Supabase can generate UUIDs too
       name,
       email,
       role
     };
 
-    // Save user for future sessions
-    const savedUsers = JSON.parse(localStorage.getItem('propbrain_users') || '[]');
-    localStorage.setItem('propbrain_users', JSON.stringify([...savedUsers, newUser]));
+    const createdUser = await dataService.createProfile(newUser);
+    setIsLoading(false);
     
-    onLogin(newUser);
+    if (createdUser) {
+      onLogin({
+        id: createdUser.id,
+        name: createdUser.full_name,
+        email: createdUser.email,
+        role: createdUser.role as UserRole
+      });
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
-      {/* Decorative Blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/20 blur-[120px] rounded-full"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-rose-600/10 blur-[120px] rounded-full"></div>
 
@@ -58,7 +66,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             PB
           </div>
           <h1 className="text-4xl font-black text-white tracking-tight mb-2">PropBrain</h1>
-          <p className="text-slate-400 font-medium">Your Real Estate Second Brain</p>
+          <p className="text-slate-400 font-medium">Synced with Supabase Cloud</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
@@ -66,7 +74,7 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             <form onSubmit={handleEmailSubmit} className="space-y-6">
               <div className="text-center mb-8">
                 <h2 className="text-xl font-bold text-white mb-2">Welcome Back</h2>
-                <p className="text-slate-400 text-sm">Enter your email to access your workspace.</p>
+                <p className="text-slate-400 text-sm">Enter your email to verify your session.</p>
               </div>
 
               <div className="space-y-2">
@@ -86,9 +94,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 group"
+                disabled={isLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 group disabled:bg-slate-800"
               >
-                Continue <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
               </button>
             </form>
           ) : (
@@ -140,9 +149,10 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
 
               <button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all"
+                disabled={isLoading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all disabled:bg-slate-800 flex justify-center"
               >
-                Launch Workspace
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Launch Workspace"}
               </button>
               
               <button 
@@ -155,10 +165,6 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             </form>
           )}
         </div>
-        
-        <p className="text-center text-slate-600 text-[10px] mt-8 font-black uppercase tracking-widest">
-          No verification needed. Simple as a brain.
-        </p>
       </div>
     </div>
   );
