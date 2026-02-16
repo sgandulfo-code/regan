@@ -2,6 +2,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
+import { Layers, ShieldCheck } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -11,7 +12,6 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatusChange, isEditable = true }) => {
-  // Use PropertyStatus enum members as runtime values for switch logic
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -32,7 +32,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div className="absolute top-4 left-4 flex gap-2">
           <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
             {property.status}
@@ -54,27 +53,35 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
             <h3 className="font-bold text-lg text-slate-800 truncate mb-1" title={property.title}>
               {property.title}
             </h3>
-            <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-              €{Math.round(property.price / property.sqft).toLocaleString()}/m² Base Price
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                €{Math.round(property.price / property.sqft).toLocaleString()}/m²
+              </p>
+              {property.fees && property.fees > 0 && (
+                <div className="flex items-center gap-1 text-[10px] text-amber-600 font-black uppercase tracking-widest">
+                  <ShieldCheck className="w-3 h-3" />
+                  €{property.fees} fees
+                </div>
+              )}
+            </div>
           </div>
           <a href={property.url} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
             {ICONS.ExternalLink}
           </a>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 text-center">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Rooms</span>
-            <span className="font-bold text-slate-800 text-sm">{property.rooms}</span>
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
+            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Ambientes</span>
+            <span className="font-bold text-slate-800 text-xs">{property.environments}</span>
           </div>
-          <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 text-center">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Baths</span>
-            <span className="font-bold text-slate-800 text-sm">{property.bathrooms}</span>
+          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
+            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Covered</span>
+            <span className="font-bold text-slate-800 text-xs">{property.coveredSqft || property.sqft}m²</span>
           </div>
-          <div className="bg-slate-50/80 rounded-2xl p-3 border border-slate-100 text-center">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Surface</span>
-            <span className="font-bold text-slate-800 text-sm">{property.sqft}m²</span>
+          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
+            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Parking</span>
+            <span className="font-bold text-slate-800 text-xs">{property.parking || 0}</span>
           </div>
         </div>
 
@@ -87,9 +94,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
           </div>
           <button 
             onClick={() => onSelect(property)}
-            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all"
           >
-            Manage
+            Details
           </button>
         </div>
 
@@ -100,7 +107,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
               value={property.status}
               onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
             >
-              {/* Cast Object.values to string[] to ensure runtime iteration and valid React child types */}
               {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           ) : (
@@ -108,9 +114,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
                Status: {property.status}
             </div>
           )}
-          <button className="p-3 bg-slate-100 text-slate-400 rounded-xl hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
-            {ICONS.MessageSquare}
-          </button>
         </div>
       </div>
     </div>

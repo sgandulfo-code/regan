@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 
@@ -14,14 +14,22 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [activeRefTab, setActiveRefTab] = useState<'preview' | 'source'>('preview');
   
-  // Editable state for the "Validation Station"
-  const [editedData, setEditedData] = useState({
+  const [editedData, setEditedData] = useState<any>({
     title: '',
     price: 0,
+    fees: 0,
     location: '',
-    sqft: 0,
+    exactAddress: '',
+    environments: 0,
     rooms: 0,
-    bathrooms: 0
+    bathrooms: 0,
+    toilets: 0,
+    parking: 0,
+    sqft: 0,
+    coveredSqft: 0,
+    uncoveredSqft: 0,
+    age: 0,
+    floor: ''
   });
 
   useEffect(() => {
@@ -29,10 +37,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
       setEditedData({
         title: analysisResult.title || '',
         price: analysisResult.price || 0,
+        fees: analysisResult.fees || 0,
         location: analysisResult.location || '',
-        sqft: analysisResult.sqft || 0,
+        exactAddress: analysisResult.exactAddress || '',
+        environments: analysisResult.environments || 0,
         rooms: analysisResult.rooms || 0,
-        bathrooms: analysisResult.bathrooms || 0
+        bathrooms: analysisResult.bathrooms || 0,
+        toilets: analysisResult.toilets || 0,
+        parking: analysisResult.parking || 0,
+        sqft: analysisResult.sqft || 0,
+        coveredSqft: analysisResult.coveredSqft || 0,
+        uncoveredSqft: analysisResult.uncoveredSqft || 0,
+        age: analysisResult.age || 0,
+        floor: analysisResult.floor || ''
       });
     }
   }, [analysisResult]);
@@ -55,10 +72,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
       title: editedData.title,
       url: input.startsWith('http') ? input : '',
       address: editedData.location,
+      exactAddress: editedData.exactAddress,
       price: editedData.price,
+      fees: editedData.fees,
+      environments: editedData.environments,
       rooms: editedData.rooms,
       bathrooms: editedData.bathrooms,
+      toilets: editedData.toilets,
+      parking: editedData.parking,
       sqft: editedData.sqft,
+      coveredSqft: editedData.coveredSqft,
+      uncoveredSqft: editedData.uncoveredSqft,
+      age: editedData.age,
+      floor: editedData.floor,
       status: PropertyStatus.WISHLIST,
       rating: Math.round(analysisResult.dealScore / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
@@ -74,165 +100,113 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
 
   const isUrl = input.trim().startsWith('http');
 
-  return (
-    <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Step 1: Input Analysis */}
-      {!analysisResult && (
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl border border-slate-800 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[120px] -z-0"></div>
-          <div className="relative z-10 max-w-3xl mx-auto text-center space-y-8">
-            <div className="space-y-4">
-              <div className="w-16 h-16 bg-indigo-500 rounded-3xl shadow-xl shadow-indigo-500/20 flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-4xl font-black text-white tracking-tight">Intelligence Hub</h2>
-              <p className="text-slate-400 text-lg">Paste a property link or description to start the extraction.</p>
-            </div>
+  const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 ml-1">
+        {Icon && <Icon className="w-3 h-3" />}
+        {label}
+      </label>
+      <div className="relative group">
+        {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">{prefix}</span>}
+        <input 
+          type={type} 
+          value={value}
+          onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
+          className={`w-full p-3.5 ${prefix ? 'pl-8' : 'pl-4'} bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 transition-all text-sm`}
+        />
+      </div>
+    </div>
+  );
 
-            <div className="relative group">
-              <textarea
-                className="w-full p-8 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-white placeholder:text-slate-500 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[180px] outline-none transition-all resize-none text-xl leading-relaxed"
-                placeholder="https://www.idealista.com/inmueble/..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isAnalyzing}
-              />
-              <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing || !input.trim()}
-                className="mt-6 w-full bg-indigo-600 text-white px-10 py-5 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 transition-all flex items-center justify-center gap-3 text-lg active:scale-95"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Decoding Property Data...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-6 h-6" />
-                    Extract & Verify
-                  </>
-                )}
-              </button>
+  return (
+    <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {!analysisResult && (
+        <div className="bg-slate-900 rounded-[3rem] p-12 shadow-2xl border border-slate-800 relative overflow-hidden text-center">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[120px]"></div>
+          <div className="relative z-10 max-w-2xl mx-auto space-y-8">
+            <div className="w-20 h-20 bg-indigo-500 rounded-3xl shadow-xl shadow-indigo-500/20 flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-white" />
             </div>
+            <h2 className="text-4xl font-black text-white tracking-tight">AI Data Extractor</h2>
+            <p className="text-slate-400 text-lg">Paste a property URL or description to analyze costs, surfaces, and features automatically.</p>
+            <textarea
+              className="w-full p-8 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[160px] outline-none transition-all resize-none text-xl leading-relaxed"
+              placeholder="https://www.idealista.com/..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+            <button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing || !input.trim()}
+              className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-800 transition-all flex items-center justify-center gap-3 text-lg"
+            >
+              {isAnalyzing ? <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div> : <Sparkles className="w-6 h-6" />}
+              {isAnalyzing ? 'Analyzing Sources...' : 'Start Technical Extraction'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Step 2: Validation Station (Split View) */}
       {analysisResult && (
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 slide-in-from-top-10 duration-700">
-          
-          {/* LEFT: Data Inspector */}
-          <div className="xl:col-span-7 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-10 shadow-xl relative overflow-hidden h-fit">
-              <div className="flex items-center justify-between mb-10">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 duration-500">
+          {/* LEFT: Technical Inspector */}
+          <div className="xl:col-span-8 space-y-6">
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl relative overflow-hidden">
+              <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-                    <PencilLine className="w-7 h-7 text-indigo-600" />
-                    Fact-Check Station
-                  </h3>
-                  <p className="text-slate-400 font-medium">Please review and adjust the extracted data.</p>
+                  <h3 className="text-2xl font-black text-slate-800">Verification Station</h3>
+                  <p className="text-slate-400 font-medium text-sm">Contrast AI data with the live reference on the right.</p>
                 </div>
-                <div className="flex flex-col items-end">
-                   <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-1">AI Confidence</div>
-                   <div className={`px-4 py-1.5 rounded-full text-xs font-bold border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-orange-50 text-orange-600 border-orange-100'}`}>
-                    {analysisResult.confidence}% Reliability
-                   </div>
+                <div className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+                  AI Certainty: {analysisResult.confidence}%
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                    Title <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  </label>
-                  <input 
-                    type="text" 
-                    value={editedData.title}
-                    onChange={(e) => setEditedData({...editedData, title: e.target.value})}
-                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-800 text-lg transition-all"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                    Price (€) <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  </label>
-                  <div className="relative group">
-                    <Euro className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                      type="number" 
-                      value={editedData.price}
-                      onChange={(e) => setEditedData({...editedData, price: Number(e.target.value)})}
-                      className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-black text-slate-800 text-xl"
-                    />
+              <div className="space-y-10">
+                {/* Section: General */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(val:any) => setEditedData({...editedData, title: val})} icon={Home} />
                   </div>
+                  <FormField label="Exact Address" type="text" value={editedData.exactAddress} onChange={(val:any) => setEditedData({...editedData, exactAddress: val})} icon={MapPin} />
+                  <FormField label="Neighborhood/City" type="text" value={editedData.location} onChange={(val:any) => setEditedData({...editedData, location: val})} icon={Maximize} />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                    Surface (m²) <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  </label>
-                  <div className="relative group">
-                    <Maximize className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
-                    <input 
-                      type="number" 
-                      value={editedData.sqft}
-                      onChange={(e) => setEditedData({...editedData, sqft: Number(e.target.value)})}
-                      className="w-full p-5 pl-14 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-black text-slate-800 text-xl"
-                    />
-                  </div>
+                {/* Section: Financials */}
+                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField label="Listing Price" prefix="€" value={editedData.price} onChange={(val:any) => setEditedData({...editedData, price: val})} icon={Euro} />
+                  <FormField label="Monthly Fees / Expensas" prefix="€" value={editedData.fees} onChange={(val:any) => setEditedData({...editedData, fees: val})} icon={ShieldCheck} />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                    Rooms <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  </label>
-                  <input 
-                    type="number" 
-                    value={editedData.rooms}
-                    onChange={(e) => setEditedData({...editedData, rooms: Number(e.target.value)})}
-                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-black text-slate-800 text-xl text-center"
-                  />
+                {/* Section: Surfaces & Age */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  <FormField label="Total m²" value={editedData.sqft} onChange={(val:any) => setEditedData({...editedData, sqft: val})} icon={Ruler} />
+                  <FormField label="Covered m²" value={editedData.coveredSqft} onChange={(val:any) => setEditedData({...editedData, coveredSqft: val})} icon={Layers} />
+                  <FormField label="Uncovered m²" value={editedData.uncoveredSqft} onChange={(val:any) => setEditedData({...editedData, uncoveredSqft: val})} icon={ChevronRight} />
+                  <FormField label="Antigüedad (Years)" value={editedData.age} onChange={(val:any) => setEditedData({...editedData, age: val})} icon={History} />
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center gap-2">
-                    Bathrooms <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                  </label>
-                  <input 
-                    type="number" 
-                    value={editedData.bathrooms}
-                    onChange={(e) => setEditedData({...editedData, bathrooms: Number(e.target.value)})}
-                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-black text-slate-800 text-xl text-center"
-                  />
+                {/* Section: Features */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  <FormField label="Ambientes" value={editedData.environments} onChange={(val:any) => setEditedData({...editedData, environments: val})} />
+                  <FormField label="Bedrooms" value={editedData.rooms} onChange={(val:any) => setEditedData({...editedData, rooms: val})} />
+                  <FormField label="Baths" value={editedData.bathrooms} onChange={(val:any) => setEditedData({...editedData, bathrooms: val})} />
+                  <FormField label="Toilets" value={editedData.toilets} onChange={(val:any) => setEditedData({...editedData, toilets: val})} />
+                  <FormField label="Parking" value={editedData.parking} onChange={(val:any) => setEditedData({...editedData, parking: val})} icon={Car} />
                 </div>
               </div>
 
-              <div className="mt-10 p-6 bg-indigo-50 rounded-[1.5rem] border border-indigo-100 flex items-start gap-5">
-                <div className="p-3 bg-white rounded-2xl shadow-sm text-indigo-600">
-                  <Lightbulb className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-black text-indigo-900 mb-1 flex items-center gap-2 uppercase text-[11px] tracking-widest">AI Strategic Advice</h4>
-                  <p className="text-indigo-700/80 text-sm leading-relaxed font-medium italic">
-                    "{analysisResult.analysis?.strategy}"
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-10 flex gap-4">
+              <div className="mt-12 pt-8 border-t border-slate-100 flex gap-4">
                 <button
                   onClick={handleConfirm}
-                  className="flex-1 bg-slate-900 text-white py-5 rounded-2xl font-black text-lg hover:bg-slate-800 shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3"
+                  className="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition-all flex items-center justify-center gap-3"
                 >
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
-                  APPROVE & ADD
+                  <CheckCircle2 className="w-6 h-6" />
+                  SAVE VALIDATED DATA
                 </button>
                 <button
                   onClick={() => setAnalysisResult(null)}
-                  className="px-8 bg-slate-100 text-slate-500 py-5 rounded-2xl font-bold hover:bg-slate-200 transition-all text-sm uppercase tracking-widest"
+                  className="px-10 bg-slate-100 text-slate-500 rounded-2xl font-bold hover:bg-slate-200 transition-all"
                 >
                   Discard
                 </button>
@@ -240,104 +214,39 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             </div>
           </div>
 
-          {/* RIGHT: Live Reference Panel */}
-          <div className="xl:col-span-5 space-y-6">
-            <div className="bg-slate-50 rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full min-h-[600px]">
-              <div className="p-6 bg-white border-b border-slate-200 flex items-center justify-between">
-                <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
-                  <button 
-                    onClick={() => setActiveRefTab('preview')}
-                    className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeRefTab === 'preview' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    Live Link
-                  </button>
-                  <button 
-                    onClick={() => setActiveRefTab('source')}
-                    className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest flex items-center gap-2 transition-all ${activeRefTab === 'source' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                    <FileText className="w-3.5 h-3.5" />
-                    Source Text
-                  </button>
+          {/* RIGHT: Reference & Strategy */}
+          <div className="xl:col-span-4 space-y-6">
+            {/* Live Reference */}
+            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[600px] flex flex-col">
+              <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
+                <div className="flex gap-2">
+                  <button onClick={() => setActiveRefTab('preview')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'preview' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Preview</button>
+                  <button onClick={() => setActiveRefTab('source')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'source' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Source</button>
                 </div>
-                {isUrl && (
-                  <a href={input} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-700 p-2 hover:bg-indigo-50 rounded-xl transition-all">
-                    <ExternalLink className="w-5 h-5" />
-                  </a>
-                )}
+                {isUrl && <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg"><ExternalLink className="w-4 h-4" /></a>}
               </div>
-
-              <div className="flex-1 overflow-hidden relative group">
-                {activeRefTab === 'preview' ? (
-                  isUrl ? (
-                    <div className="h-full flex flex-col">
-                      <div className="flex-1 bg-white relative">
-                        {/* Note: Many property sites block iframes. We show a friendly placeholder if it fails or use a direct link button */}
-                        <iframe 
-                          src={input} 
-                          className="w-full h-full border-none"
-                          title="Property Reference"
-                        />
-                        <div className="absolute inset-0 bg-slate-900/5 pointer-events-none"></div>
-                        
-                        {/* Overlay info if iframe is blocked or for better UX */}
-                        <div className="absolute bottom-6 left-6 right-6 bg-white/90 backdrop-blur-md p-6 rounded-3xl border border-white shadow-2xl flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">External Reference</p>
-                            <p className="text-sm font-bold text-slate-800 truncate max-w-[200px]">{input}</p>
-                          </div>
-                          <a 
-                            href={input} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-200"
-                          >
-                            Open Original <ChevronRight className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center p-12 text-center bg-white">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300">
-                        <MapPin className="w-10 h-10" />
-                      </div>
-                      <h4 className="text-xl font-bold text-slate-800 mb-2">No Live Link</h4>
-                      <p className="text-slate-500 text-sm max-w-[250px]">You pasted text instead of a URL. Check the Source Text tab to verify the data.</p>
-                      <button 
-                        onClick={() => setActiveRefTab('source')}
-                        className="mt-6 text-indigo-600 text-xs font-black uppercase tracking-widest underline decoration-2 underline-offset-4"
-                      >
-                        Switch to Source Text
-                      </button>
-                    </div>
-                  )
+              <div className="flex-1 overflow-hidden relative">
+                {activeRefTab === 'preview' && isUrl ? (
+                  <iframe src={input} className="w-full h-full border-none grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700" title="Property Ref" />
                 ) : (
-                  <div className="h-full bg-slate-900 p-8 overflow-y-auto">
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Raw Extraction Buffer</span>
-                    </div>
-                    <pre className="text-indigo-300 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words opacity-80">
-                      {input}
-                    </pre>
+                  <div className="p-8 font-mono text-xs text-indigo-300/60 leading-relaxed whitespace-pre-wrap overflow-y-auto h-full">
+                    {input}
                   </div>
                 )}
+                <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[2.5rem]"></div>
               </div>
             </div>
 
-            {/* Score Card */}
-            <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-indigo-200 relative overflow-hidden">
-               <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 blur-3xl rounded-full"></div>
-               <div className="relative z-10 flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-black text-indigo-200 uppercase tracking-widest">Property Appraisal</p>
-                    <h4 className="text-3xl font-black">Investment Potential</h4>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-6xl font-black">{analysisResult.dealScore}</p>
-                    <p className="text-[10px] font-bold text-indigo-200 uppercase">Points</p>
-                  </div>
+            {/* AI Verdict */}
+            <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl">
+               <div className="flex justify-between items-center mb-6">
+                 <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Verdict</p>
+                 <span className="text-4xl font-black">{analysisResult.dealScore}/100</span>
+               </div>
+               <div className="bg-white/10 rounded-2xl p-5 mb-0">
+                  <p className="text-sm font-medium italic leading-relaxed opacity-90">
+                    "{analysisResult.analysis?.strategy}"
+                  </p>
                </div>
             </div>
           </div>

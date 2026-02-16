@@ -44,6 +44,8 @@ export const MOCK_PROPERTIES: Property[] = [
     url: 'https://example.com/prop1',
     address: 'Paseo de la Chopera, 10, Madrid',
     price: 450000,
+    // Fix: Added missing 'environments' property as required by Property interface
+    environments: 4,
     rooms: 3,
     bathrooms: 2,
     sqft: 95,
@@ -63,6 +65,8 @@ export const MOCK_PROPERTIES: Property[] = [
     url: 'https://example.com/prop2',
     address: 'Calle de la Palma, 45, Madrid',
     price: 525000,
+    // Fix: Added missing 'environments' property as required by Property interface
+    environments: 3,
     rooms: 2,
     bathrooms: 1,
     sqft: 110,

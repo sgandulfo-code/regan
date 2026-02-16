@@ -27,10 +27,19 @@ export interface Property {
   title: string;
   url: string;
   address: string;
+  exactAddress?: string;
   price: number;
-  rooms: number;
+  fees?: number; // Expensas / Community fees
+  environments: number; // Ambientes totales
+  rooms: number; // Dormitorios/Habitaciones
   bathrooms: number;
-  sqft: number;
+  toilets?: number; // Aseos/Toilettes
+  parking?: number; // Cocheras/Garajes
+  sqft: number; // Total m2
+  coveredSqft?: number; // m2 cubiertos
+  uncoveredSqft?: number; // m2 descubiertos/terrazas
+  age?: number; // Antigüedad en años
+  floor?: string; // Planta/Piso
   status: PropertyStatus;
   rating: number;
   notes: string;

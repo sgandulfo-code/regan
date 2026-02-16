@@ -7,9 +7,16 @@ export const parseSemanticSearch = async (description: string) => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `You are a meticulous real estate data extractor. Extract info from: "${description}". 
-      If a value is missing or unclear, set it to 0 or null. Do not guess.
-      Explain your reasoning for the investment score.`,
+      contents: `You are a high-precision real estate analyst. Extract technical data from: "${description}".
+      
+      CRITICAL DEFINITIONS:
+      - "environments" (ambientes): Total number of distinct living areas (Living + Bedrooms).
+      - "rooms": Number of actual bedrooms (dormitorios).
+      - "fees" (expensas/comunidad): Monthly maintenance cost.
+      - "coveredSqft": Indoor area.
+      - "uncoveredSqft": Balconies, terraces or gardens.
+      
+      If any value is missing, return 0 or null. DO NOT HALLUCINATE OR GUESS.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -17,12 +24,21 @@ export const parseSemanticSearch = async (description: string) => {
           properties: {
             title: { type: Type.STRING },
             price: { type: Type.NUMBER },
+            fees: { type: Type.NUMBER },
+            location: { type: Type.STRING },
+            exactAddress: { type: Type.STRING },
+            environments: { type: Type.INTEGER },
             rooms: { type: Type.INTEGER },
             bathrooms: { type: Type.INTEGER },
-            location: { type: Type.STRING },
-            sqft: { type: Type.INTEGER },
+            toilets: { type: Type.INTEGER },
+            parking: { type: Type.INTEGER },
+            sqft: { type: Type.NUMBER },
+            coveredSqft: { type: Type.NUMBER },
+            uncoveredSqft: { type: Type.NUMBER },
+            age: { type: Type.INTEGER },
+            floor: { type: Type.STRING },
             dealScore: { type: Type.NUMBER },
-            confidence: { type: Type.NUMBER, description: 'Percentage of certainty on data extraction (0-100)' },
+            confidence: { type: Type.NUMBER },
             analysis: {
               type: Type.OBJECT,
               properties: {
