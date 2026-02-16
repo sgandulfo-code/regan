@@ -1,26 +1,41 @@
 
-import React, { useState } from 'react';
-import { Plus, Shield } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
-import { Property, PropertyStatus, UserRole, User, RenovationItem } from './types';
-import { MOCK_PROPERTIES, ICONS, MOCK_USER } from './constants';
+import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
+import { MOCK_PROPERTIES, ICONS, MOCK_USER, MOCK_FOLDERS } from './constants';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [folders, setFolders] = useState<SearchFolder[]>(MOCK_FOLDERS);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USER);
 
+  const filteredProperties = useMemo(() => {
+    if (!activeFolderId) return properties;
+    return properties.filter(p => p.folderId === activeFolderId);
+  }, [properties, activeFolderId]);
+
+  const activeFolder = useMemo(() => 
+    folders.find(f => f.id === activeFolderId), 
+  [folders, activeFolderId]);
+
   const handleAddProperty = (prop: Property) => {
     if (currentUser.role !== UserRole.BUYER) {
-      alert("Only a Buyer can add new properties to the database.");
+      alert("Only a Buyer can add new properties.");
       return;
     }
-    setProperties([prop, ...properties]);
+    // Aseguramos que la propiedad pertenezca a la carpeta activa o a la primera disponible
+    const folderToAssign = activeFolderId || (folders.length > 0 ? folders[0].id : 'default');
+    const propertyWithFolder = { ...prop, folderId: folderToAssign };
+    
+    setProperties([propertyWithFolder, ...properties]);
     setActiveTab('properties');
   };
 
@@ -48,146 +63,182 @@ const App: React.FC = () => {
     });
   };
 
+  const createFolder = () => {
+    const name = prompt("Enter Search Name (e.g., Beach House, Madrid Investment):");
+    if (!name) return;
+    const newFolder: SearchFolder = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      description: "My search for " + name,
+      color: ['bg-indigo-600', 'bg-rose-600', 'bg-amber-600', 'bg-emerald-600'][Math.floor(Math.random() * 4)],
+      createdAt: new Date().toISOString()
+    };
+    setFolders([...folders, newFolder]);
+    setActiveFolderId(newFolder.id);
+    setActiveTab('properties');
+  };
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={currentUser.role} />
+    <div className="flex min-h-screen bg-slate-50">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        userRole={currentUser.role} 
+        folders={folders}
+        activeFolderId={activeFolderId}
+        setActiveFolderId={setActiveFolderId}
+      />
       
-      <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+      <main className="flex-1 p-4 md:p-10 overflow-y-auto">
         {/* Header */}
-        <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
-              {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-              <span className={`text-xs px-2 py-1 rounded-md border ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
-                {currentUser.role} View
-              </span>
-            </h1>
-            <p className="text-slate-500">
-              {currentUser.role === UserRole.BUYER 
-                ? "Managing your real estate acquisitions." 
-                : "Providing technical expertise for Alejandro's search."}
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="animate-in slide-in-from-left duration-500">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'My Search Folders' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+              </h1>
+              {activeFolder && (
+                <div className={`w-3 h-3 rounded-full ${activeFolder.color}`}></div>
+              )}
+            </div>
+            <p className="text-slate-500 font-medium flex items-center gap-2">
+              {activeFolder ? (
+                <>
+                  <Briefcase className="w-4 h-4" />
+                  Technical lead for this specific portfolio
+                </>
+              ) : "Central control for your real estate acquisitions."}
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 animate-in slide-in-from-right duration-500">
             <button 
               onClick={switchRole}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-              title="Toggle role to test permissions"
+              className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm"
             >
-              <Shield className="w-4 h-4 text-orange-500" />
+              <Shield className="w-4 h-4 text-orange-500 group-hover:scale-125 transition-transform" />
               Switch Role
             </button>
-            <div className="flex items-center gap-2 bg-white border border-slate-200 py-1 pl-1 pr-3 rounded-xl shadow-sm">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-500' : 'bg-indigo-600'}`}>
+            <div className="flex items-center gap-3 bg-white border border-slate-200 p-1.5 pr-5 rounded-2xl shadow-sm">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-500' : 'bg-indigo-600'}`}>
                 {currentUser.name.charAt(0)}
               </div>
               <div className="hidden sm:block leading-none">
-                <p className="text-sm font-bold text-slate-700">{currentUser.name}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase">{currentUser.role}</p>
+                <p className="text-sm font-black text-slate-800">{currentUser.name}</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{currentUser.role}</p>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Tab Content */}
-        <div className="max-w-7xl mx-auto">
-          {activeTab === 'dashboard' && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: 'Total Saved', value: properties.length, icon: ICONS.Heart, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'Visits Done', value: '12', icon: ICONS.CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-                  { label: 'Avg. m² Price', value: '€4,250', icon: ICONS.MapPin, color: 'text-blue-600', bg: 'bg-blue-50' },
-                  { label: 'Collaborators', value: '3', icon: ICONS.Users, color: 'text-purple-600', bg: 'bg-purple-50' },
-                ].map((stat, i) => (
-                  <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
-                    <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
-                      {stat.icon}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                      <p className="text-xl font-bold text-slate-800">{stat.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
-                  <h2 className="text-lg font-bold text-slate-800">Recent Highlights</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {properties.slice(0, 2).map(p => (
-                      <PropertyCard 
-                        key={p.id} 
-                        property={p} 
-                        onSelect={setSelectedProperty} 
-                        onStatusChange={handleUpdateStatus} 
-                        isEditable={currentUser.role === UserRole.BUYER}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <h2 className="text-lg font-bold text-slate-800">Visit Agenda</h2>
-                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                    {[
-                      { date: 'Today, 18:00', title: 'Attic Madrid Rio', addr: 'Paseo de la Chopera' },
-                      { date: 'Tomorrow, 10:30', title: 'Industrial Loft', addr: 'Calle Palma' }
-                    ].map((visit, i) => (
-                      <div key={i} className="flex gap-4 pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                        <div className="w-12 h-12 bg-indigo-50 rounded-lg flex flex-col items-center justify-center text-indigo-600 font-bold shrink-0">
-                          <span className="text-xs uppercase">{visit.date.split(',')[0]}</span>
-                          <span className="text-lg">{visit.date.split(' ')[1]}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-sm">{visit.title}</p>
-                          <p className="text-xs text-slate-500 truncate w-32">{visit.addr}</p>
-                        </div>
+        {/* Level 1: Folders Dashboard */}
+        {activeTab === 'dashboard' && !activeFolderId && (
+          <div className="space-y-10 animate-in fade-in zoom-in-95 duration-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {folders.map(folder => {
+                const propCount = properties.filter(p => p.folderId === folder.id).length;
+                return (
+                  <button
+                    key={folder.id}
+                    onClick={() => {
+                      setActiveFolderId(folder.id);
+                      setActiveTab('properties');
+                    }}
+                    className="group bg-white rounded-[2rem] p-8 border border-slate-200 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all text-left relative overflow-hidden"
+                  >
+                    <div className={`absolute top-0 right-0 w-32 h-32 ${folder.color} opacity-5 blur-3xl -mr-10 -mt-10 group-hover:opacity-10 transition-opacity`}></div>
+                    <div className="mb-6 flex justify-between items-start">
+                      <div className={`w-14 h-14 ${folder.color} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
+                        <Search className="w-7 h-7" />
                       </div>
-                    ))}
-                    <button className="w-full py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-100">
-                      View Calendar
-                    </button>
-                  </div>
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                        {new Date(folder.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-black text-slate-800 mb-2 group-hover:text-indigo-600 transition-colors">{folder.name}</h3>
+                    <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2">{folder.description}</p>
+                    <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-black text-slate-800">{propCount}</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Properties</span>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-all">
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              <button 
+                onClick={createFolder}
+                className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-4 text-slate-400 hover:bg-white hover:border-indigo-300 hover:text-indigo-500 transition-all group"
+              >
+                <div className="w-16 h-16 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center group-hover:border-indigo-200 group-hover:scale-110 transition-all">
+                  <FolderPlus className="w-8 h-8" />
                 </div>
-              </div>
+                <span className="font-black text-sm uppercase tracking-widest">New Search Folder</span>
+              </button>
             </div>
-          )}
+          </div>
+        )}
 
+        {/* Level 2: Properties & Details inside Folder */}
+        <div className="max-w-7xl mx-auto">
           {activeTab === 'search' && (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-5xl mx-auto">
               {currentUser.role === UserRole.BUYER ? (
-                <PropertyForm onAdd={handleAddProperty} />
+                <div className="space-y-6">
+                  <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${activeFolder?.color || 'bg-indigo-600'}`}></div>
+                        <p className="text-xs font-bold text-indigo-900 uppercase tracking-wider">Adding to Folder: <span className="font-black">{activeFolder?.name || 'My Searches'}</span></p>
+                     </div>
+                     <button onClick={() => setActiveTab('dashboard')} className="text-[10px] font-black text-indigo-600 uppercase underline">Change Folder</button>
+                  </div>
+                  <PropertyForm onAdd={handleAddProperty} />
+                </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                  <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <h2 className="text-xl font-bold text-slate-800">Admin Only Access</h2>
-                  <p className="text-slate-500">Architects cannot add new properties. Please switch back to Buyer role to use Smart Search.</p>
+                <div className="bg-white rounded-[3rem] border border-slate-200 p-20 text-center shadow-sm">
+                  <Shield className="w-20 h-20 text-slate-200 mx-auto mb-6" />
+                  <h2 className="text-2xl font-black text-slate-800 mb-2">Architect Access Only</h2>
+                  <p className="text-slate-400 max-w-sm mx-auto">Architects cannot add new properties to the database. Please request the Buyer to add new leads.</p>
                 </div>
               )}
             </div>
           )}
 
           {activeTab === 'properties' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map(p => (
-                <PropertyCard 
-                  key={p.id} 
-                  property={p} 
-                  onSelect={setSelectedProperty} 
-                  onStatusChange={handleUpdateStatus}
-                  isEditable={currentUser.role === UserRole.BUYER}
-                />
-              ))}
+            <div className="space-y-8 animate-in fade-in duration-700">
+              {filteredProperties.length === 0 ? (
+                <div className="bg-white rounded-[3rem] border border-slate-200 p-20 text-center">
+                   <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                      <Heart className="w-12 h-12" />
+                   </div>
+                   <h2 className="text-2xl font-black text-slate-800 mb-2">No properties here yet</h2>
+                   <p className="text-slate-400 mb-8 max-w-xs mx-auto">Start by using Smart Search to extract your first property data from an advertisement.</p>
+                   <button onClick={() => setActiveTab('search')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black hover:bg-indigo-700 shadow-xl transition-all">Go to Smart Search</button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredProperties.map(p => (
+                    <PropertyCard 
+                      key={p.id} 
+                      property={p} 
+                      onSelect={setSelectedProperty} 
+                      onStatusChange={handleUpdateStatus}
+                      isEditable={currentUser.role === UserRole.BUYER}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'calculator' && (
-            <div className="space-y-8">
-              <ComparisonTool properties={properties} />
+            <div className="space-y-12 animate-in fade-in duration-700">
+              <ComparisonTool properties={filteredProperties} />
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {properties.map(p => (
+                {filteredProperties.map(p => (
                   <RenovationCalculator 
                     key={p.id} 
                     property={p} 
@@ -200,14 +251,15 @@ const App: React.FC = () => {
           )}
 
           {activeTab === 'reports' && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-              <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
-                {ICONS.FileText}
+            <div className="bg-white rounded-[3rem] border border-slate-200 p-20 text-center shadow-sm">
+              <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8 text-indigo-600">
+                <FileText className="w-12 h-12" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">Generate Search Dossier</h2>
-              <p className="text-slate-500 mb-8 max-w-md mx-auto">Create a professional PDF report with all your saved properties, renovation estimates, and professional notes for offline review.</p>
-              <button className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all">
-                Export PDF Report
+              <h2 className="text-3xl font-black text-slate-800 mb-4">Search Dossier</h2>
+              <p className="text-slate-500 mb-10 max-w-md mx-auto text-lg">Generate a professional comparison report for the <span className="font-black text-indigo-600">"{activeFolder?.name || 'selected'}"</span> portfolio. Includes renovation ROI and visit notes.</p>
+              <button className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-2xl shadow-indigo-100 transition-all flex items-center gap-3 mx-auto">
+                <FileText className="w-6 h-6" />
+                Download PDF Dossier
               </button>
             </div>
           )}
@@ -216,85 +268,97 @@ const App: React.FC = () => {
 
       {/* Property Details Modal */}
       {selectedProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-3xl overflow-hidden flex flex-col md:flex-row shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="md:w-2/5 relative h-64 md:h-auto overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md">
+          <div className="bg-white w-full max-w-6xl max-h-[92vh] rounded-[3rem] overflow-hidden flex flex-col md:flex-row shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="md:w-2/5 relative h-72 md:h-auto overflow-hidden">
               <img 
                 src={selectedProperty.images[0]} 
                 alt={selectedProperty.title} 
                 className="w-full h-full object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent"></div>
               <button 
                 onClick={() => setSelectedProperty(null)}
-                className="absolute top-4 left-4 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/40 md:hidden"
+                className="absolute top-6 left-6 bg-white/20 backdrop-blur-md p-3 rounded-full text-white hover:bg-white/40 transition-all md:hidden"
               >
-                {ICONS.Trash2}
+                <Plus className="w-6 h-6 rotate-45" />
               </button>
             </div>
             
-            <div className="md:w-3/5 p-8 overflow-y-auto bg-slate-50/50">
-              <div className="flex justify-between items-start mb-6">
+            <div className="md:w-3/5 p-12 overflow-y-auto bg-slate-50/30">
+              <div className="flex justify-between items-start mb-8">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800">{selectedProperty.title}</h2>
-                  <p className="text-slate-500 flex items-center gap-1">{ICONS.MapPin} {selectedProperty.address}</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${activeFolder?.color || 'bg-indigo-600'}`}></div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{activeFolder?.name || 'Property Detail'}</span>
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-800 leading-tight">{selectedProperty.title}</h2>
+                  <p className="text-slate-500 font-medium flex items-center gap-2 mt-2"><MapPin className="w-4 h-4 text-indigo-500" /> {selectedProperty.address}</p>
                 </div>
                 <button 
                   onClick={() => setSelectedProperty(null)}
-                  className="p-2 hover:bg-slate-200 rounded-full text-slate-400"
+                  className="p-3 bg-white hover:bg-slate-100 rounded-2xl text-slate-400 shadow-sm border border-slate-100 transition-all"
                 >
-                  <Plus className="w-6 h-6 rotate-45" />
+                  <Plus className="w-7 h-7 rotate-45" />
                 </button>
               </div>
 
-              <div className="flex gap-2 mb-8">
-                <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold uppercase tracking-wider">
-                  {selectedProperty.status}
-                </span>
-                <span className="px-3 py-1 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">
-                  {selectedProperty.sqft} m²
-                </span>
-                <span className="px-3 py-1 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold">
-                  €{selectedProperty.price.toLocaleString()}
-                </span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                   <p className="text-sm font-black text-indigo-600 uppercase">{selectedProperty.status}</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Surface</p>
+                   <p className="text-sm font-black text-slate-800">{selectedProperty.sqft} m²</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Price</p>
+                   <p className="text-sm font-black text-slate-800">€{selectedProperty.price.toLocaleString()}</p>
+                </div>
+                <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valuation</p>
+                   <p className="text-sm font-black text-slate-800">{selectedProperty.rating}/5 Stars</p>
+                </div>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-10">
                 <RenovationCalculator 
                   property={selectedProperty} 
                   userRole={currentUser.role}
                   onUpdate={(items) => handleUpdateRenovation(selectedProperty.id, items)} 
                 />
 
-                <div className="bg-white rounded-2xl border border-slate-200 p-6">
-                  <h4 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 flex items-center justify-between">
-                    Collaborative Chat
-                    <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded text-slate-400">Project #{selectedProperty.id}</span>
+                <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
+                  <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center justify-between">
+                    Team Discussion
+                    <span className="text-[9px] bg-slate-100 px-3 py-1 rounded-full text-slate-400 border border-slate-100 font-black">Project: {selectedProperty.id}</span>
                   </h4>
-                  <div className="h-48 overflow-y-auto space-y-4 mb-4 pr-2">
-                    <div className="flex gap-3 items-start">
-                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-[10px] font-bold text-orange-700 shrink-0 uppercase tracking-tighter">Arch</div>
-                      <div className="bg-slate-100 p-3 rounded-2xl rounded-tl-none text-xs">
-                        <p className="font-bold mb-1 text-slate-800">Maria (Architect)</p>
-                        <p className="text-slate-600 leading-relaxed">I've updated the kitchen estimates based on the sqft. The load-bearing walls seem okay, but we should verify the ceiling height in the attic.</p>
+                  <div className="space-y-6 mb-8">
+                    <div className="flex gap-4 items-start">
+                      <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xs font-black text-orange-700 shrink-0 uppercase tracking-tighter shadow-sm">Arch</div>
+                      <div className="bg-slate-50 p-5 rounded-3xl rounded-tl-none border border-slate-100">
+                        <p className="font-black text-[10px] uppercase text-orange-600 mb-2">Maria (Architect)</p>
+                        <p className="text-slate-600 text-sm leading-relaxed font-medium">I've verified the {selectedProperty.coveredSqft}m² covered. We can definitely expand the living room by removing the partition wall.</p>
                       </div>
                     </div>
                     
-                    <div className="flex gap-3 items-start flex-row-reverse">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shrink-0 uppercase tracking-tighter">You</div>
-                      <div className="bg-indigo-600 p-3 rounded-2xl rounded-tr-none text-xs text-white">
-                        <p className="font-bold mb-1">Alejandro</p>
-                        <p className="leading-relaxed">Thanks Maria. Is there enough room for a small home office in the master bedroom?</p>
+                    <div className="flex gap-4 items-start flex-row-reverse">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-xs font-black text-indigo-700 shrink-0 uppercase tracking-tighter shadow-sm">You</div>
+                      <div className="bg-indigo-600 p-5 rounded-3xl rounded-tr-none text-white shadow-xl shadow-indigo-100">
+                        <p className="font-black text-[10px] uppercase text-indigo-200 mb-2">Alejandro</p>
+                        <p className="text-sm leading-relaxed font-medium">Excellent. Can you update the renovation budget with the demolition costs?</p>
                       </div>
                     </div>
                   </div>
-                  <div className="relative">
+                  <div className="relative group">
                     <input 
                       type="text" 
-                      placeholder="Discuss with your team..."
-                      className="w-full p-3 pr-12 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                      placeholder="Type a technical instruction..."
+                      className="w-full p-5 pr-16 rounded-2xl border border-slate-100 bg-slate-50 text-sm font-medium focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
                     />
-                    <button className="absolute right-2 top-1.5 p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                      <Plus className="w-5 h-5" />
+                    <button className="absolute right-3 top-2.5 p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg transition-all active:scale-95">
+                      <Plus className="w-6 h-6" />
                     </button>
                   </div>
                 </div>

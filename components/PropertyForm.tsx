@@ -67,8 +67,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleConfirm = () => {
     if (!analysisResult) return;
     
+    // Fix: Added folderId to satisfy the Property interface requirements.
     const newProp: Property = {
       id: Math.random().toString(36).substr(2, 9),
+      folderId: '',
       title: editedData.title,
       url: input.startsWith('http') ? input : '',
       address: editedData.location,

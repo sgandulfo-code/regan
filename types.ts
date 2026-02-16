@@ -15,6 +15,14 @@ export enum UserRole {
   CONTRACTOR = 'Contractor'
 }
 
+export interface SearchFolder {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  createdAt: string;
+}
+
 export interface RenovationItem {
   id: string;
   category: string;
@@ -24,22 +32,23 @@ export interface RenovationItem {
 
 export interface Property {
   id: string;
+  folderId: string; // Relación con la carpeta de búsqueda
   title: string;
   url: string;
   address: string;
   exactAddress?: string;
   price: number;
-  fees?: number; // Expensas / Community fees
-  environments: number; // Ambientes totales
-  rooms: number; // Dormitorios/Habitaciones
+  fees?: number; 
+  environments: number; 
+  rooms: number; 
   bathrooms: number;
-  toilets?: number; // Aseos/Toilettes
-  parking?: number; // Cocheras/Garajes
-  sqft: number; // Total m2
-  coveredSqft?: number; // m2 cubiertos
-  uncoveredSqft?: number; // m2 descubiertos/terrazas
-  age?: number; // Antigüedad en años
-  floor?: string; // Planta/Piso
+  toilets?: number; 
+  parking?: number; 
+  sqft: number; 
+  coveredSqft?: number; 
+  uncoveredSqft?: number; 
+  age?: number; 
+  floor?: string; 
   status: PropertyStatus;
   rating: number;
   notes: string;

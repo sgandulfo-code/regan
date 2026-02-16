@@ -15,9 +15,10 @@ import {
   Trash2,
   CheckCircle,
   MoreVertical,
-  Star
+  Star,
+  FolderOpen
 } from 'lucide-react';
-import { Property, User, PropertyStatus, UserRole } from './types';
+import { Property, User, PropertyStatus, UserRole, SearchFolder } from './types';
 
 export const ICONS = {
   Home: <Home className="w-5 h-5" />,
@@ -34,17 +35,35 @@ export const ICONS = {
   Trash2: <Trash2 className="w-5 h-5" />,
   CheckCircle: <CheckCircle className="w-5 h-5" />,
   MoreVertical: <MoreVertical className="w-5 h-5" />,
-  Star: <Star className="w-5 h-5" />
+  Star: <Star className="w-5 h-5" />,
+  Folder: <FolderOpen className="w-5 h-5" />
 };
+
+export const MOCK_FOLDERS: SearchFolder[] = [
+  {
+    id: 'f1',
+    name: 'Madrid Investment',
+    description: 'Looking for 2-bedroom apartments near Metro',
+    color: 'bg-indigo-600',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'f2',
+    name: 'Family Home',
+    description: 'Villas or large attics with terrace in north area',
+    color: 'bg-rose-600',
+    createdAt: new Date().toISOString()
+  }
+];
 
 export const MOCK_PROPERTIES: Property[] = [
   {
     id: '1',
+    folderId: 'f1',
     title: 'Luminous Attic in Madrid Rio',
     url: 'https://example.com/prop1',
     address: 'Paseo de la Chopera, 10, Madrid',
     price: 450000,
-    // Fix: Added missing 'environments' property as required by Property interface
     environments: 4,
     rooms: 3,
     bathrooms: 2,
@@ -61,11 +80,11 @@ export const MOCK_PROPERTIES: Property[] = [
   },
   {
     id: '2',
+    folderId: 'f1',
     title: 'Industrial Loft near Malasaña',
     url: 'https://example.com/prop2',
     address: 'Calle de la Palma, 45, Madrid',
     price: 525000,
-    // Fix: Added missing 'environments' property as required by Property interface
     environments: 3,
     rooms: 2,
     bathrooms: 1,
