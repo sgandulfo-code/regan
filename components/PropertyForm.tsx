@@ -67,12 +67,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleConfirm = () => {
     if (!analysisResult) return;
     
-    // Fix: Added folderId to satisfy the Property interface requirements.
+    const isInputUrl = input.trim().startsWith('http');
+    
+    // Generamos el screenshot del link si es una URL válida
+    const propertyImage = isInputUrl 
+      ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`
+      : `https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80`;
+
     const newProp: Property = {
       id: Math.random().toString(36).substr(2, 9),
       folderId: '',
       title: editedData.title,
-      url: input.startsWith('http') ? input : '',
+      url: isInputUrl ? input.trim() : '',
       address: editedData.location,
       exactAddress: editedData.exactAddress,
       price: editedData.price,
@@ -91,7 +97,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
       rating: Math.round(analysisResult.dealScore / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
       renovationCosts: [],
-      images: [`https://picsum.photos/seed/${editedData.title}/800/600`],
+      images: [propertyImage],
       createdAt: new Date().toISOString(),
     };
     
@@ -129,8 +135,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             <div className="w-20 h-20 bg-indigo-500 rounded-3xl shadow-xl shadow-indigo-500/20 flex items-center justify-center mx-auto mb-6">
               <Sparkles className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-4xl font-black text-white tracking-tight">AI Data Extractor</h2>
-            <p className="text-slate-400 text-lg">Paste a property URL or description to analyze costs, surfaces, and features automatically.</p>
+            <h2 className="text-4xl font-black text-white tracking-tight">AI Multi-Source Extractor</h2>
+            <p className="text-slate-400 text-lg">Paste a URL to automatically screenshot the ad and extract all technical data.</p>
             <textarea
               className="w-full p-8 bg-slate-800/50 border-2 border-slate-700 rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[160px] outline-none transition-all resize-none text-xl leading-relaxed"
               placeholder="https://www.idealista.com/..."
@@ -143,7 +149,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
               className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-800 transition-all flex items-center justify-center gap-3 text-lg"
             >
               {isAnalyzing ? <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div> : <Sparkles className="w-6 h-6" />}
-              {isAnalyzing ? 'Analyzing Sources...' : 'Start Technical Extraction'}
+              {isAnalyzing ? 'Extracting Technical Data...' : 'Start Extraction & Screenshot'}
             </button>
           </div>
         </div>
@@ -156,8 +162,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800">Verification Station</h3>
-                  <p className="text-slate-400 font-medium text-sm">Contrast AI data with the live reference on the right.</p>
+                  <h3 className="text-2xl font-black text-slate-800">Technical Verification</h3>
+                  <p className="text-slate-400 font-medium text-sm">Contrast the AI extraction with the screenshot on the right.</p>
                 </div>
                 <div className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                   AI Certainty: {analysisResult.confidence}%
@@ -165,7 +171,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
               </div>
 
               <div className="space-y-10">
-                {/* Section: General */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="md:col-span-2">
                     <FormField label="Property Title" type="text" value={editedData.title} onChange={(val:any) => setEditedData({...editedData, title: val})} icon={Home} />
@@ -174,23 +179,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   <FormField label="Neighborhood/City" type="text" value={editedData.location} onChange={(val:any) => setEditedData({...editedData, location: val})} icon={Maximize} />
                 </div>
 
-                {/* Section: Financials */}
                 <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormField label="Listing Price" prefix="€" value={editedData.price} onChange={(val:any) => setEditedData({...editedData, price: val})} icon={Euro} />
-                  <FormField label="Monthly Fees / Expensas" prefix="€" value={editedData.fees} onChange={(val:any) => setEditedData({...editedData, fees: val})} icon={ShieldCheck} />
+                  <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(val:any) => setEditedData({...editedData, fees: val})} icon={ShieldCheck} />
                 </div>
 
-                {/* Section: Surfaces & Age */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <FormField label="Total m²" value={editedData.sqft} onChange={(val:any) => setEditedData({...editedData, sqft: val})} icon={Ruler} />
                   <FormField label="Covered m²" value={editedData.coveredSqft} onChange={(val:any) => setEditedData({...editedData, coveredSqft: val})} icon={Layers} />
                   <FormField label="Uncovered m²" value={editedData.uncoveredSqft} onChange={(val:any) => setEditedData({...editedData, uncoveredSqft: val})} icon={ChevronRight} />
-                  <FormField label="Antigüedad (Years)" value={editedData.age} onChange={(val:any) => setEditedData({...editedData, age: val})} icon={History} />
+                  <FormField label="Age (Years)" value={editedData.age} onChange={(val:any) => setEditedData({...editedData, age: val})} icon={History} />
                 </div>
 
-                {/* Section: Features */}
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <FormField label="Ambientes" value={editedData.environments} onChange={(val:any) => setEditedData({...editedData, environments: val})} />
+                  <FormField label="Environments" value={editedData.environments} onChange={(val:any) => setEditedData({...editedData, environments: val})} />
                   <FormField label="Bedrooms" value={editedData.rooms} onChange={(val:any) => setEditedData({...editedData, rooms: val})} />
                   <FormField label="Baths" value={editedData.bathrooms} onChange={(val:any) => setEditedData({...editedData, bathrooms: val})} />
                   <FormField label="Toilets" value={editedData.toilets} onChange={(val:any) => setEditedData({...editedData, toilets: val})} />
@@ -204,7 +206,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   className="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <CheckCircle2 className="w-6 h-6" />
-                  SAVE VALIDATED DATA
+                  SAVE VALIDATED SHEET
                 </button>
                 <button
                   onClick={() => setAnalysisResult(null)}
@@ -216,20 +218,25 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             </div>
           </div>
 
-          {/* RIGHT: Reference & Strategy */}
+          {/* RIGHT: Source Inspector */}
           <div className="xl:col-span-4 space-y-6">
-            {/* Live Reference */}
             <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[600px] flex flex-col">
               <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
                 <div className="flex gap-2">
-                  <button onClick={() => setActiveRefTab('preview')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'preview' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Preview</button>
+                  <button onClick={() => setActiveRefTab('preview')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'preview' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Screenshot</button>
                   <button onClick={() => setActiveRefTab('source')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest ${activeRefTab === 'source' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'}`}>Source</button>
                 </div>
                 {isUrl && <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg"><ExternalLink className="w-4 h-4" /></a>}
               </div>
               <div className="flex-1 overflow-hidden relative">
                 {activeRefTab === 'preview' && isUrl ? (
-                  <iframe src={input} className="w-full h-full border-none grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700" title="Property Ref" />
+                  <div className="w-full h-full p-4 overflow-hidden">
+                    <img 
+                      src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`} 
+                      className="w-full h-full object-contain rounded-xl grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all duration-700 cursor-zoom-in" 
+                      alt="Source Screenshot" 
+                    />
+                  </div>
                 ) : (
                   <div className="p-8 font-mono text-xs text-indigo-300/60 leading-relaxed whitespace-pre-wrap overflow-y-auto h-full">
                     {input}
@@ -239,7 +246,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
               </div>
             </div>
 
-            {/* AI Verdict */}
             <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl">
                <div className="flex justify-between items-center mb-6">
                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Verdict</p>
