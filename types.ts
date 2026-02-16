@@ -1,21 +1,19 @@
 
-export const PropertyStatus = {
-  WISHLIST: 'Wishlist',
-  CONTACTED: 'Contacted',
-  VISITED: 'Visited',
-  OFFERED: 'Offered',
-  DISCARDED: 'Discarded'
-} as const;
+// PropertyStatus enum used for tracking the lifecycle of a real estate lead
+export enum PropertyStatus {
+  WISHLIST = 'Wishlist',
+  CONTACTED = 'Contacted',
+  VISITED = 'Visited',
+  OFFERED = 'Offered',
+  DISCARDED = 'Discarded'
+}
 
-export type PropertyStatus = typeof PropertyStatus[keyof typeof PropertyStatus];
-
-export const UserRole = {
-  BUYER: 'Buyer',
-  ARCHITECT: 'Architect',
-  CONTRACTOR: 'Contractor'
-} as const;
-
-export type UserRole = typeof UserRole[keyof typeof UserRole];
+// UserRole enum defining permissions and views within the application
+export enum UserRole {
+  BUYER = 'Buyer',
+  ARCHITECT = 'Architect',
+  CONTRACTOR = 'Contractor'
+}
 
 export interface RenovationItem {
   id: string;

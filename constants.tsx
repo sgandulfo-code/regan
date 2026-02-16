@@ -17,7 +17,7 @@ import {
   MoreVertical,
   Star
 } from 'lucide-react';
-import { Property, PropertyStatus, User, UserRole } from './types';
+import { Property, User } from './types';
 
 export const ICONS = {
   Home: <Home className="w-5 h-5" />,
@@ -47,7 +47,7 @@ export const MOCK_PROPERTIES: Property[] = [
     rooms: 3,
     bathrooms: 2,
     sqft: 95,
-    status: PropertyStatus.VISITED,
+    status: 'Visited',
     rating: 4,
     notes: 'Great views, needs bathroom updates.',
     renovationCosts: [
@@ -66,7 +66,7 @@ export const MOCK_PROPERTIES: Property[] = [
     rooms: 2,
     bathrooms: 1,
     sqft: 110,
-    status: PropertyStatus.WISHLIST,
+    status: 'Wishlist',
     rating: 5,
     notes: 'Incredible space but high community fees.',
     renovationCosts: [
@@ -80,6 +80,6 @@ export const MOCK_PROPERTIES: Property[] = [
 export const MOCK_USER: User = {
   id: 'u1',
   name: 'Alejandro Buyer',
-  role: UserRole.BUYER,
+  role: 'Buyer',
   email: 'ale@example.com'
 };

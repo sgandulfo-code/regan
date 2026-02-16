@@ -11,6 +11,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatusChange, isEditable = true }) => {
+  // Use PropertyStatus enum members as runtime values for switch logic
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -99,7 +100,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
               value={property.status}
               onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
             >
-              {Object.values(PropertyStatus).map(s => <option key={s} value={s}>{s}</option>)}
+              {/* Cast Object.values to string[] to ensure runtime iteration and valid React child types */}
+              {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           ) : (
             <div className="flex-1 bg-slate-50 rounded-xl text-[10px] font-bold text-slate-400 py-3 px-4 text-center border border-slate-100 uppercase tracking-widest">

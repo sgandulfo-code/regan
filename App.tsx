@@ -1,24 +1,22 @@
 
 import React, { useState } from 'react';
-import { Plus, Shield, User as UserIcon } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
-import { Property, PropertyStatus, UserRole, User } from './types';
+import { Property, PropertyStatus, UserRole, User, RenovationItem } from './types';
 import { MOCK_PROPERTIES, ICONS, MOCK_USER } from './constants';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  
-  // Current session user simulation
   const [currentUser, setCurrentUser] = useState<User>(MOCK_USER);
 
   const handleAddProperty = (prop: Property) => {
-    if (currentUser.role !== UserRole.BUYER) {
+    if (currentUser.role !== 'Buyer') {
       alert("Only a Buyer can add new properties to the database.");
       return;
     }
@@ -27,15 +25,14 @@ const App: React.FC = () => {
   };
 
   const handleUpdateStatus = (id: string, status: PropertyStatus) => {
-    if (currentUser.role !== UserRole.BUYER) {
+    if (currentUser.role !== 'Buyer') {
       alert("Only the Buyer (Owner) can change the property status.");
       return;
     }
     setProperties(properties.map(p => p.id === id ? { ...p, status } : p));
   };
 
-  const handleUpdateRenovation = (id: string, items: any[]) => {
-    // Both Buyer and Architect can update renovations
+  const handleUpdateRenovation = (id: string, items: RenovationItem[]) => {
     setProperties(properties.map(p => p.id === id ? { ...p, renovationCosts: items } : p));
     if (selectedProperty?.id === id) {
       setSelectedProperty(prev => prev ? { ...prev, renovationCosts: items } : null);
@@ -43,11 +40,11 @@ const App: React.FC = () => {
   };
 
   const switchRole = () => {
-    const nextRole = currentUser.role === UserRole.BUYER ? UserRole.ARCHITECT : UserRole.BUYER;
+    const nextRole: UserRole = currentUser.role === 'Buyer' ? 'Architect' : 'Buyer';
     setCurrentUser({
       ...currentUser,
       role: nextRole,
-      name: nextRole === UserRole.ARCHITECT ? "Maria Architect" : "Alejandro Buyer"
+      name: nextRole === 'Architect' ? "Maria Architect" : "Alejandro Buyer"
     });
   };
 
@@ -61,12 +58,12 @@ const App: React.FC = () => {
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-              <span className={`text-xs px-2 py-1 rounded-md border ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
+              <span className={`text-xs px-2 py-1 rounded-md border ${currentUser.role === 'Architect' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-indigo-50 border-indigo-200 text-indigo-600'}`}>
                 {currentUser.role} View
               </span>
             </h1>
             <p className="text-slate-500">
-              {currentUser.role === UserRole.BUYER 
+              {currentUser.role === 'Buyer' 
                 ? "Managing your real estate acquisitions." 
                 : "Providing technical expertise for Alejandro's search."}
             </p>
@@ -82,7 +79,7 @@ const App: React.FC = () => {
               Switch Role
             </button>
             <div className="flex items-center gap-2 bg-white border border-slate-200 py-1 pl-1 pr-3 rounded-xl shadow-sm">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-500' : 'bg-indigo-600'}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold ${currentUser.role === 'Architect' ? 'bg-orange-500' : 'bg-indigo-600'}`}>
                 {currentUser.name.charAt(0)}
               </div>
               <div className="hidden sm:block leading-none">
@@ -126,7 +123,7 @@ const App: React.FC = () => {
                         property={p} 
                         onSelect={setSelectedProperty} 
                         onStatusChange={handleUpdateStatus} 
-                        isEditable={currentUser.role === UserRole.BUYER}
+                        isEditable={currentUser.role === 'Buyer'}
                       />
                     ))}
                   </div>
@@ -160,7 +157,7 @@ const App: React.FC = () => {
 
           {activeTab === 'search' && (
             <div className="max-w-4xl mx-auto">
-              {currentUser.role === UserRole.BUYER ? (
+              {currentUser.role === 'Buyer' ? (
                 <PropertyForm onAdd={handleAddProperty} />
               ) : (
                 <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
@@ -180,7 +177,7 @@ const App: React.FC = () => {
                   property={p} 
                   onSelect={setSelectedProperty} 
                   onStatusChange={handleUpdateStatus}
-                  isEditable={currentUser.role === UserRole.BUYER}
+                  isEditable={currentUser.role === 'Buyer'}
                 />
               ))}
             </div>
