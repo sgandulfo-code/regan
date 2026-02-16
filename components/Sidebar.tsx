@@ -2,7 +2,7 @@
 import React from 'react';
 import { ICONS } from '../constants';
 import { UserRole, SearchFolder } from '../types';
-import { FolderIcon, Plus } from 'lucide-react';
+import { FolderIcon, Plus, LogOut } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -11,6 +11,7 @@ interface SidebarProps {
   folders: SearchFolder[];
   activeFolderId: string | null;
   setActiveFolderId: (id: string | null) => void;
+  onLogout: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -19,7 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   userRole = UserRole.BUYER,
   folders,
   activeFolderId,
-  setActiveFolderId
+  setActiveFolderId,
+  onLogout
 }) => {
   const menuItems = [
     { id: 'dashboard', label: 'My Searches', icon: ICONS.Folder },
@@ -87,11 +89,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </nav>
 
-      <div className="p-4 border-t border-slate-100 hidden md:block">
-        <div className={`rounded-2xl p-4 shadow-sm border ${userRole === UserRole.ARCHITECT ? 'bg-orange-50 border-orange-100' : 'bg-slate-900 border-slate-800'}`}>
-          <p className={`text-[10px] uppercase font-bold tracking-widest mb-1 ${userRole === UserRole.ARCHITECT ? 'text-orange-400' : 'text-slate-500'}`}>Session Mode</p>
-          <p className={`font-bold ${userRole === UserRole.ARCHITECT ? 'text-orange-900' : 'text-white'}`}>{userRole}</p>
+      <div className="p-4 border-t border-slate-100 hidden md:block space-y-4">
+        <div className={`rounded-2xl p-4 shadow-sm border ${userRole === UserRole.ARCHITECT ? 'bg-orange-50 border-orange-100' : userRole === UserRole.CONTRACTOR ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-900 border-slate-800'}`}>
+          <p className={`text-[10px] uppercase font-bold tracking-widest mb-1 ${userRole === UserRole.ARCHITECT ? 'text-orange-400' : userRole === UserRole.CONTRACTOR ? 'text-emerald-500' : 'text-slate-500'}`}>Session Mode</p>
+          <p className={`font-bold ${userRole === UserRole.ARCHITECT ? 'text-orange-900' : userRole === UserRole.CONTRACTOR ? 'text-emerald-900' : 'text-white'}`}>{userRole}</p>
         </div>
+        
+        <button 
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-bold text-sm"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out</span>
+        </button>
       </div>
     </aside>
   );

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -8,18 +8,37 @@ import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
 import FolderFormModal from './components/FolderFormModal';
 import PropertyMapView from './components/PropertyMapView';
+import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
-import { MOCK_PROPERTIES, ICONS, MOCK_USER, MOCK_FOLDERS } from './constants';
+import { MOCK_PROPERTIES, ICONS, MOCK_FOLDERS } from './constants';
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [folders, setFolders] = useState<SearchFolder[]>(MOCK_FOLDERS);
   const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [currentUser, setCurrentUser] = useState<User>(MOCK_USER);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+
+  // Check for existing session
+  useEffect(() => {
+    const savedSession = localStorage.getItem('propbrain_session');
+    if (savedSession) {
+      setUser(JSON.parse(savedSession));
+    }
+  }, []);
+
+  const handleLogin = (loggedUser: User) => {
+    setUser(loggedUser);
+    localStorage.setItem('propbrain_session', JSON.stringify(loggedUser));
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('propbrain_session');
+  };
 
   const filteredProperties = useMemo(() => {
     if (!activeFolderId) return properties;
@@ -31,7 +50,7 @@ const App: React.FC = () => {
   [folders, activeFolderId]);
 
   const handleAddProperty = (prop: Property) => {
-    if (currentUser.role !== UserRole.BUYER) {
+    if (user?.role !== UserRole.BUYER) {
       alert("Only a Buyer can add new properties.");
       return;
     }
@@ -43,7 +62,7 @@ const App: React.FC = () => {
   };
 
   const handleUpdateStatus = (id: string, status: PropertyStatus) => {
-    if (currentUser.role !== UserRole.BUYER) {
+    if (user?.role !== UserRole.BUYER) {
       alert("Only the Buyer (Owner) can change the property status.");
       return;
     }
@@ -55,15 +74,6 @@ const App: React.FC = () => {
     if (selectedProperty?.id === id) {
       setSelectedProperty(prev => prev ? { ...prev, renovationCosts: items } : null);
     }
-  };
-
-  const switchRole = () => {
-    const nextRole: UserRole = currentUser.role === UserRole.BUYER ? UserRole.ARCHITECT : UserRole.BUYER;
-    setCurrentUser({
-      ...currentUser,
-      role: nextRole,
-      name: nextRole === UserRole.ARCHITECT ? "Maria Architect" : "Alejandro Buyer"
-    });
   };
 
   const handleCreateFolder = (data: { name: string, description: string }) => {
@@ -80,6 +90,10 @@ const App: React.FC = () => {
     setActiveTab('properties');
     setIsFolderModalOpen(false);
   };
+
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
 
   const DetailItem = ({ label, value, icon: Icon }: any) => (
     <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 hover:border-indigo-100 transition-colors">
@@ -98,10 +112,11 @@ const App: React.FC = () => {
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        userRole={currentUser.role} 
+        userRole={user.role} 
         folders={folders}
         activeFolderId={activeFolderId}
         setActiveFolderId={setActiveFolderId}
+        onLogout={handleLogout}
       />
       
       <main className="flex-1 p-4 md:p-10 overflow-y-auto">
@@ -127,20 +142,13 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4 animate-in slide-in-from-right duration-500">
-            <button 
-              onClick={switchRole}
-              className="group flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 hover:border-orange-200 hover:bg-orange-50 transition-all shadow-sm"
-            >
-              <Shield className="w-4 h-4 text-orange-500 group-hover:scale-125 transition-transform" />
-              Switch Role
-            </button>
             <div className="flex items-center gap-3 bg-white border border-slate-200 p-1.5 pr-5 rounded-2xl shadow-sm">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black ${currentUser.role === UserRole.ARCHITECT ? 'bg-orange-500' : 'bg-indigo-600'}`}>
-                {currentUser.name.charAt(0)}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black ${user.role === UserRole.ARCHITECT ? 'bg-orange-500' : user.role === UserRole.CONTRACTOR ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
+                {user.name.charAt(0)}
               </div>
               <div className="hidden sm:block leading-none">
-                <p className="text-sm font-black text-slate-800">{currentUser.name}</p>
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{currentUser.role}</p>
+                <p className="text-sm font-black text-slate-800">{user.name}</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{user.role}</p>
               </div>
             </div>
           </div>
@@ -201,7 +209,7 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {activeTab === 'search' && (
             <div className="max-w-5xl mx-auto">
-              {currentUser.role === UserRole.BUYER ? (
+              {user.role === UserRole.BUYER ? (
                 <div className="space-y-6">
                   <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 flex items-center justify-between">
                      <div className="flex items-center gap-3">
@@ -215,8 +223,8 @@ const App: React.FC = () => {
               ) : (
                 <div className="bg-white rounded-[3rem] border border-slate-200 p-20 text-center shadow-sm">
                   <Shield className="w-20 h-20 text-slate-200 mx-auto mb-6" />
-                  <h2 className="text-2xl font-black text-slate-800 mb-2">Architect Access Only</h2>
-                  <p className="text-slate-400 max-w-sm mx-auto">Architects cannot add new properties to the database. Please request the Buyer to add new leads.</p>
+                  <h2 className="text-2xl font-black text-slate-800 mb-2">{user.role} Access Restricted</h2>
+                  <p className="text-slate-400 max-w-sm mx-auto">Only Buyers can add new properties to the database. Please request a Buyer to add new leads.</p>
                 </div>
               )}
             </div>
@@ -254,7 +262,9 @@ const App: React.FC = () => {
                    </div>
                    <h2 className="text-2xl font-black text-slate-800 mb-2">No properties here yet</h2>
                    <p className="text-slate-400 mb-8 max-w-xs mx-auto">Start by using Smart Search to extract your first property data from an advertisement.</p>
-                   <button onClick={() => setActiveTab('search')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black hover:bg-indigo-700 shadow-xl transition-all">Go to Smart Search</button>
+                   {user.role === UserRole.BUYER && (
+                     <button onClick={() => setActiveTab('search')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black hover:bg-indigo-700 shadow-xl transition-all">Go to Smart Search</button>
+                   )}
                 </div>
               ) : (
                 <>
@@ -266,7 +276,7 @@ const App: React.FC = () => {
                           property={p} 
                           onSelect={setSelectedProperty} 
                           onStatusChange={handleUpdateStatus}
-                          isEditable={currentUser.role === UserRole.BUYER}
+                          isEditable={user.role === UserRole.BUYER}
                         />
                       ))}
                     </div>
@@ -289,7 +299,7 @@ const App: React.FC = () => {
                   <RenovationCalculator 
                     key={p.id} 
                     property={p} 
-                    userRole={currentUser.role}
+                    userRole={user.role}
                     onUpdate={(items) => handleUpdateRenovation(p.id, items)} 
                   />
                 ))}
@@ -363,7 +373,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="space-y-10">
-                <RenovationCalculator property={selectedProperty} userRole={currentUser.role} onUpdate={(items) => handleUpdateRenovation(selectedProperty.id, items)} />
+                <RenovationCalculator property={selectedProperty} userRole={user.role} onUpdate={(items) => handleUpdateRenovation(selectedProperty.id, items)} />
               </div>
             </div>
           </div>
