@@ -146,5 +146,32 @@ export const dataService = {
     let query = supabase.from('link_inbox').delete().eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
     await query;
+  },
+
+  // External Scraper Simulation (Fetch Metadata via Proxy)
+  async fetchExternalMetadata(url: string) {
+    try {
+      // Usamos un proxy público de metadatos como "fallback" externo
+      const response = await fetch(`https://api.peekalink.io/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ link: url })
+      }).catch(() => null);
+
+      // Si falla peekalink, usamos allorigins para parsear el título
+      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      const html = data.contents;
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      
+      return {
+        title: doc.querySelector('title')?.innerText || '',
+        image: doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || null,
+        description: doc.querySelector('meta[name="description"]')?.getAttribute('content') || ''
+      };
+    } catch (e) {
+      console.error("External Metadata Fetch Failed", e);
+      return null;
+    }
   }
 };

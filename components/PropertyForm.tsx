@@ -48,7 +48,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   useEffect(() => {
     if (analysisResult && !analysisResult.error) {
       setEditedData({
-        title: analysisResult.title || '',
+        title: analysisResult.title || editedData.title || '',
         price: analysisResult.price || 0,
         fees: analysisResult.fees || 0,
         location: analysisResult.location || '',
@@ -102,20 +102,33 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       } else {
         setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
         setMode('manual');
-        switchToManual(link.url);
+        await switchToManual(link.url);
       }
       setIsAnalyzing(false);
     } else {
-      switchToManual(link.url);
+      await switchToManual(link.url);
     }
   };
 
-  const switchToManual = (url: string) => {
+  const switchToManual = async (url: string) => {
+    setIsAnalyzing(true); // Reusamos el loader para el fetch de metadatos externo
+    const meta = await dataService.fetchExternalMetadata(url);
+    
     setAnalysisResult({ 
-      title: '', price: 0, confidence: 1, dealScore: 50, 
-      analysis: { strategy: 'Manual audit based on live reference.' }, sources: []
+      title: meta?.title || '', 
+      price: 0, 
+      confidence: 1, 
+      dealScore: 50, 
+      analysis: { strategy: 'Manual audit based on live reference.' }, 
+      sources: []
     });
+    
+    if (meta?.title) {
+       setEditedData(prev => ({ ...prev, title: meta.title }));
+    }
+    
     setStep('verify');
+    setIsAnalyzing(false);
   };
 
   const handleConfirm = async () => {
@@ -135,7 +148,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       createdAt: new Date().toISOString(),
     });
 
-    // Solo eliminamos del inbox tras confirmar el guardado exitoso
     await dataService.removeInboxLink(processingLink.id);
     await fetchInbox();
     resetProcessing();
@@ -147,6 +159,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAnalysisResult(null);
     setStep('inbox');
     setErrorStatus(null);
+    setEditedData({
+      title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
+    });
   };
 
   const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => (
@@ -303,7 +318,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               {isAnalyzing ? (
                 <div className="py-20 text-center space-y-4">
                   <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Neural AI is parsing listing data...</p>
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+                    {mode === 'ai' ? 'Neural AI is parsing listing data...' : 'Fetching external portal metadata...'}
+                  </p>
                 </div>
               ) : (
                 <>
