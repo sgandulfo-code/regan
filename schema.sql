@@ -1,44 +1,54 @@
 
--- PropBrain Database Schema (Supabase) - Private Multi-tenant Version
--- Ejecuta este script en el SQL Editor de Supabase para inicializar o resetear la base de datos.
+-- PropBrain Database Schema (Supabase) - CLEAN INSTALL
+-- Instrucciones: Borra todo lo que tengas en el SQL Editor de Supabase, pega esto y dale a "Run".
 
--- 0. EXTENSIONS
+-- 0. LIMPIEZA (Borra tablas anteriores para evitar el error de "columna no existe")
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP TABLE IF EXISTS renovations CASCADE;
+DROP TABLE IF EXISTS link_inbox CASCADE;
+DROP TABLE IF EXISTS properties CASCADE;
+DROP TABLE IF EXISTS folders CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
+-- 1. EXTENSIONES
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. ENUMS
+-- 2. TIPOS ENUM (Si fallan porque ya existen, se ignora el error)
 DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+        CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_status') THEN
+        CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offered', 'Discarded');
+    END IF;
+END $$;
 
-DO $$ BEGIN
-    CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offered', 'Discarded');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+-- 3. TABLAS
 
--- 2. TABLES
-
--- Profiles table
-CREATE TABLE IF NOT EXISTS profiles (
-  id UUID PRIMARY KEY,
+-- Perfiles de usuario
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   role user_role DEFAULT 'Buyer'::user_role,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Folders table
-CREATE TABLE IF NOT EXISTS folders (
+-- Carpetas de búsqueda
+CREATE TABLE folders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL, -- Propiedad del usuario
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   color TEXT DEFAULT 'bg-indigo-600',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Properties table
-CREATE TABLE IF NOT EXISTS properties (
+-- Propiedades
+CREATE TABLE properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL, -- Propiedad del usuario
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   folder_id UUID REFERENCES folders(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   url TEXT,
@@ -63,8 +73,8 @@ CREATE TABLE IF NOT EXISTS properties (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Renovations table
-CREATE TABLE IF NOT EXISTS renovations (
+-- Renovaciones
+CREATE TABLE renovations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
   author_id UUID REFERENCES profiles(id) NOT NULL,
@@ -74,8 +84,8 @@ CREATE TABLE IF NOT EXISTS renovations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Link Inbox table
-CREATE TABLE IF NOT EXISTS link_inbox (
+-- Inbox de Enlaces
+CREATE TABLE link_inbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
@@ -83,27 +93,33 @@ CREATE TABLE IF NOT EXISTS link_inbox (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. RLS POLICIES (Seguridad por usuario)
+-- 4. SEGURIDAD (Row Level Security - RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE renovations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE link_inbox ENABLE ROW LEVEL SECURITY;
 
--- Solo el propio usuario puede ver/editar su perfil
-CREATE POLICY "Users can manage their own profile" ON profiles FOR ALL USING (auth.uid() = id);
-
--- Cada usuario solo ve sus propias carpetas
-CREATE POLICY "Users can manage their own folders" ON folders FOR ALL USING (auth.uid() = user_id);
-
--- Cada usuario solo ve sus propias propiedades
-CREATE POLICY "Users can manage their own properties" ON properties FOR ALL USING (auth.uid() = user_id);
-
--- Solo el autor o el dueño de la propiedad pueden ver renovaciones
-CREATE POLICY "Users can manage renovations" ON renovations FOR ALL USING (
+-- Políticas de Privacidad
+CREATE POLICY "Profiles are private" ON profiles FOR ALL USING (auth.uid() = id);
+CREATE POLICY "Folders are private" ON folders FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Properties are private" ON properties FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Inbox is private" ON link_inbox FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Renovations are private/collaborative" ON renovations FOR ALL USING (
   auth.uid() = author_id OR 
   EXISTS (SELECT 1 FROM properties WHERE id = property_id AND user_id = auth.uid())
 );
 
--- Cada usuario solo ve sus propios links en el inbox
-CREATE POLICY "Users can manage their own inbox" ON link_inbox FOR ALL USING (auth.uid() = user_id);
+-- 5. TRIGGER PARA PERFIL AUTOMÁTICO
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, email, role)
+  VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', new.email), new.email, 'Buyer');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();

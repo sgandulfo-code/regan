@@ -77,7 +77,7 @@ const App: React.FC = () => {
     if (newFolder) {
       await loadInitialData();
       setActiveFolderId(newFolder.id);
-      setActiveTab('search');
+      setActiveTab('properties');
     }
     setIsFolderModalOpen(false);
     setIsSyncing(false);
@@ -93,6 +93,12 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  // Obtener la carpeta activa para mostrar su info en el header
+  const activeFolder = useMemo(() => 
+    folders.find(f => f.id === activeFolderId), 
+    [folders, activeFolderId]
+  );
+
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
 
@@ -100,28 +106,83 @@ const App: React.FC = () => {
     <div className="flex min-h-screen bg-slate-50">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user.role} folders={folders} activeFolderId={activeFolderId} setActiveFolderId={setActiveFolderId} onLogout={() => supabase.auth.signOut()} isSyncing={isSyncing} />
       <main className="flex-1 p-10 overflow-y-auto">
-        <header className="mb-10 flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">{folders.find(f => f.id === activeFolderId)?.name || 'Dashboard'}</h1>
-            <p className="text-slate-500 font-medium">Neural Real Estate Brain</p>
+        <header className="mb-10 flex justify-between items-start">
+          <div className="max-w-3xl">
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+              {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Mis Búsquedas' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+            </h1>
+            <p className="text-slate-500 font-medium mt-1">
+              {activeFolder ? activeFolder.description : 'Plataforma inteligente para compradores de propiedades'}
+            </p>
           </div>
-          <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">{user.name[0]}</div><span className="text-sm font-bold pr-2">{user.name}</span></div>
+          <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
+              {user.name[0]}
+            </div>
+            <span className="text-sm font-bold pr-2">{user.name}</span>
+          </div>
         </header>
+
         {activeTab === 'dashboard' && !activeFolderId && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {folders.map(f => (
-              <button key={f.id} onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} className="bg-white p-8 rounded-[2rem] border hover:shadow-xl transition-all text-left">
-                <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg`}></div><h3 className="text-xl font-black mb-2">{f.name}</h3><p className="text-sm text-slate-400 font-medium mb-4">{f.description}</p>
-                <div className="pt-4 border-t flex justify-between"><span className="text-xs font-black uppercase text-slate-300">{properties.filter(p => p.folderId === f.id).length} Props</span><ArrowRight className="w-4 h-4 text-indigo-600" /></div>
+              <button 
+                key={f.id} 
+                onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
+                className="bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group"
+              >
+                <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
+                <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed">
+                  {f.description || 'Sin descripción definida'}
+                </p>
+                <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                    {properties.filter(p => p.folderId === f.id).length} Propiedades
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
+                </div>
               </button>
             ))}
-            <button onClick={() => setIsFolderModalOpen(true)} className="border-2 border-dashed rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 transition-all"><Plus className="w-8 h-8 mb-2" /><span className="text-xs font-black uppercase">New Search Folder</span></button>
+            <button 
+              onClick={() => setIsFolderModalOpen(true)} 
+              className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[220px]"
+            >
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                <Plus className="w-6 h-6" />
+              </div>
+              <span className="text-xs font-black uppercase tracking-widest">Nueva Búsqueda</span>
+            </button>
           </div>
         )}
+
         {activeTab === 'search' && <PropertyForm onAdd={handleAddProperty} userId={user.id} activeFolderId={activeFolderId} />}
+        
         {activeTab === 'properties' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">{properties.filter(p => p.folderId === activeFolderId).map(p => <PropertyCard key={p.id} property={p} onSelect={setSelectedProperty} onStatusChange={(id, s) => dataService.updatePropertyStatus(id, s)} />)}</div>
+            {properties.filter(p => p.folderId === activeFolderId).length === 0 ? (
+              <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Home className="w-10 h-10 text-slate-300" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Aún no hay propiedades aquí</h3>
+                <p className="text-slate-400 mb-8 max-w-sm mx-auto">Comienza a buscar propiedades o agrégalas manualmente usando la búsqueda inteligente.</p>
+                <button 
+                  onClick={() => setActiveTab('search')}
+                  className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
+                >
+                  Agregar Propiedad
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.filter(p => p.folderId === activeFolderId).map(p => (
+                  <PropertyCard key={p.id} property={p} onSelect={setSelectedProperty} onStatusChange={(id, s) => dataService.updatePropertyStatus(id, s)} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>
