@@ -5,20 +5,20 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const parseSemanticSearch = async (description: string) => {
   try {
-    // Usamos googleSearch para que el modelo visite la URL y extraiga datos reales
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `You are a high-precision real estate analyst. 
-      TASK: Extract all technical specifications from this property: "${description}".
+      contents: `You are a high-precision real estate technical analyst. 
+      TASK: Visit this URL or analyze this description: "${description}" and extract ALL possible technical specifications.
       
-      RULES:
-      1. Visit the provided URL if available.
-      2. Extract EXACT numbers.
-      3. "environments" = Living + Bedrooms.
-      4. "rooms" = Bedrooms only.
-      5. "fees" = Monthly community costs.
+      CRITICAL RULES:
+      1. Use Google Search to find the EXACT listing if a URL is provided.
+      2. Extract EXACT numbers for price, sqft, rooms, and fees.
+      3. "environments" = Total number of main spaces (Living + Bedrooms).
+      4. "rooms" = Total number of Bedrooms only.
+      5. "fees" = Monthly community costs/expensas (approximate if not exact).
+      6. "confidence" = Score from 0.0 to 1.0 based on how sure you are of the data.
       
-      If data is missing, return 0. Use grounding to provide sources.`,
+      If any data point is absolutely not found, return 0 or empty string. Do not invent data.`,
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
@@ -56,9 +56,9 @@ export const parseSemanticSearch = async (description: string) => {
       }
     });
 
-    const parsed = JSON.parse(response.text || '{}');
+    const text = response.text || '{}';
+    const parsed = JSON.parse(text);
     
-    // Adjuntamos las fuentes (grounding) para que el usuario pueda validar
     return {
       ...parsed,
       sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
