@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler, Info, Map as MapIcon, Image as ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler, Info, Map as MapIcon, Image as ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 
@@ -15,7 +15,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
-  const [activeRefTab, setActiveRefTab] = useState<'screenshot' | 'map'>('screenshot');
+  const [activeRefTab, setActiveRefTab] = useState<'live' | 'map'>('live');
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   
   const [editedData, setEditedData] = useState<any>({
@@ -74,7 +74,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleSelectPendingLink = (link: string) => {
     setInput(link);
     setPendingLinks(prev => prev.filter(l => l !== link));
-    // Trigger analysis automatically
     handleAnalyzeWithInput(link);
   };
 
@@ -95,7 +94,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
       setAnalysisResult(null);
     } else if (result) {
       setAnalysisResult(result);
-      setActiveRefTab(trimmedInput.startsWith('http') ? 'screenshot' : 'map');
+      setActiveRefTab(trimmedInput.startsWith('http') ? 'live' : 'map');
     } else {
       setErrorStatus('Could not parse property. Check the URL/Text and try again.');
     }
@@ -304,12 +303,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
 
       {analysisResult && (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 duration-500">
-          <div className="xl:col-span-7 space-y-6">
+          <div className="xl:col-span-6 space-y-6">
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800">Technical Data Validation</h3>
-                  <p className="text-slate-400 font-medium text-sm">Verify extracted fields before saving to folder.</p>
+                  <h3 className="text-2xl font-black text-slate-800">Validation Panel</h3>
+                  <p className="text-slate-400 font-medium text-sm">Compare AI data with the source on the right.</p>
                 </div>
                 <div className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                   AI Certainty: {analysisResult.confidence}%
@@ -352,7 +351,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   className="flex-1 bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg hover:bg-indigo-700 shadow-xl transition-all flex items-center justify-center gap-3"
                 >
                   <CheckCircle2 className="w-6 h-6" />
-                  SAVE VALIDATED SHEET
+                  CONFIRM & SAVE
                 </button>
                 <button
                   onClick={() => setAnalysisResult(null)}
@@ -364,42 +363,57 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             </div>
           </div>
 
-          <div className="xl:col-span-5 space-y-6">
-            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[650px] flex flex-col">
+          <div className="xl:col-span-6 space-y-6">
+            <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[750px] flex flex-col">
               <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => setActiveRefTab('screenshot')} 
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'screenshot' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    onClick={() => setActiveRefTab('live')} 
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                   >
-                    <ImageIcon className="w-3 h-3" /> Ad Evidence
+                    <Monitor className="w-3 h-3" /> Live Source View
                   </button>
                   <button 
                     onClick={() => setActiveRefTab('map')} 
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'map' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                   >
-                    <MapIcon className="w-3 h-3" /> Spatial Check
+                    <MapIcon className="w-3 h-3" /> Satellite Check
                   </button>
                 </div>
-                {input.trim().startsWith('http') && (
-                  <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg transition-colors">
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
+                <div className="flex items-center gap-2">
+                  {input.trim().startsWith('http') && (
+                    <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg transition-colors flex items-center gap-2 text-[10px] font-black uppercase">
+                      Open in New Tab <ExternalLink className="w-3 h-3" />
+                    </a>
+                  )}
+                </div>
               </div>
               
-              <div className="flex-1 overflow-hidden relative">
-                {activeRefTab === 'screenshot' && input.trim().startsWith('http') ? (
-                  <div className="w-full h-full p-4 overflow-hidden flex items-center justify-center bg-slate-800">
-                    <img 
-                      src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200`} 
-                      className="max-w-full max-h-full object-contain rounded-xl shadow-2xl" 
-                      alt="Website Preview" 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://placehold.co/1200x800/1e293b/6366f1?text=Preview+Pending...';
-                      }}
-                    />
-                  </div>
+              <div className="flex-1 overflow-hidden relative bg-slate-800">
+                {activeRefTab === 'live' ? (
+                  input.trim().startsWith('http') ? (
+                    <div className="w-full h-full relative group">
+                      <iframe 
+                        src={input.trim()}
+                        className="w-full h-full border-none bg-white"
+                        title="Source Preview"
+                      />
+                      {/* Overlay for sites that block iframes */}
+                      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-white/10 text-center max-w-xs">
+                          <AlertOctagon className="w-10 h-10 text-amber-500 mx-auto mb-4" />
+                          <p className="text-white font-bold text-sm">Site blocks embedded view?</p>
+                          <p className="text-slate-400 text-[10px] mt-2 leading-relaxed">Some portals like Idealista or Zillow block iframes. Use the button above to open the original link.</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-12 text-center">
+                      <ImageIcon className="w-16 h-16 mb-4 opacity-20" />
+                      <p className="font-bold">No URL Source Available</p>
+                      <p className="text-xs opacity-60 mt-2">Analysis was based on plain text description.</p>
+                    </div>
+                  )
                 ) : (
                   <div className="w-full h-full relative">
                     <iframe 
@@ -419,14 +433,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                       <Sparkles className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Verdict</p>
-                      <p className="font-black text-xl">AI Deal Score: {analysisResult.dealScore}/100</p>
+                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">IA Verdict</p>
+                      <p className="font-black text-xl">Deal Score: {analysisResult.dealScore}/100</p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 p-4 bg-white/10 rounded-2xl">
                    <p className="text-xs font-medium italic leading-relaxed opacity-90">
-                    "{analysisResult.analysis?.strategy || 'Analyzing investment potential...'}"
+                    "{analysisResult.analysis?.strategy || 'Reviewing investment potential based on available data...'}"
                    </p>
                 </div>
               </div>
