@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Home, ShieldCheck, CheckCircle2, AlertCircle, ExternalLink, ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2, X, FileSearch, Keyboard, Cpu, RefreshCw, Ruler, Layers } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Home, ShieldCheck, CheckCircle2, AlertCircle, ExternalLink, ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2, X, FileSearch, Keyboard, Cpu, RefreshCw, Ruler, Layers, Plus, Inbox, ClipboardList } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
@@ -11,41 +11,28 @@ interface PropertyFormProps {
   activeFolderId: string | null;
 }
 
-type CreationStep = 'select' | 'input' | 'verify';
-type CreationMode = 'ai' | 'manual';
+type CreationStep = 'inbox' | 'verify';
+type ProcessingMode = 'ai' | 'manual' | null;
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId }) => {
-  const [step, setStep] = useState<CreationStep>('select');
-  const [mode, setMode] = useState<CreationMode>('ai');
-  const [input, setInput] = useState('');
-  const [verificationUrl, setVerificationUrl] = useState('');
-  const [bulkInput, setBulkInput] = useState('');
+  const [step, setStep] = useState<CreationStep>('inbox');
+  const [processingLink, setProcessingLink] = useState<InboxLink | null>(null);
+  const [mode, setMode] = useState<ProcessingMode>(null);
+  const [urlInput, setUrlInput] = useState('');
   const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
+  
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSyncingInbox, setIsSyncingInbox] = useState(false);
-  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('snapshot');
-  const [showBulkAdd, setShowBulkAdd] = useState(false);
-  const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
+  const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotVersion, setSnapshotVersion] = useState(Date.now());
-  
+
   const [editedData, setEditedData] = useState<any>({
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
   });
-
-  // Lista extendida de dominios que bloquean iFrames por X-Frame-Options
-  const isIframeBlocked = (url: string) => {
-    if (!url) return false;
-    const blocked = [
-      'remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 
-      'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 
-      'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21'
-    ];
-    return blocked.some(domain => url.toLowerCase().includes(domain));
-  };
 
   useEffect(() => {
     fetchInbox();
@@ -58,7 +45,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setIsSyncingInbox(false);
   };
 
-  // Al cambiar el resultado de la IA o el modo manual, sincronizar los datos del formulario
   useEffect(() => {
     if (analysisResult && !analysisResult.error) {
       setEditedData({
@@ -81,88 +67,85 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     }
   }, [analysisResult]);
 
-  const handleAddBulkLinks = async () => {
-    const urls = bulkInput.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
+  const handleAddLinks = async () => {
+    const urls = urlInput.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
     if (urls.length > 0) {
       setIsSyncingInbox(true);
       await dataService.addInboxLinks(urls, userId, activeFolderId);
       await fetchInbox();
-      setBulkInput('');
-      setShowBulkAdd(false);
+      setUrlInput('');
       setIsSyncingInbox(false);
     }
   };
 
-  const handleStartCreation = async (targetInput: string) => {
-    const trimmedInput = targetInput.trim();
-    if (!trimmedInput) return;
+  const isIframeBlocked = (url: string) => {
+    if (!url) return false;
+    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21'];
+    return blocked.some(domain => url.toLowerCase().includes(domain));
+  };
 
-    // Seteamos la URL de verificación y decidimos el tab inicial de referencia inmediatamente
-    setVerificationUrl(trimmedInput);
-    if (isIframeBlocked(trimmedInput)) {
-      setActiveRefTab('snapshot');
-    } else {
-      setActiveRefTab('live');
-    }
-    
-    setSnapshotError(false);
+  const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
+    setProcessingLink(link);
+    setMode(selectedMode);
+    setActiveRefTab(isIframeBlocked(link.url) ? 'snapshot' : 'live');
     setSnapshotLoading(true);
+    setSnapshotError(false);
     setSnapshotVersion(Date.now());
 
-    if (mode === 'ai') {
+    if (selectedMode === 'ai') {
       setIsAnalyzing(true);
       setErrorStatus(null);
-      const result = await parseSemanticSearch(trimmedInput);
-      
+      const result = await parseSemanticSearch(link.url);
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
       } else {
-        const errorMsg = result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.';
-        if (window.confirm(`${errorMsg} Do you want to continue with Manual Entry?`)) {
-          setMode('manual');
-          switchToManual();
-        } else {
-          setErrorStatus(errorMsg);
-        }
+        setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
+        setMode('manual');
+        switchToManual(link.url);
       }
       setIsAnalyzing(false);
     } else {
-      switchToManual();
+      switchToManual(link.url);
     }
   };
 
-  const switchToManual = () => {
+  const switchToManual = (url: string) => {
     setAnalysisResult({ 
       title: '', price: 0, confidence: 1, dealScore: 50, 
-      analysis: { strategy: 'Manual technical audit in progress.' }, sources: []
+      analysis: { strategy: 'Manual audit based on live reference.' }, sources: []
     });
     setStep('verify');
   };
 
-  const handleConfirm = () => {
-    if (!analysisResult) return;
+  const handleConfirm = async () => {
+    if (!processingLink || !analysisResult) return;
+    
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
       folderId: activeFolderId || '',
       ...editedData,
-      url: verificationUrl,
+      url: processingLink.url,
       address: editedData.location || 'Unknown Address',
       status: PropertyStatus.WISHLIST,
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
       renovationCosts: [],
-      images: [verificationUrl ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1200` : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'],
+      images: [processingLink.url ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink.url)}?w=1200` : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'],
       createdAt: new Date().toISOString(),
     });
-    resetForm();
+
+    // Solo eliminamos del inbox tras confirmar el guardado exitoso
+    await dataService.removeInboxLink(processingLink.id);
+    await fetchInbox();
+    resetProcessing();
   };
 
-  const resetForm = () => {
+  const resetProcessing = () => {
+    setProcessingLink(null);
+    setMode(null);
     setAnalysisResult(null);
-    setInput('');
-    setVerificationUrl('');
-    setStep('select');
+    setStep('inbox');
     setErrorStatus(null);
   };
 
@@ -182,148 +165,121 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     </div>
   );
 
-  if (step === 'select') {
+  if (step === 'inbox') {
     return (
-      <div className="max-w-5xl mx-auto py-12 animate-in fade-in zoom-in-95 duration-500">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">Add New Property</h2>
-          <p className="text-slate-500 font-medium">Choose your ingestion method for this asset.</p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <button 
-            onClick={() => { setMode('ai'); setStep('input'); }}
-            className="group bg-slate-900 rounded-[3.5rem] p-12 border border-slate-800 text-left hover:shadow-2xl hover:scale-[1.02] transition-all relative overflow-hidden"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-600/10 blur-[80px]"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white mb-8 shadow-xl">
-                <Cpu className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-black text-white mb-2">Neural AI Inspector</h3>
-              <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                Paste a link and let our AI visit the portal, extract technical data, and analyze the investment score.
-              </p>
-              <div className="flex items-center gap-2 text-indigo-400 text-xs font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-                Launch Inspection <ArrowRight className="w-4 h-4" />
-              </div>
+      <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-10">
+        {/* URL Input Section */}
+        <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
+              <LinkIcon className="w-7 h-7" />
             </div>
-          </button>
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Lead Collector</h2>
+              <p className="text-slate-500 font-medium">Add links from any property portal to your queue.</p>
+            </div>
+          </div>
 
-          <button 
-            onClick={() => { setMode('manual'); setStep('input'); }}
-            className="group bg-white rounded-[3.5rem] p-12 border border-slate-200 text-left hover:shadow-2xl hover:scale-[1.02] transition-all"
-          >
-            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-600 mb-8">
-              <Keyboard className="w-8 h-8" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-900 mb-2">Standard Entry</h3>
-            <p className="text-slate-500 text-sm leading-relaxed mb-8">
-              Fill the data sheet manually. You can still paste a link to keep the portal as visual reference.
-            </p>
-            <div className="flex items-center gap-2 text-slate-900 text-xs font-black uppercase tracking-widest group-hover:gap-4 transition-all">
-              Manual Form <ArrowRight className="w-4 h-4" />
-            </div>
-          </button>
-        </div>
+          <div className="relative">
+            <textarea
+              rows={3}
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              placeholder="Paste listing URLs here (one per line)..."
+              className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg font-medium placeholder:text-slate-300 resize-none"
+            />
+            <button 
+              onClick={handleAddLinks}
+              disabled={!urlInput.trim() || isSyncingInbox}
+              className="absolute bottom-6 right-6 bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 disabled:bg-slate-300 transition-all flex items-center gap-2"
+            >
+              {isSyncingInbox ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Add to Inbox
+            </button>
+          </div>
+        </section>
 
-        {pendingLinks.length > 0 && (
-          <div className="mt-12 bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-            <div className="flex justify-between items-center mb-6 px-2">
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Pending Queue</h3>
-              <button onClick={() => { if(window.confirm('Clear all?')) dataService.clearInbox(userId, activeFolderId).then(fetchInbox) }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Clear Inbox</button>
+        {/* Inbox Queue Section */}
+        <section className="space-y-6">
+          <div className="flex justify-between items-center px-4">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Inbox className="w-4 h-4" /> Pending Queue ({pendingLinks.length})
+            </h3>
+            {pendingLinks.length > 0 && (
+              <button 
+                onClick={() => { if(window.confirm('Clear all pending links?')) dataService.clearInbox(userId, activeFolderId).then(fetchInbox) }} 
+                className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline"
+              >
+                Clear All
+              </button>
+            )}
+          </div>
+
+          {pendingLinks.length === 0 ? (
+            <div className="bg-slate-50 rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-200">
+               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                  <ClipboardList className="w-10 h-10 text-slate-200" />
+               </div>
+               <p className="text-slate-400 font-medium italic">Your inbox is empty. Start by adding some listing URLs above.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {pendingLinks.map(link => (
-                <div 
-                  key={link.id} 
-                  className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-md transition-all flex items-center justify-between group"
-                >
-                  <button onClick={() => { setInput(link.url); handleStartCreation(link.url); dataService.removeInboxLink(link.id).then(fetchInbox); }} className="flex-1 min-w-0 text-left">
-                    <p className="text-[10px] font-black text-indigo-500 uppercase truncate">
-                      {new URL(link.url).hostname.replace('www.', '')}
-                    </p>
-                    <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
-                  </button>
-                  <button onClick={(e) => { e.stopPropagation(); dataService.removeInboxLink(link.id).then(fetchInbox); }} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
-                    <X className="w-4 h-4" />
-                  </button>
+                <div key={link.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all group flex flex-col">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black text-indigo-500 uppercase truncate mb-1">
+                        {new URL(link.url).hostname.replace('www.', '')}
+                      </p>
+                      <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
+                    </div>
+                    <button 
+                      onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)}
+                      className="p-2 text-slate-300 hover:text-rose-500 transition-all"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-slate-50">
+                    <button 
+                      onClick={() => startProcessing(link, 'ai')}
+                      className="bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"
+                    >
+                      <Cpu className="w-3 h-3" /> Neural AI
+                    </button>
+                    <button 
+                      onClick={() => startProcessing(link, 'manual')}
+                      className="bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"
+                    >
+                      <Keyboard className="w-3 h-3" /> Standard
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </section>
       </div>
     );
   }
 
-  if (step === 'input') {
-    return (
-      <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-500">
-        <button onClick={() => setStep('select')} className="mb-8 text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Selection
-        </button>
-        
-        <div className={`rounded-[3.5rem] p-12 shadow-2xl border relative overflow-hidden min-h-[500px] flex flex-col justify-center ${mode === 'ai' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-          <div className="relative z-10 max-w-2xl mx-auto w-full space-y-8">
-            <div className="flex items-center justify-between">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${mode === 'ai' ? 'bg-indigo-50 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {mode === 'ai' ? <Cpu className="w-8 h-8 text-indigo-600" /> : <Keyboard className="w-8 h-8" />}
-              </div>
-              <button onClick={() => setShowBulkAdd(!showBulkAdd)} className={`px-5 py-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${mode === 'ai' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100'}`}>
-                <ListPlus className="w-4 h-4 inline mr-2" /> Bulk Queue
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <h2 className={`text-4xl font-black tracking-tighter ${mode === 'ai' ? 'text-white' : 'text-slate-900'}`}>
-                {mode === 'ai' ? 'Neural Link Inspection' : 'Manual Entry Reference'}
-              </h2>
-              <p className={mode === 'ai' ? 'text-slate-400 text-sm' : 'text-slate-500 text-sm'}>
-                {mode === 'ai' ? 'Paste the portal link to start the neural extraction.' : 'Link is optional, but useful for visual cross-checking.'}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <textarea
-                className={`w-full p-7 rounded-[2.5rem] min-h-[160px] outline-none transition-all resize-none text-xl tracking-tight border-2 ${mode === 'ai' ? 'bg-slate-800/50 border-slate-700 text-white focus:border-indigo-500/50' : 'bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-200'}`}
-                placeholder={showBulkAdd ? "Paste links, one per line..." : "Paste the property link here (Idealista, RE/MAX, etc)..."} 
-                value={showBulkAdd ? bulkInput : input} 
-                onChange={(e) => showBulkAdd ? setBulkInput(e.target.value) : setInput(e.target.value)}
-              />
-              
-              {errorStatus && <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-rose-400 text-xs font-bold"><AlertCircle className="w-5 h-5" />{errorStatus}</div>}
-              
-              {showBulkAdd ? (
-                <button onClick={handleAddBulkLinks} className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-sm uppercase shadow-xl hover:bg-indigo-500 transition-all flex items-center justify-center gap-3">
-                  <ListPlus className="w-5 h-5" /> Add to Inbox
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleStartCreation(input)} disabled={isAnalyzing || (mode === 'ai' && !input.trim())}
-                  className={`w-full py-6 rounded-3xl font-black shadow-2xl transition-all flex items-center justify-center gap-4 text-xl ${mode === 'ai' ? 'bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-slate-800' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
-                >
-                  {isAnalyzing ? <Loader2 className="w-7 h-7 animate-spin" /> : <><Sparkles className="w-7 h-7" /> {mode === 'ai' ? 'Inspect Property' : 'Continue'}</>}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // Verificación y Auditoría (Step 'verify')
   return (
     <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
-        <button onClick={() => setStep('input')} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Input
+        <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Inbox
         </button>
         <div className="flex items-center gap-4">
           <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-            {mode === 'ai' ? 'AI Verification Active' : 'Manual Data Sheet'}
+            {mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
           </div>
-          <button onClick={() => handleStartCreation(verificationUrl)} className="text-slate-400 hover:text-indigo-600 p-2"><RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} /></button>
+          {mode === 'ai' && (
+             <button onClick={() => startProcessing(processingLink!, 'ai')} className="text-slate-400 hover:text-indigo-600 p-2">
+               <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+             </button>
+          )}
         </div>
       </div>
 
@@ -333,10 +289,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
             <div className="flex items-center justify-between border-b pb-8">
               <div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Technical Audit</h3>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Cross-check the extracted property data</p>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Asset Audit</h3>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Confirm data before importing to search folder</p>
               </div>
-              {mode === 'ai' && (
+              {mode === 'ai' && !isAnalyzing && (
                 <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
                 </div>
@@ -344,27 +300,39 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             </div>
             
             <div className="flex-1 space-y-5 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
-              <FormField label="Property Listing Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
-                <FormField label="Neighborhood" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
-                <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
-                <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
-                <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
-                <FormField label="Fees/Expensas" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
-              </div>
+              {isAnalyzing ? (
+                <div className="py-20 text-center space-y-4">
+                  <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Neural AI is parsing listing data...</p>
+                </div>
+              ) : (
+                <>
+                  <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
+                    <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
+                    <FormField label="Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
+                    <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
+                    <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
+                    <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                  </div>
+                  {errorStatus && <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {errorStatus}</div>}
+                </>
+              )}
             </div>
 
-            <div className="flex gap-4 pt-6 mt-auto">
-              <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
-                <CheckCircle2 className="w-6 h-6" /> VALIDATE ASSET
-              </button>
-              <button onClick={resetForm} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Discard</button>
-            </div>
+            {!isAnalyzing && (
+              <div className="flex gap-4 pt-6 mt-auto">
+                <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
+                  <CheckCircle2 className="w-6 h-6" /> IMPORT ASSET
+                </button>
+                <button onClick={resetProcessing} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Cancel</button>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Panel de Vista Previa (Referencia) */}
+        {/* Panel de Vista Previa */}
         <div className="xl:col-span-7">
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
@@ -376,108 +344,80 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
               </div>
-              {verificationUrl && (
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => {setSnapshotVersion(Date.now()); setSnapshotLoading(true); setSnapshotError(false);}} 
-                    className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all"
-                    title="Refresh Capture"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${snapshotLoading && activeRefTab === 'snapshot' ? 'animate-spin' : ''}`} />
-                  </button>
-                  <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
-                    ORIGINAL <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              )}
+              <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
+                ORIGINAL <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
             
-            <div className="flex-1 bg-slate-800 relative overflow-hidden flex flex-col">
-              {verificationUrl ? (
-                <>
-                  {activeRefTab === 'snapshot' && (
-                    <div className="w-full h-full relative flex items-center justify-center bg-white overflow-auto p-4 custom-scrollbar">
-                       {snapshotLoading && (
-                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center p-8">
-                            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural AI is capturing the portal...</p>
-                         </div>
-                       )}
-                       {snapshotError ? (
-                         <div className="text-center p-12 max-w-sm">
-                            <ImageIcon className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                            <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                            <p className="text-slate-400 text-sm mb-6">Portal security blocks automated AI snapshots. Please open the site directly or use the <b>Live Portal</b> tab.</p>
-                            <a href={verificationUrl} target="_blank" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-2">Visit Website <ExternalLink className="w-3 h-3" /></a>
-                         </div>
-                       ) : (
-                         <img 
-                          key={snapshotVersion}
-                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1280&v=${snapshotVersion}`} 
-                          className="max-w-full h-auto shadow-2xl rounded-lg" 
-                          alt="Property View"
-                          onLoad={() => setSnapshotLoading(false)}
-                          onError={() => { setSnapshotError(true); setSnapshotLoading(false); }}
-                        />
-                       )}
+            <div className="flex-1 bg-white relative overflow-hidden flex flex-col">
+              {activeRefTab === 'snapshot' ? (
+                <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center bg-slate-100 p-8">
+                  {snapshotLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
+                      <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture...</p>
                     </div>
                   )}
-
-                  {activeRefTab === 'live' && (
-                    <div className="w-full h-full relative group">
-                      <iframe 
-                        src={verificationUrl} 
-                        className="w-full h-full border-none bg-white" 
-                        title="Live Reference" 
-                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                        referrerPolicy="no-referrer"
-                      />
-                      {isIframeBlocked(verificationUrl) && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm p-10 z-10 text-center">
-                          <div className="max-w-md p-10 bg-slate-900 border border-white/10 rounded-[3rem] shadow-3xl">
-                             <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
-                                <AlertOctagon className="w-10 h-10" />
-                             </div>
-                             <h4 className="text-xl font-black text-white mb-2">Embedded Blocked</h4>
-                             <p className="text-slate-400 text-sm leading-relaxed mb-8">This portal (RE/MAX, Idealista, etc.) uses security policies that prevent embedding. Use <b>"Neural Snapshot"</b> for a visual capture.</p>
-                             <div className="flex flex-col gap-3">
-                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Switch to Snapshot</button>
-                               <a href={verificationUrl} target="_blank" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">Open Original Portal <ExternalLink className="w-3 h-3" /></a>
-                             </div>
-                          </div>
-                        </div>
-                      )}
+                  {snapshotError ? (
+                    <div className="text-center p-12">
+                      <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
+                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
+                      <p className="text-slate-400 text-sm mb-6">Portal security blocks automated AI snapshots. Use the <b>Live Portal</b> tab.</p>
                     </div>
+                  ) : (
+                    <img 
+                      key={snapshotVersion}
+                      src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1280&v=${snapshotVersion}`} 
+                      className="max-w-full h-auto shadow-2xl rounded-lg" 
+                      alt="Property View"
+                      onLoad={() => setSnapshotLoading(false)}
+                      onError={() => { setSnapshotError(true); setSnapshotLoading(false); }}
+                    />
                   )}
-                </>
+                </div>
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-12 text-center">
-                  <Monitor className="w-16 h-16 mb-6 opacity-20" />
-                  <h4 className="text-xl font-black text-white mb-2">No Target Selected</h4>
-                  <p className="text-slate-400 text-sm max-w-xs">Waiting for a property link to initialize the neural inspection panel.</p>
+                <div className="w-full h-full relative">
+                  <iframe 
+                    src={processingLink?.url} 
+                    className="w-full h-full border-none" 
+                    title="Live Reference" 
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                    referrerPolicy="no-referrer"
+                  />
+                  {isIframeBlocked(processingLink?.url || '') && (
+                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center z-10">
+                      <div className="max-w-md">
+                        <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+                        <h4 className="text-xl font-black text-white mb-2">Embed Shield Active</h4>
+                        <p className="text-slate-400 text-sm mb-8">This portal blocks embedding. Please use the <b>Neural Snapshot</b> view for visual reference.</p>
+                        <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Switch to Snapshot</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-              
-              <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[3.5rem] shadow-inner z-30"></div>
             </div>
-            
-            <div className="p-8 bg-indigo-600 text-white shrink-0 z-20">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                    {mode === 'ai' ? <Sparkles className="w-6 h-6" /> : <Keyboard className="w-6 h-6" />}
+
+            {/* AI Insights Footer (Only if AI was used) */}
+            {mode === 'ai' && !isAnalyzing && (
+              <div className="p-8 bg-indigo-600 text-white shrink-0">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Neural Verdict</p>
+                      <h4 className="text-2xl font-black">Deal Score: {analysisResult?.dealScore || '??'}/100</h4>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em]">Neural Verdict</p>
-                    <h4 className="text-2xl font-black">{mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Technical Verify'}</h4>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Strategy Recommendation</p>
+                    <p className="text-xs font-bold mt-1 italic max-w-sm line-clamp-2">"{analysisResult?.analysis?.strategy || 'Analyzing...'}"</p>
                   </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Strategy</p>
-                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Analyzing data...'}"</p>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
