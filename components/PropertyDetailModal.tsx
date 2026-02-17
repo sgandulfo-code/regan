@@ -13,13 +13,12 @@ interface PropertyDetailModalProps {
 }
 
 const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno }) => {
-  const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('snapshot');
+  const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('live');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // Intentamos obtener la captura de Microlink al abrir el modal
     setSnapshotLoading(true);
     dataService.fetchExternalMetadata(property.url).then(meta => {
       setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(property.url)}?w=1600`);
@@ -102,21 +101,21 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
           </div>
         </div>
 
-        {/* LADO DERECHO: VISTA DEL PORTAL (MICROLINK SNAPSHOT) */}
+        {/* LADO DERECHO: VISTA DEL PORTAL (PRIORIDAD IFRAME) */}
         <div className="flex-1 bg-slate-900 h-full relative flex flex-col overflow-hidden">
           <div className="p-4 bg-white/5 border-b border-white/5 flex items-center justify-between backdrop-blur-md z-30">
             <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
+              <button 
+                onClick={() => setActiveRefTab('live')} 
+                className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+              >
+                <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
+              </button>
               <button 
                 onClick={() => setActiveRefTab('snapshot')} 
                 className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
               >
                 <ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot
-              </button>
-              <button 
-                onClick={() => setActiveRefTab('live')} 
-                className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-50 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-              >
-                <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
               </button>
             </div>
             <div className="flex items-center gap-3">
@@ -127,26 +126,50 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
           </div>
 
           <div className="flex-1 bg-white relative">
-            {activeRefTab === 'snapshot' ? (
+            {activeRefTab === 'live' ? (
+              <div className="w-full h-full relative">
+                <iframe 
+                  src={property.url}
+                  className="w-full h-full border-none"
+                  title="Live Portal Audit"
+                  allowFullScreen
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                />
+                {isIframeBlocked(property.url) && (
+                  <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center pointer-events-none">
+                    <div className="max-w-md pointer-events-auto">
+                      <AlertOctagon className="w-20 h-20 text-amber-500 mx-auto mb-6" />
+                      <h4 className="text-2xl font-black text-white mb-2">Source portal restricted</h4>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                        This portal does not allow being viewed inside an iframe for security reasons.
+                        <br/><br/>
+                        Switch to the <b>AI Snapshot</b> or use the original link.
+                      </p>
+                      <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-500 transition-all">Switch to AI Snapshot</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
               <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center p-8 bg-slate-100">
                 {snapshotLoading && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
                     <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rendering High-Fidelity Snapshot...</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rendering AI Snapshot...</p>
                   </div>
                 )}
                 {snapshotError ? (
                   <div className="text-center max-w-sm">
                     <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
-                    <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                    <p className="text-slate-400 text-sm mb-6">Automated capture failed. Use the original portal link to view this property.</p>
+                    <h4 className="text-xl font-black text-slate-800 mb-2">Capture Error</h4>
+                    <p className="text-slate-400 text-sm mb-6">Automated snapshot failed. Portals often block automation tools.</p>
                   </div>
                 ) : (
                   snapshotUrl && (
                     <img 
                       src={snapshotUrl}
                       className="max-w-full h-auto shadow-2xl rounded-2xl"
-                      alt="Portal Reference"
+                      alt="Portal Snapshot"
                       onLoad={() => setSnapshotLoading(false)}
                       onError={() => { 
                         if (!snapshotUrl.includes('mshots')) {
@@ -159,33 +182,8 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                   )
                 )}
               </div>
-            ) : (
-              <div className="w-full h-full relative">
-                <iframe 
-                  src={property.url}
-                  className="w-full h-full border-none"
-                  title="Live Audit"
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                  referrerPolicy="no-referrer"
-                />
-                {isIframeBlocked(property.url) && (
-                  <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center">
-                    <div className="max-w-md">
-                      <AlertOctagon className="w-20 h-20 text-amber-500 mx-auto mb-6" />
-                      <h4 className="text-2xl font-black text-white mb-2">Live Browsing Restricted</h4>
-                      <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                        The source portal (Idealista, RE/MAX, etc.) does not allow being viewed inside other applications for security reasons.
-                        <br/><br/>
-                        Use the <b>AI Snapshot</b> tab for a full visual reference without blocks.
-                      </p>
-                      <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-500 transition-all">Switch to AI Snapshot</button>
-                    </div>
-                  </div>
-                )}
-              </div>
             )}
-            
-            <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-none z-20 shadow-inner"></div>
+            <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-none z-20"></div>
           </div>
         </div>
 

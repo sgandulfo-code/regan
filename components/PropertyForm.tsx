@@ -130,9 +130,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setProcessingLink(link);
     setMode(selectedMode);
     
-    // Si es manual, priorizamos el LIVE (Iframe)
-    // Si es AI, priorizamos el SNAPSHOT para ver los datos que la AI está extrayendo
-    setActiveRefTab(selectedMode === 'manual' ? 'live' : 'snapshot'); 
+    // Default to 'live' (iframe) as requested for the standard experience
+    setActiveRefTab('live'); 
     
     setSnapshotLoading(true);
     setSnapshotError(false);
@@ -146,17 +145,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
+        // Pre-fetch snapshot in background
         dataService.fetchExternalMetadata(link.url).then(meta => {
           setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`);
           setSnapshotLoading(false);
         });
       } else {
         const isQuota = result?.error === 'QUOTA_EXCEEDED';
-        setErrorStatus(isQuota ? 'Gemini AI Quota Exhausted (429). Switching to Standard mode.' : 'Neural analysis failed for this URL.');
-        
-        setTimeout(async () => {
-          await switchToManual(link.url);
-        }, isQuota ? 2000 : 500);
+        setErrorStatus(isQuota ? 'Gemini AI Quota Exhausted (429). Switching to Standard mode.' : 'Neural analysis failed.');
+        setTimeout(() => switchToManual(link.url), isQuota ? 2000 : 500);
       }
       setIsAnalyzing(false);
     } else {
@@ -166,7 +163,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const switchToManual = async (url: string) => {
     setIsAnalyzing(true);
-    setActiveRefTab('live'); // Forzar Iframe en modo manual
+    setActiveRefTab('live'); 
     const meta = await dataService.fetchExternalMetadata(url);
     
     setAnalysisResult({ 
@@ -174,7 +171,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       price: 0, 
       confidence: 1, 
       dealScore: 50, 
-      analysis: { strategy: 'Standard audit mode based on portal metadata.' }, 
+      analysis: { strategy: 'Standard audit mode activated. Iframe prioritizing.' }, 
       sources: []
     });
     
@@ -417,7 +414,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <ImageIcon className="w-3 h-3 inline mr-2" /> Neural Snapshot
+                  <ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot
                 </button>
               </div>
               <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
@@ -426,19 +423,47 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             </div>
             
             <div className="flex-1 bg-white relative overflow-hidden flex flex-col">
-              {activeRefTab === 'snapshot' ? (
+              {activeRefTab === 'live' ? (
+                <div className="w-full h-full relative">
+                  <iframe 
+                    src={processingLink?.url} 
+                    className="w-full h-full border-none" 
+                    title="Live Portal View" 
+                    allowFullScreen
+                    style={{ border: 'none' }}
+                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                  />
+                  {isIframeBlocked(processingLink?.url || '') && (
+                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center z-10 pointer-events-none">
+                      <div className="max-w-md pointer-events-auto">
+                        <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+                        <h4 className="text-xl font-black text-white mb-2">Embedded View restricted</h4>
+                        <p className="text-slate-400 text-sm mb-8">
+                          The listing portal blocks direct embedding.
+                          <br/><br/>
+                          Try the <b>AI Snapshot</b> or open the <b>Original</b> link.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                          <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">View Snapshot</button>
+                          <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/10 text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest">Open Original</a>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
                 <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center bg-slate-100 p-8">
                   {snapshotLoading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
                       <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating High-Fidelity Snapshot...</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating Visual Snapshot...</p>
                     </div>
                   )}
                   {snapshotUrl ? (
                     <img 
                       src={snapshotUrl} 
                       className="max-w-full h-auto shadow-2xl rounded-lg" 
-                      alt="Property View"
+                      alt="Property Preview"
                       onLoad={() => setSnapshotLoading(false)}
                       onError={() => { 
                         if (!snapshotUrl.includes('mshots')) {
@@ -451,35 +476,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   ) : !snapshotLoading && (
                     <div className="text-center p-12">
                       <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
-                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Error</h4>
-                      <p className="text-slate-400 text-sm">Failed to generate preview. Portals often block automation. Try original link.</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full relative">
-                  <iframe 
-                    src={processingLink?.url} 
-                    className="w-full h-full border-none" 
-                    title="Live Reference" 
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                    referrerPolicy="no-referrer"
-                  />
-                  {isIframeBlocked(processingLink?.url || '') && (
-                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center z-10">
-                      <div className="max-w-md">
-                        <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-                        <h4 className="text-xl font-black text-white mb-2">Live View Restricted</h4>
-                        <p className="text-slate-400 text-sm mb-8">
-                          Security headers on this portal (RE/MAX, Idealista, etc.) block embedding for live browsing.
-                          <br/><br/>
-                          Use the <b>Neural Snapshot</b> for a high-quality reference without blocks.
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                          <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">View Snapshot</button>
-                          <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/10 text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest">Open Original</a>
-                        </div>
-                      </div>
+                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
+                      <p className="text-slate-400 text-sm">Automated capture blocked by portal. Please use original link.</p>
                     </div>
                   )}
                 </div>
