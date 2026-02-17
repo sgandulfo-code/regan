@@ -29,13 +29,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
+  const [snapshotVersion, setSnapshotVersion] = useState(Date.now());
   
   const [editedData, setEditedData] = useState<any>({
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
   });
 
   const isIframeBlocked = (url: string) => {
-    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario'];
+    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz'];
     return blocked.some(domain => url.toLowerCase().includes(domain));
   };
 
@@ -122,6 +123,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     const trimmedInput = targetInput.trim();
     setSnapshotError(false);
     setSnapshotLoading(true);
+    setSnapshotVersion(Date.now());
 
     if (mode === 'ai') {
       if (!trimmedInput) return;
@@ -156,6 +158,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
     });
     setStep('verify');
+    if (input.trim().startsWith('http') && isIframeBlocked(input)) {
+      setActiveRefTab('snapshot');
+    }
   };
 
   const handleConfirm = () => {
@@ -287,7 +292,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           
           <div className="relative z-10 max-w-2xl mx-auto w-full space-y-8">
             <div className="flex items-center justify-between">
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${mode === 'ai' ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${mode === 'ai' ? 'bg-indigo-50 text-white' : 'bg-slate-100 text-slate-600'}`}>
                 {mode === 'ai' ? <Cpu className="w-8 h-8" /> : <Keyboard className="w-8 h-8" />}
               </div>
               <button onClick={() => setShowBulkAdd(!showBulkAdd)} className={`px-5 py-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${mode === 'ai' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100'}`}>
@@ -424,9 +429,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 </button>
               </div>
               {input.trim().startsWith('http') && (
-                <a href={input} target="_blank" rel="noopener" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
-                  OPEN ORIGINAL <ExternalLink className="w-3 h-3" />
-                </a>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => {setSnapshotVersion(Date.now()); setSnapshotLoading(true); setSnapshotError(false);}} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all">
+                    <RefreshCw className={`w-3 h-3 ${snapshotLoading && activeRefTab === 'snapshot' ? 'animate-spin' : ''}`} />
+                  </button>
+                  <a href={input} target="_blank" rel="noopener" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
+                    OPEN ORIGINAL <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
               )}
             </div>
             
@@ -436,19 +446,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   {activeRefTab === 'snapshot' && (
                     <div className="w-full h-full relative flex items-center justify-center bg-white overflow-auto p-4">
                        {snapshotLoading && (
-                         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center p-8">
+                            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IA is capturing the portal...</p>
                          </div>
                        )}
                        {snapshotError ? (
                          <div className="text-center p-12 max-w-sm">
                             <ImageIcon className="w-16 h-16 text-slate-200 mx-auto mb-6" />
                             <h4 className="text-xl font-black text-slate-800 mb-2">Neural Snapshot Failed</h4>
-                            <p className="text-slate-400 text-sm mb-6">Service is busy or portal blocks capture. Please use <b>Live Portal</b> or open the site directly.</p>
+                            <p className="text-slate-400 text-sm mb-6">Site blocks automated capture. Please use <b>Live Portal</b> or open the site directly.</p>
                          </div>
                        ) : (
                          <img 
-                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1600`} 
+                          key={snapshotVersion}
+                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1600&v=${snapshotVersion}`} 
                           className="max-w-full h-auto shadow-2xl rounded-lg" 
                           alt="AI Capturing Portal..."
                           onLoad={() => setSnapshotLoading(false)}
@@ -472,10 +484,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                              <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
                                 <AlertOctagon className="w-10 h-10" />
                              </div>
-                             <h4 className="text-xl font-black text-white mb-2">Embedded Blocked</h4>
-                             <p className="text-slate-400 text-sm leading-relaxed mb-8">This portal (like RE/MAX or Idealista) blocks security iframes. Use <b>"Neural Snapshot"</b> or open in a new window to verify.</p>
+                             <h4 className="text-xl font-black text-white mb-2">Portal Security Active</h4>
+                             <p className="text-slate-400 text-sm leading-relaxed mb-8">This portal (RE/MAX, Idealista, etc.) blocks embedded views for security. Use <b>"Neural Snapshot"</b> or open in a new window to verify.</p>
                              <div className="flex flex-col gap-3">
-                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Switch to Snapshot</button>
+                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Try Neural Snapshot</button>
                                <a href={input} target="_blank" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Open Original Site</a>
                              </div>
                           </div>
@@ -487,7 +499,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-12 text-center">
                   <Monitor className="w-16 h-16 mb-6 opacity-20" />
-                  <h4 className="text-xl font-black text-white mb-2">Reference Mode Offline</h4>
+                  <h4 className="text-xl font-black text-white mb-2">No Visual Context</h4>
                   <p className="text-slate-400 text-sm max-w-xs">No link provided for this entry. Visual context panel is disabled.</p>
                 </div>
               )}
@@ -506,13 +518,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       {mode === 'ai' ? 'Neural Verdict' : 'Manual Entry'}
                     </p>
                     <h4 className="text-2xl font-black">
-                      {mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Verification Active'}
+                      {mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Technical Audit'}
                     </h4>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Potential</p>
-                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Analyzing investment viability...'}"</p>
+                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Strategic Insight</p>
+                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Analyzing data for investment potential...'}"</p>
                 </div>
               </div>
             </div>
