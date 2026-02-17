@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, CloudCheck } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -44,7 +45,7 @@ const App: React.FC = () => {
       dataService.getProperties()
     ]);
     
-    setFolders(fetchedFolders.map(f => ({
+    setFolders(fetchedFolders.map((f: any) => ({
       id: f.id,
       name: f.name,
       description: f.description,
@@ -52,7 +53,7 @@ const App: React.FC = () => {
       createdAt: f.created_at
     })));
 
-    setProperties(fetchedProperties.map(p => ({
+    setProperties(fetchedProperties.map((p: any) => ({
       id: p.id,
       folderId: p.folder_id,
       title: p.title,
@@ -75,7 +76,7 @@ const App: React.FC = () => {
       rating: p.rating,
       notes: p.notes,
       images: p.images || [],
-      renovationCosts: [], // Will load on detail if needed or fetched in query
+      renovationCosts: [], 
       createdAt: p.created_at
     })));
     setIsSyncing(false);
@@ -114,7 +115,7 @@ const App: React.FC = () => {
 
     const created = await dataService.createProperty({ ...prop, folderId: folderToAssign });
     if (created) {
-      await loadInitialData(); // Reload all to keep synced
+      await loadInitialData(); 
       setActiveTab('properties');
     }
     setIsSyncing(false);
@@ -131,7 +132,6 @@ const App: React.FC = () => {
   const handleUpdateRenovation = async (id: string, items: RenovationItem[]) => {
     if (!user) return;
     setIsSyncing(true);
-    // Fixed typo: renamed updateRenocations to updateRenovations to match dataService definition
     await dataService.updateRenovations(id, items, user.id);
     setProperties(properties.map(p => p.id === id ? { ...p, renovationCosts: items } : p));
     if (selectedProperty?.id === id) {
@@ -218,18 +218,17 @@ const App: React.FC = () => {
                 <p className="text-sm font-black text-slate-800">{user.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{user.role}</p>
-                   {isSyncing ? <Cloud className="w-2.5 h-2.5 text-indigo-400 animate-pulse" /> : <CloudCheck className="w-2.5 h-2.5 text-emerald-500" />}
+                   {isSyncing ? <Cloud className="w-2.5 h-2.5 text-indigo-400 animate-pulse" /> : <Check className="w-2.5 h-2.5 text-emerald-500" />}
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Dashboards and Tabs logic follows the same structure as before but uses folders/properties state synced from Supabase */}
         {activeTab === 'dashboard' && !activeFolderId && (
           <div className="space-y-10 animate-in fade-in zoom-in-95 duration-700">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {folders.map(folder => {
+              {folders.map((folder: any) => {
                 const propCount = properties.filter(p => p.folderId === folder.id).length;
                 return (
                   <button
@@ -276,7 +275,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Tab content logic remains the same, utilizing updated states from Supabase */}
         <div className="max-w-7xl mx-auto">
           {activeTab === 'search' && (
              <div className="max-w-5xl mx-auto">
