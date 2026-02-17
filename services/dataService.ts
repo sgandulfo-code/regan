@@ -148,29 +148,31 @@ export const dataService = {
     await query;
   },
 
-  // External Scraper Simulation (Fetch Metadata via Proxy)
+  /**
+   * Fetch Metadata via Microlink API
+   * Microlink uses real headless browsers to extract data, bypassing most CORS and bot shields.
+   */
   async fetchExternalMetadata(url: string) {
     try {
-      // Usamos un proxy público de metadatos como "fallback" externo
-      const response = await fetch(`https://api.peekalink.io/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ link: url })
-      }).catch(() => null);
-
-      // Si falla peekalink, usamos allorigins para parsear el título
-      const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-      const data = await res.json();
-      const html = data.contents;
-      const doc = new DOMParser().parseFromString(html, 'text/html');
+      // API de Microlink (Free tier permite peticiones limitadas sin API key)
+      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true&palette=true`;
       
-      return {
-        title: doc.querySelector('title')?.innerText || '',
-        image: doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || null,
-        description: doc.querySelector('meta[name="description"]')?.getAttribute('content') || ''
-      };
+      const response = await fetch(microlinkUrl);
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        const { data } = result;
+        return {
+          title: data.title || '',
+          image: data.image?.url || data.screenshot?.url || null,
+          description: data.description || '',
+          screenshot: data.screenshot?.url || null,
+          publisher: data.publisher || ''
+        };
+      }
+      return null;
     } catch (e) {
-      console.error("External Metadata Fetch Failed", e);
+      console.error("Microlink Metadata Fetch Failed", e);
       return null;
     }
   }

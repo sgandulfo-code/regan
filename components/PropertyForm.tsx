@@ -46,7 +46,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('snapshot');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState(false);
-  const [snapshotVersion, setSnapshotVersion] = useState(Date.now());
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
@@ -105,10 +105,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
     setProcessingLink(link);
     setMode(selectedMode);
-    setActiveRefTab(isIframeBlocked(link.url) ? 'snapshot' : 'live');
+    setActiveRefTab('snapshot'); // Por defecto usamos el snapshot de Microlink
     setSnapshotLoading(true);
     setSnapshotError(false);
-    setSnapshotVersion(Date.now());
+    setSnapshotUrl(null);
 
     if (selectedMode === 'ai') {
       setIsAnalyzing(true);
@@ -117,6 +117,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
+        // Intentar obtener una captura profesional vía Microlink en paralelo
+        dataService.fetchExternalMetadata(link.url).then(meta => {
+          if (meta?.screenshot) setSnapshotUrl(meta.screenshot);
+          setSnapshotLoading(false);
+        });
       } else {
         setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
         setMode('manual');
@@ -129,7 +134,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const switchToManual = async (url: string) => {
-    setIsAnalyzing(true); // Reusamos el loader para el fetch de metadatos externo
+    setIsAnalyzing(true);
     const meta = await dataService.fetchExternalMetadata(url);
     
     setAnalysisResult({ 
@@ -137,16 +142,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       price: 0, 
       confidence: 1, 
       dealScore: 50, 
-      analysis: { strategy: 'Manual audit based on live reference.' }, 
+      analysis: { strategy: 'Manual audit based on high-fidelity reference.' }, 
       sources: []
     });
     
     if (meta?.title) {
        setEditedData((prev: PropertyFormData) => ({ ...prev, title: meta.title }));
     }
+
+    if (meta?.screenshot) {
+      setSnapshotUrl(meta.screenshot);
+    }
     
     setStep('verify');
     setIsAnalyzing(false);
+    setSnapshotLoading(false);
   };
 
   const handleConfirm = async () => {
@@ -162,7 +172,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
       renovationCosts: [],
-      images: [processingLink.url ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink.url)}?w=1200` : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'],
+      images: [snapshotUrl || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink.url)}?w=1200`],
       createdAt: new Date().toISOString(),
     });
 
@@ -177,6 +187,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAnalysisResult(null);
     setStep('inbox');
     setErrorStatus(null);
+    setSnapshotUrl(null);
     setEditedData({
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
     });
@@ -201,7 +212,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   if (step === 'inbox') {
     return (
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-10">
-        {/* URL Input Section */}
         <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
@@ -232,7 +242,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           </div>
         </section>
 
-        {/* Inbox Queue Section */}
         <section className="space-y-6">
           <div className="flex justify-between items-center px-4">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -297,7 +306,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     );
   }
 
-  // Verificación y Auditoría (Step 'verify')
   return (
     <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
@@ -308,16 +316,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
             {mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
           </div>
-          {mode === 'ai' && (
-             <button onClick={() => startProcessing(processingLink!, 'ai')} className="text-slate-400 hover:text-indigo-600 p-2">
-               <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-             </button>
-          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        {/* Formulario de Verificación */}
         <div className="xl:col-span-5">
           <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
             <div className="flex items-center justify-between border-b pb-8">
@@ -367,13 +369,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           </div>
         </div>
 
-        {/* Panel de Vista Previa */}
         <div className="xl:col-span-7">
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <ImageIcon className="w-3 h-3 inline mr-2" /> Neural Snapshot
+                  <ImageIcon className="w-3 h-3 inline mr-2" /> High-Fidelity Snapshot
                 </button>
                 <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
                   <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
@@ -390,19 +391,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   {snapshotLoading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
                       <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture...</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture via Microlink...</p>
                     </div>
                   )}
-                  {snapshotError ? (
+                  {snapshotError || !snapshotUrl && !snapshotLoading ? (
                     <div className="text-center p-12">
                       <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
                       <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                      <p className="text-slate-400 text-sm mb-6">Portal security blocks automated AI snapshots. Use the <b>Live Portal</b> tab.</p>
+                      <p className="text-slate-400 text-sm mb-6">Automated snapshots are restricted for this portal. Use the <b>Live Portal</b> tab.</p>
                     </div>
                   ) : (
                     <img 
-                      key={snapshotVersion}
-                      src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1280&v=${snapshotVersion}`} 
+                      src={snapshotUrl || ''} 
                       className="max-w-full h-auto shadow-2xl rounded-lg" 
                       alt="Property View"
                       onLoad={() => setSnapshotLoading(false)}
@@ -424,7 +424,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <div className="max-w-md">
                         <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
                         <h4 className="text-xl font-black text-white mb-2">Embed Shield Active</h4>
-                        <p className="text-slate-400 text-sm mb-8">This portal blocks embedding. Please use the <b>Neural Snapshot</b> view for visual reference.</p>
+                        <p className="text-slate-400 text-sm mb-8">This portal blocks embedding. Please use the <b>High-Fidelity Snapshot</b> view.</p>
                         <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Switch to Snapshot</button>
                       </div>
                     </div>
@@ -433,7 +433,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               )}
             </div>
 
-            {/* AI Insights Footer (Only if AI was used) */}
             {mode === 'ai' && !isAnalyzing && (
               <div className="p-8 bg-indigo-600 text-white shrink-0">
                 <div className="flex justify-between items-center">
@@ -445,10 +444,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Neural Verdict</p>
                       <h4 className="text-2xl font-black">Deal Score: {analysisResult?.dealScore || '??'}/100</h4>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Strategy Recommendation</p>
-                    <p className="text-xs font-bold mt-1 italic max-w-sm line-clamp-2">"{analysisResult?.analysis?.strategy || 'Analyzing...'}"</p>
                   </div>
                 </div>
               </div>
