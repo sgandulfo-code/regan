@@ -5,6 +5,33 @@ import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
 
+// Re-importing from lucide-react correctly
+import { 
+  Sparkles as SparklesIcon,
+  MapPin as MapPinIcon,
+  Euro as EuroIcon,
+  Home as HomeIcon,
+  ShieldCheck as ShieldIcon,
+  CheckCircle2 as CheckIcon,
+  AlertCircle as AlertIcon,
+  ExternalLink as ExternalIcon,
+  ImageIcon as ImageIconIcon,
+  Link as LinkIcon2,
+  Trash2 as TrashIcon,
+  ArrowRight as ArrowIcon,
+  Monitor as MonitorIcon,
+  AlertOctagon as OctagonIcon,
+  Loader2 as LoaderIcon,
+  Plus as PlusIcon,
+  Inbox as InboxIcon,
+  ClipboardList as ClipboardIcon,
+  Cpu as CpuIcon,
+  Keyboard as KeyboardIcon,
+  RefreshCw as RefreshIcon,
+  Ruler as RulerIcon,
+  Layers as LayersIcon
+} from 'lucide-react';
+
 interface PropertyFormProps {
   onAdd: (prop: Property) => void;
   userId: string;
@@ -98,20 +125,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const isIframeBlocked = (url: string) => {
     if (!url) return false;
-    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21'];
+    // Lista extendida de portales que bloquean iFrames
+    const blocked = ['idealista', 'remax', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21', 'vivienda', 'pisos.com', 'yaencontre'];
     return blocked.some(domain => url.toLowerCase().includes(domain));
   };
 
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
     setProcessingLink(link);
     setMode(selectedMode);
-    setActiveRefTab('snapshot'); 
+    setActiveRefTab('snapshot'); // Forzamos snapshot para evitar el error de iFrame visual inicial
     setSnapshotLoading(true);
     setSnapshotError(false);
     setSnapshotUrl(null);
-
-    // Iniciar carga de snapshot de respaldo de inmediato
-    const backupUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1280`;
 
     if (selectedMode === 'ai') {
       setIsAnalyzing(true);
@@ -120,10 +145,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
-        // Intentar obtener una captura mejor vía Microlink
+        // Microlink en paralelo
         dataService.fetchExternalMetadata(link.url).then(meta => {
-          setSnapshotUrl(meta?.screenshot || backupUrl);
-          if (!meta?.screenshot) setSnapshotLoading(false);
+          setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`);
+          setSnapshotLoading(false);
         });
       } else {
         setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
@@ -139,7 +164,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const switchToManual = async (url: string) => {
     setIsAnalyzing(true);
     const meta = await dataService.fetchExternalMetadata(url);
-    const backupUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     
     setAnalysisResult({ 
       title: meta?.title || '', 
@@ -154,10 +178,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
        setEditedData((prev: PropertyFormData) => ({ ...prev, title: meta.title }));
     }
 
-    setSnapshotUrl(meta?.screenshot || backupUrl);
+    setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`);
     setStep('verify');
     setIsAnalyzing(false);
-    if (!meta?.screenshot) setSnapshotLoading(false);
+    setSnapshotLoading(false);
   };
 
   const handleConfirm = async () => {
@@ -189,7 +213,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setStep('inbox');
     setErrorStatus(null);
     setSnapshotUrl(null);
-    setSnapshotError(false);
     setEditedData({
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
     });
@@ -217,7 +240,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
           <div className="flex items-center gap-4 mb-8">
             <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-              <LinkIcon className="w-7 h-7" />
+              <LinkIcon2 className="w-7 h-7" />
             </div>
             <div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Lead Collector</h2>
@@ -238,7 +261,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               disabled={!urlInput.trim() || isSyncingInbox}
               className="absolute bottom-6 right-6 bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 disabled:bg-slate-300 transition-all flex items-center gap-2"
             >
-              {isSyncingInbox ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              {isSyncingInbox ? <LoaderIcon className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
               Add to Inbox
             </button>
           </div>
@@ -247,7 +270,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         <section className="space-y-6">
           <div className="flex justify-between items-center px-4">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Inbox className="w-4 h-4" /> Pending Queue ({pendingLinks.length})
+              <InboxIcon className="w-4 h-4" /> Pending Queue ({pendingLinks.length})
             </h3>
             {pendingLinks.length > 0 && (
               <button 
@@ -262,7 +285,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           {pendingLinks.length === 0 ? (
             <div className="bg-slate-50 rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-200">
                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                  <ClipboardList className="w-10 h-10 text-slate-200" />
+                  <ClipboardIcon className="w-10 h-10 text-slate-200" />
                </div>
                <p className="text-slate-400 font-medium italic">Your inbox is empty. Start by adding some listing URLs above.</p>
             </div>
@@ -281,7 +304,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)}
                       className="p-2 text-slate-300 hover:text-rose-500 transition-all"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <TrashIcon className="w-4 h-4" />
                     </button>
                   </div>
 
@@ -290,13 +313,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       onClick={() => startProcessing(link, 'ai')}
                       className="bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"
                     >
-                      <Cpu className="w-3 h-3" /> Neural AI
+                      <CpuIcon className="w-3 h-3" /> Neural AI
                     </button>
                     <button 
                       onClick={() => startProcessing(link, 'manual')}
                       className="bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"
                     >
-                      <Keyboard className="w-3 h-3" /> Standard
+                      <KeyboardIcon className="w-3 h-3" /> Standard
                     </button>
                   </div>
                 </div>
@@ -312,7 +335,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
         <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Inbox
+          <ArrowIcon className="w-4 h-4 rotate-180" /> Back to Inbox
         </button>
         <div className="flex items-center gap-4">
           <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
@@ -331,7 +354,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               </div>
               {mode === 'ai' && !isAnalyzing && (
                 <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
+                  <ShieldIcon className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
                 </div>
               )}
             </div>
@@ -339,23 +362,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             <div className="flex-1 space-y-5 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
               {isAnalyzing ? (
                 <div className="py-20 text-center space-y-4">
-                  <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
+                  <LoaderIcon className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                    {mode === 'ai' ? 'Neural AI is parsing listing data...' : 'Fetching external portal metadata...'}
+                    {mode === 'ai' ? 'Neural AI is parsing listing data...' : 'Fetching portal metadata...'}
                   </p>
                 </div>
               ) : (
                 <>
-                  <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
+                  <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={HomeIcon} />
                   <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
-                    <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
-                    <FormField label="Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
-                    <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
-                    <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
-                    <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                    <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={EuroIcon} />
+                    <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPinIcon} />
+                    <FormField label="Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={RulerIcon} />
+                    <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={LayersIcon} />
+                    <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={LayersIcon} />
+                    <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldIcon} />
                   </div>
-                  {errorStatus && <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {errorStatus}</div>}
+                  {errorStatus && <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2"><AlertIcon className="w-4 h-4" /> {errorStatus}</div>}
                 </>
               )}
             </div>
@@ -363,7 +386,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             {!isAnalyzing && (
               <div className="flex gap-4 pt-6 mt-auto">
                 <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
-                  <CheckCircle2 className="w-6 h-6" /> IMPORT ASSET
+                  <CheckIcon className="w-6 h-6" /> IMPORT ASSET
                 </button>
                 <button onClick={resetProcessing} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Cancel</button>
               </div>
@@ -376,14 +399,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <ImageIcon className="w-3 h-3 inline mr-2" /> High-Fidelity Snapshot
+                  <ImageIconIcon className="w-3 h-3 inline mr-2" /> Neural Snapshot
                 </button>
                 <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-50 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
+                  <MonitorIcon className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
               </div>
               <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
-                ORIGINAL <ExternalLink className="w-3 h-3" />
+                ORIGINAL <ExternalIcon className="w-3 h-3" />
               </a>
             </div>
             
@@ -392,35 +415,30 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center bg-slate-100 p-8">
                   {snapshotLoading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
-                      <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture...</p>
+                      <LoaderIcon className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating High-Fidelity Snapshot...</p>
                     </div>
                   )}
-                  {snapshotError ? (
+                  {snapshotUrl ? (
+                    <img 
+                      src={snapshotUrl} 
+                      className="max-w-full h-auto shadow-2xl rounded-lg" 
+                      alt="Property View"
+                      onLoad={() => setSnapshotLoading(false)}
+                      onError={() => { 
+                        if (!snapshotUrl.includes('mshots')) {
+                           setSnapshotUrl(`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1440`);
+                        } else {
+                           setSnapshotError(true); setSnapshotLoading(false);
+                        }
+                      }}
+                    />
+                  ) : !snapshotLoading && (
                     <div className="text-center p-12">
-                      <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
-                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                      <p className="text-slate-400 text-sm mb-6">This portal blocks automated AI snapshots. Use the <b>Live Portal</b> tab or try refreshing.</p>
-                      <button onClick={() => {setSnapshotError(false); setSnapshotLoading(true);}} className="text-indigo-600 font-bold text-xs uppercase underline">Retry Capture</button>
+                      <OctagonIcon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
+                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Error</h4>
+                      <p className="text-slate-400 text-sm">Failed to generate preview. Portals often block automation. Try original link.</p>
                     </div>
-                  ) : (
-                    snapshotUrl && (
-                      <img 
-                        src={snapshotUrl} 
-                        className="max-w-full h-auto shadow-2xl rounded-lg" 
-                        alt="Property View"
-                        onLoad={() => setSnapshotLoading(false)}
-                        onError={() => { 
-                          // Si falla Microlink, intentar el respaldo directo mshots como último recurso
-                          if (!snapshotUrl.includes('mshots')) {
-                            setSnapshotUrl(`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1280`);
-                          } else {
-                            setSnapshotError(true); 
-                            setSnapshotLoading(false); 
-                          }
-                        }}
-                      />
-                    )
                   )}
                 </div>
               ) : (
@@ -435,10 +453,17 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   {isIframeBlocked(processingLink?.url || '') && (
                     <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center z-10">
                       <div className="max-w-md">
-                        <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-                        <h4 className="text-xl font-black text-white mb-2">Embed Shield Active</h4>
-                        <p className="text-slate-400 text-sm mb-8">This portal blocks embedding. Please use the <b>High-Fidelity Snapshot</b> view.</p>
-                        <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl">Switch to Snapshot</button>
+                        <OctagonIcon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+                        <h4 className="text-xl font-black text-white mb-2">Live View Restricted</h4>
+                        <p className="text-slate-400 text-sm mb-8">
+                          Security headers on this portal (Idealista, etc.) block embedding.
+                          <br/><br/>
+                          Use the <b>Neural Snapshot</b> for a high-quality reference without blocks.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                          <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">View Snapshot</button>
+                          <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/10 text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest">Open Original</a>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -451,7 +476,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                      <Sparkles className="w-6 h-6" />
+                      <SparklesIcon className="w-6 h-6" />
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Neural Verdict</p>

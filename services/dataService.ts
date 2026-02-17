@@ -1,3 +1,4 @@
+
 import { supabase } from './supabase';
 import { Property, SearchFolder, User, RenovationItem, UserRole } from '../types';
 
@@ -87,7 +88,6 @@ export const dataService = {
         toilets: property.toilets,
         parking: property.parking,
         sqft: property.sqft,
-        // Fixed: Use camelCase property names as defined in types.ts
         covered_sqft: property.coveredSqft,
         uncovered_sqft: property.uncoveredSqft,
         age: property.age,
@@ -149,45 +149,33 @@ export const dataService = {
   },
 
   /**
-   * Fetch Metadata via Microlink API with Fallback
+   * Fetch Metadata via Microlink API
+   * Utilizamos parámetros de renderizado agresivos para asegurar que la captura sea fiel al portal original.
    */
   async fetchExternalMetadata(url: string) {
     try {
-      // Intentar Microlink para datos ricos y captura de alta fidelidad
-      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true`;
+      // Configuramos Microlink para forzar el renderizado de JS y esperar a que la red esté tranquila
+      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true&waitForTimeout=4000&viewport.width=1440&viewport.height=900&adblock=true`;
+      
       const response = await fetch(microlinkUrl);
       const result = await response.json();
 
-      const fallbackScreenshot = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
+      const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`;
 
       if (result.status === 'success') {
         const { data } = result;
         return {
           title: data.title || '',
-          image: data.image?.url || data.screenshot?.url || fallbackScreenshot,
+          image: data.screenshot?.url || data.image?.url || mshotsFallback,
           description: data.description || '',
-          screenshot: data.screenshot?.url || fallbackScreenshot,
+          screenshot: data.screenshot?.url || mshotsFallback,
           publisher: data.publisher || ''
         };
       }
-      
-      // Fallback si la API de Microlink falla
-      return {
-        title: '',
-        image: fallbackScreenshot,
-        description: '',
-        screenshot: fallbackScreenshot,
-        publisher: ''
-      };
+      return { title: '', screenshot: mshotsFallback };
     } catch (e) {
-      console.error("Microlink Metadata Fetch Failed", e);
-      return {
-        title: '',
-        image: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`,
-        description: '',
-        screenshot: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`,
-        publisher: ''
-      };
+      console.error("Microlink API Call Failed", e);
+      return { title: '', screenshot: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440` };
     }
   }
 };
