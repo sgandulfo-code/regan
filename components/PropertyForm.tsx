@@ -17,6 +17,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSyncingInbox, setIsSyncingInbox] = useState(false);
+  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'map' | 'snapshot'>('snapshot');
@@ -79,6 +80,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       await fetchInbox();
       setBulkInput('');
       setShowBulkAdd(false);
+      setIsSyncingInbox(false);
+    }
+  };
+
+  const handleDeleteInboxLink = async (e: React.MouseEvent, linkId: string) => {
+    e.stopPropagation();
+    setDeletingLinkId(linkId);
+    await dataService.removeInboxLink(linkId);
+    await fetchInbox();
+    setDeletingLinkId(null);
+  };
+
+  const handleClearAllInbox = async () => {
+    if (window.confirm('¿Estás seguro de que quieres limpiar todos los enlaces del Inbox?')) {
+      setIsSyncingInbox(true);
+      await dataService.clearInbox(userId, activeFolderId);
+      await fetchInbox();
       setIsSyncingInbox(false);
     }
   };
@@ -203,15 +221,56 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               ) : (
                 <div className="bg-white rounded-[3rem] border border-slate-200 p-8 shadow-xl h-full flex flex-col max-h-[600px]">
                   <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-2"><LinkIcon className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Inbox</h3></div>
-                    <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">{pendingLinks.length}</span>
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-indigo-600" />
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Inbox</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={handleClearAllInbox}
+                        className="text-[9px] font-black text-slate-400 hover:text-rose-500 uppercase tracking-widest transition-colors mr-2"
+                      >
+                        Limpiar Todo
+                      </button>
+                      <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">{pendingLinks.length}</span>
+                    </div>
                   </div>
                   <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                     {pendingLinks.map((link) => (
-                      <button key={link.id} onClick={() => handleSelectPendingLink(link)} className="w-full group bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:shadow-md transition-all text-left flex items-center justify-between">
-                        <div className="min-w-0 flex-1"><p className="text-[10px] font-black text-indigo-500 uppercase truncate">{new URL(link.url).hostname.replace('www.', '')}</p><p className="text-xs text-slate-400 truncate font-medium">{link.url}</p></div>
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-all" />
-                      </button>
+                      <div 
+                        key={link.id} 
+                        className="group relative bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:bg-white hover:shadow-md transition-all flex items-center justify-between"
+                      >
+                        <button 
+                          onClick={() => handleSelectPendingLink(link)} 
+                          className="flex-1 min-w-0 text-left"
+                        >
+                          <p className="text-[10px] font-black text-indigo-500 uppercase truncate">
+                            {new URL(link.url).hostname.replace('www.', '')}
+                          </p>
+                          <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
+                        </button>
+                        <div className="flex items-center gap-1 ml-2">
+                          <button
+                            onClick={(e) => handleDeleteInboxLink(e, link.id)}
+                            disabled={deletingLinkId === link.id}
+                            className="p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                            title="Eliminar de la lista"
+                          >
+                            {deletingLinkId === link.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button 
+                             onClick={() => handleSelectPendingLink(link)}
+                             className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                          >
+                            <ArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
