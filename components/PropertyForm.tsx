@@ -11,6 +11,24 @@ interface PropertyFormProps {
   activeFolderId: string | null;
 }
 
+interface PropertyFormData {
+  title: string;
+  price: number;
+  fees: number;
+  location: string;
+  exactAddress: string;
+  environments: number;
+  rooms: number;
+  bathrooms: number;
+  toilets: number;
+  parking: number;
+  sqft: number;
+  coveredSqft: number;
+  uncoveredSqft: number;
+  age: number;
+  floor: string;
+}
+
 type CreationStep = 'inbox' | 'verify';
 type ProcessingMode = 'ai' | 'manual' | null;
 
@@ -30,7 +48,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotVersion, setSnapshotVersion] = useState(Date.now());
 
-  const [editedData, setEditedData] = useState<any>({
+  const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
   });
 
@@ -124,7 +142,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     });
     
     if (meta?.title) {
-       setEditedData(prev => ({ ...prev, title: meta.title }));
+       setEditedData((prev: PropertyFormData) => ({ ...prev, title: meta.title }));
     }
     
     setStep('verify');
