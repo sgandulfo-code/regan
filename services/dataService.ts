@@ -49,10 +49,16 @@ export const dataService = {
   // Properties
   async getProperties(folderId?: string) {
     let query = supabase.from('properties').select('*, renovations(*)');
+    
     if (folderId) {
       query = query.eq('folder_id', folderId);
     }
-    const { data, error } = await supabase.from('properties').select('*');
+    
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching properties:", error);
+      return [];
+    }
     return data || [];
   },
 
