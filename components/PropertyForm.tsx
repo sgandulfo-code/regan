@@ -18,6 +18,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [step, setStep] = useState<CreationStep>('select');
   const [mode, setMode] = useState<CreationMode>('ai');
   const [input, setInput] = useState('');
+  const [verificationUrl, setVerificationUrl] = useState(''); // URL estable para la vista previa
   const [bulkInput, setBulkInput] = useState('');
   const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -36,7 +37,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   });
 
   const isIframeBlocked = (url: string) => {
-    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz'];
+    if (!url) return false;
+    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker'];
     return blocked.some(domain => url.toLowerCase().includes(domain));
   };
 
@@ -71,15 +73,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         floor: analysisResult.floor || ''
       });
       
-      if (input.trim().startsWith('http')) {
-        if (isIframeBlocked(input)) {
+      if (verificationUrl) {
+        if (isIframeBlocked(verificationUrl)) {
           setActiveRefTab('snapshot');
         } else {
           setActiveRefTab('live');
         }
       }
     }
-  }, [analysisResult]);
+  }, [analysisResult, verificationUrl]);
 
   const handleAddBulkLinks = async () => {
     const urls = bulkInput.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
@@ -121,6 +123,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const handleStartCreation = async (targetInput: string) => {
     const trimmedInput = targetInput.trim();
+    setVerificationUrl(trimmedInput); // Fijamos la URL de verificación inmediatamente
     setSnapshotError(false);
     setSnapshotLoading(true);
     setSnapshotVersion(Date.now());
@@ -158,25 +161,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
     });
     setStep('verify');
-    if (input.trim().startsWith('http') && isIframeBlocked(input)) {
+    if (verificationUrl && isIframeBlocked(verificationUrl)) {
       setActiveRefTab('snapshot');
     }
   };
 
   const handleConfirm = () => {
     if (!analysisResult) return;
-    const isUrl = input.trim().startsWith('http');
     onAdd({
       id: Math.random().toString(36).substr(2, 9),
       folderId: activeFolderId || '',
       ...editedData,
-      url: isUrl ? input.trim() : '',
+      url: verificationUrl,
       address: editedData.location || 'Unknown Address',
       status: PropertyStatus.WISHLIST,
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
       notes: analysisResult.analysis?.strategy || '',
       renovationCosts: [],
-      images: [isUrl ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1200` : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'],
+      images: [verificationUrl ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1200` : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750'],
       createdAt: new Date().toISOString(),
     });
     resetForm();
@@ -185,6 +187,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const resetForm = () => {
     setAnalysisResult(null);
     setInput('');
+    setVerificationUrl('');
     setStep('select');
     setErrorStatus(null);
   };
@@ -358,7 +361,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             {mode === 'ai' ? 'Neural AI Mode' : 'Standard Manual Mode'}
           </div>
           {mode === 'ai' && (
-            <button onClick={() => handleStartCreation(input)} className="text-slate-400 hover:text-indigo-600 p-2"><RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} /></button>
+            <button onClick={() => handleStartCreation(verificationUrl)} className="text-slate-400 hover:text-indigo-600 p-2"><RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} /></button>
           )}
         </div>
       </div>
@@ -419,6 +422,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
         <div className="xl:col-span-7">
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
+            {/* Referencia Header */}
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
@@ -428,12 +432,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
               </div>
-              {input.trim().startsWith('http') && (
+              {verificationUrl && (
                 <div className="flex items-center gap-2">
-                  <button onClick={() => {setSnapshotVersion(Date.now()); setSnapshotLoading(true); setSnapshotError(false);}} className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all">
+                  <button 
+                    onClick={() => {setSnapshotVersion(Date.now()); setSnapshotLoading(true); setSnapshotError(false);}} 
+                    className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all"
+                    title="Force Refresh Reference"
+                  >
                     <RefreshCw className={`w-3 h-3 ${snapshotLoading && activeRefTab === 'snapshot' ? 'animate-spin' : ''}`} />
                   </button>
-                  <a href={input} target="_blank" rel="noopener" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
+                  <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
                     OPEN ORIGINAL <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -441,28 +449,31 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             </div>
             
             <div className="flex-1 bg-slate-800 relative overflow-hidden flex flex-col">
-              {input.trim().startsWith('http') ? (
+              {verificationUrl ? (
                 <>
                   {activeRefTab === 'snapshot' && (
                     <div className="w-full h-full relative flex items-center justify-center bg-white overflow-auto p-4">
                        {snapshotLoading && (
                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center p-8">
                             <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">IA is capturing the portal...</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural AI is capturing portal view...</p>
                          </div>
                        )}
                        {snapshotError ? (
                          <div className="text-center p-12 max-w-sm">
                             <ImageIcon className="w-16 h-16 text-slate-200 mx-auto mb-6" />
                             <h4 className="text-xl font-black text-slate-800 mb-2">Neural Snapshot Failed</h4>
-                            <p className="text-slate-400 text-sm mb-6">Site blocks automated capture. Please use <b>Live Portal</b> or open the site directly.</p>
+                            <p className="text-slate-400 text-sm mb-6">Portal security prevents AI automated capture. Use <b>Live Portal</b> or open site directly.</p>
+                            <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all">
+                              Visit Website <ExternalLink className="w-3 h-3" />
+                            </a>
                          </div>
                        ) : (
                          <img 
                           key={snapshotVersion}
-                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(input.trim())}?w=1600&v=${snapshotVersion}`} 
+                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1600&v=${snapshotVersion}`} 
                           className="max-w-full h-auto shadow-2xl rounded-lg" 
-                          alt="AI Capturing Portal..."
+                          alt="AI Portal Reference"
                           onLoad={() => setSnapshotLoading(false)}
                           onError={() => { setSnapshotError(true); setSnapshotLoading(false); }}
                         />
@@ -473,22 +484,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   {activeRefTab === 'live' && (
                     <div className="w-full h-full relative group">
                       <iframe 
-                        src={input} 
+                        src={verificationUrl} 
                         className="w-full h-full border-none bg-white" 
-                        title="Live View" 
-                        sandbox="allow-same-origin allow-scripts allow-forms"
+                        title="Live Reference View" 
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                       />
-                      {isIframeBlocked(input) && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-10">
+                      {isIframeBlocked(verificationUrl) && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-10 z-10">
                           <div className="max-w-md p-12 bg-slate-900 border border-white/10 rounded-[3rem] text-center shadow-3xl">
                              <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
                                 <AlertOctagon className="w-10 h-10" />
                              </div>
-                             <h4 className="text-xl font-black text-white mb-2">Portal Security Active</h4>
-                             <p className="text-slate-400 text-sm leading-relaxed mb-8">This portal (RE/MAX, Idealista, etc.) blocks embedded views for security. Use <b>"Neural Snapshot"</b> or open in a new window to verify.</p>
+                             <h4 className="text-xl font-black text-white mb-2">Portal Shield Active</h4>
+                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                               Este portal bloquea la visualización incrustada por seguridad. 
+                               Utiliza <b>"Neural Snapshot"</b> para ver la última captura de la IA.
+                             </p>
                              <div className="flex flex-col gap-3">
-                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Try Neural Snapshot</button>
-                               <a href={input} target="_blank" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all">Open Original Site</a>
+                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Switch to AI Snapshot</button>
+                               <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                                 Open in New Tab <ExternalLink className="w-4 h-4" />
+                               </a>
                              </div>
                           </div>
                         </div>
@@ -499,14 +515,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-12 text-center">
                   <Monitor className="w-16 h-16 mb-6 opacity-20" />
-                  <h4 className="text-xl font-black text-white mb-2">No Visual Context</h4>
-                  <p className="text-slate-400 text-sm max-w-xs">No link provided for this entry. Visual context panel is disabled.</p>
+                  <h4 className="text-xl font-black text-white mb-2">Reference Mode Offline</h4>
+                  <p className="text-slate-400 text-sm max-w-xs">No target URL for this session. Visual verification is disabled.</p>
                 </div>
               )}
               
               <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[3.5rem] shadow-inner z-30"></div>
             </div>
             
+            {/* Footer Summary */}
             <div className="p-8 bg-indigo-600 text-white shrink-0 z-20">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
@@ -515,16 +532,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   </div>
                   <div>
                     <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em]">
-                      {mode === 'ai' ? 'Neural Verdict' : 'Manual Entry'}
+                      {mode === 'ai' ? 'Neural Verdict' : 'Manual Audit'}
                     </p>
                     <h4 className="text-2xl font-black">
-                      {mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Technical Audit'}
+                      {mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Verification Active'}
                     </h4>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Strategic Insight</p>
-                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Analyzing data for investment potential...'}"</p>
+                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Potential</p>
+                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Manual technical verification in progress...'}"</p>
                 </div>
               </div>
             </div>
