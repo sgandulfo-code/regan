@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-// Added Ruler and Layers to imports
 import { Sparkles, MapPin, Euro, Home, ShieldCheck, CheckCircle2, AlertCircle, ExternalLink, ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2, X, FileSearch, Keyboard, Cpu, RefreshCw, Ruler, Layers } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -35,7 +34,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
   });
 
-  // Detección de portales problemáticos para iFrames (X-Frame-Options)
   const isIframeBlocked = (url: string) => {
     const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario'];
     return blocked.some(domain => url.toLowerCase().includes(domain));
@@ -52,7 +50,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setIsSyncingInbox(false);
   };
 
-  // Sincronizar editedData cuando llega el resultado de la IA
   useEffect(() => {
     if (analysisResult && !analysisResult.error) {
       setEditedData({
@@ -73,7 +70,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         floor: analysisResult.floor || ''
       });
       
-      // Auto-cambiar pestaña según el portal
       if (input.trim().startsWith('http')) {
         if (isIframeBlocked(input)) {
           setActiveRefTab('snapshot');
@@ -137,7 +133,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         setAnalysisResult(result);
         setStep('verify');
       } else {
-        // Fallback a manual si la IA falla
         const errorMsg = result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.';
         if (window.confirm(`${errorMsg} Do you want to continue with Manual Entry?`)) {
           setMode('manual');
@@ -412,14 +407,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
                 <CheckCircle2 className="w-6 h-6" /> VALIDATE & SAVE
               </button>
-              <button resetForm={() => resetForm()} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Discard</button>
+              <button onClick={resetForm} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Discard</button>
             </div>
           </div>
         </div>
 
         <div className="xl:col-span-7">
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
-            {/* Tabs de Referencia */}
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
@@ -472,7 +466,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         title="Live View" 
                         sandbox="allow-same-origin allow-scripts allow-forms"
                       />
-                      {/* Detección de posibles bloqueos X-Frame-Options */}
                       {isIframeBlocked(input) && (
                         <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-10">
                           <div className="max-w-md p-12 bg-slate-900 border border-white/10 rounded-[3rem] text-center shadow-3xl">
