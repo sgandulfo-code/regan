@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Home, ShieldCheck, CheckCircle2, AlertCircle, ExternalLink, ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2, X, FileSearch, Keyboard, Cpu, RefreshCw, Ruler, Layers, Plus, Inbox, ClipboardList } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Home, ShieldCheck, CheckCircle2, AlertCircle, ExternalLink, ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2, X, FileSearch, Keyboard, Cpu, RefreshCw, Ruler, Layers, Plus, Inbox, ClipboardList } from 'lucide-center';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
@@ -105,10 +105,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
     setProcessingLink(link);
     setMode(selectedMode);
-    setActiveRefTab('snapshot'); // Por defecto usamos el snapshot de Microlink
+    setActiveRefTab('snapshot'); 
     setSnapshotLoading(true);
     setSnapshotError(false);
     setSnapshotUrl(null);
+
+    // Iniciar carga de snapshot de respaldo de inmediato
+    const backupUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1280`;
 
     if (selectedMode === 'ai') {
       setIsAnalyzing(true);
@@ -117,10 +120,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
-        // Intentar obtener una captura profesional vía Microlink en paralelo
+        // Intentar obtener una captura mejor vía Microlink
         dataService.fetchExternalMetadata(link.url).then(meta => {
-          if (meta?.screenshot) setSnapshotUrl(meta.screenshot);
-          setSnapshotLoading(false);
+          setSnapshotUrl(meta?.screenshot || backupUrl);
+          if (!meta?.screenshot) setSnapshotLoading(false);
         });
       } else {
         setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
@@ -136,6 +139,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const switchToManual = async (url: string) => {
     setIsAnalyzing(true);
     const meta = await dataService.fetchExternalMetadata(url);
+    const backupUrl = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     
     setAnalysisResult({ 
       title: meta?.title || '', 
@@ -150,13 +154,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
        setEditedData((prev: PropertyFormData) => ({ ...prev, title: meta.title }));
     }
 
-    if (meta?.screenshot) {
-      setSnapshotUrl(meta.screenshot);
-    }
-    
+    setSnapshotUrl(meta?.screenshot || backupUrl);
     setStep('verify');
     setIsAnalyzing(false);
-    setSnapshotLoading(false);
+    if (!meta?.screenshot) setSnapshotLoading(false);
   };
 
   const handleConfirm = async () => {
@@ -188,6 +189,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setStep('inbox');
     setErrorStatus(null);
     setSnapshotUrl(null);
+    setSnapshotError(false);
     setEditedData({
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
     });
@@ -376,7 +378,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
                   <ImageIcon className="w-3 h-3 inline mr-2" /> High-Fidelity Snapshot
                 </button>
-                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-50 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
                   <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
               </div>
@@ -391,23 +393,34 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   {snapshotLoading && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
                       <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture via Microlink...</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating reference capture...</p>
                     </div>
                   )}
-                  {snapshotError || !snapshotUrl && !snapshotLoading ? (
+                  {snapshotError ? (
                     <div className="text-center p-12">
                       <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
                       <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                      <p className="text-slate-400 text-sm mb-6">Automated snapshots are restricted for this portal. Use the <b>Live Portal</b> tab.</p>
+                      <p className="text-slate-400 text-sm mb-6">This portal blocks automated AI snapshots. Use the <b>Live Portal</b> tab or try refreshing.</p>
+                      <button onClick={() => {setSnapshotError(false); setSnapshotLoading(true);}} className="text-indigo-600 font-bold text-xs uppercase underline">Retry Capture</button>
                     </div>
                   ) : (
-                    <img 
-                      src={snapshotUrl || ''} 
-                      className="max-w-full h-auto shadow-2xl rounded-lg" 
-                      alt="Property View"
-                      onLoad={() => setSnapshotLoading(false)}
-                      onError={() => { setSnapshotError(true); setSnapshotLoading(false); }}
-                    />
+                    snapshotUrl && (
+                      <img 
+                        src={snapshotUrl} 
+                        className="max-w-full h-auto shadow-2xl rounded-lg" 
+                        alt="Property View"
+                        onLoad={() => setSnapshotLoading(false)}
+                        onError={() => { 
+                          // Si falla Microlink, intentar el respaldo directo mshots como último recurso
+                          if (!snapshotUrl.includes('mshots')) {
+                            setSnapshotUrl(`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1280`);
+                          } else {
+                            setSnapshotError(true); 
+                            setSnapshotLoading(false); 
+                          }
+                        }}
+                      />
+                    )
                   )}
                 </div>
               ) : (
