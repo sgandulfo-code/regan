@@ -8,6 +8,7 @@ import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
 import FolderFormModal from './components/FolderFormModal';
 import PropertyMapView from './components/PropertyMapView';
+import PropertyDetailModal from './components/PropertyDetailModal';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
 import { dataService } from './services/dataService';
@@ -93,6 +94,27 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  const handleUpdateReno = async (propertyId: string, items: RenovationItem[]) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.updateRenovations(propertyId, items, user.id);
+    // Recargar datos para ver el impacto en el total
+    await loadInitialData();
+    // Actualizar también la propiedad seleccionada si está abierta
+    if (selectedProperty && selectedProperty.id === propertyId) {
+      const updatedProp = properties.find(p => p.id === propertyId);
+      if (updatedProp) setSelectedProperty(updatedProp);
+    }
+    setIsSyncing(false);
+  };
+
+  const handleUpdateStatus = async (propertyId: string, status: PropertyStatus) => {
+    setIsSyncing(true);
+    await dataService.updatePropertyStatus(propertyId, status);
+    await loadInitialData();
+    setIsSyncing(false);
+  };
+
   // Obtener la carpeta activa para mostrar su info en el header
   const activeFolder = useMemo(() => 
     folders.find(f => f.id === activeFolderId), 
@@ -103,9 +125,10 @@ const App: React.FC = () => {
   if (!user) return <Auth />;
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 relative">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user.role} folders={folders} activeFolderId={activeFolderId} setActiveFolderId={setActiveFolderId} onLogout={() => supabase.auth.signOut()} isSyncing={isSyncing} />
-      <main className="flex-1 p-10 overflow-y-auto">
+      
+      <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
         <header className="mb-10 flex justify-between items-start">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
@@ -124,7 +147,7 @@ const App: React.FC = () => {
         </header>
 
         {activeTab === 'dashboard' && !activeFolderId && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
             {folders.map(f => (
               <button 
                 key={f.id} 
@@ -163,7 +186,7 @@ const App: React.FC = () => {
         {activeTab === 'properties' && (
           <div className="space-y-6">
             {properties.filter(p => p.folderId === activeFolderId).length === 0 ? (
-              <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
+              <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Home className="w-10 h-10 text-slate-300" />
                 </div>
@@ -177,16 +200,36 @@ const App: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
                 {properties.filter(p => p.folderId === activeFolderId).map(p => (
-                  <PropertyCard key={p.id} property={p} onSelect={setSelectedProperty} onStatusChange={(id, s) => dataService.updatePropertyStatus(id, s)} />
+                  <PropertyCard 
+                    key={p.id} 
+                    property={p} 
+                    onSelect={setSelectedProperty} 
+                    onStatusChange={(id, s) => handleUpdateStatus(id, s)} 
+                  />
                 ))}
               </div>
             )}
           </div>
         )}
       </main>
-      <FolderFormModal isOpen={isFolderModalOpen} onClose={() => setIsFolderModalOpen(false)} onConfirm={handleCreateFolder} />
+
+      {/* Vistas Modales */}
+      <FolderFormModal 
+        isOpen={isFolderModalOpen} 
+        onClose={() => setIsFolderModalOpen(false)} 
+        onConfirm={handleCreateFolder} 
+      />
+      
+      {selectedProperty && (
+        <PropertyDetailModal 
+          property={selectedProperty} 
+          onClose={() => setSelectedProperty(null)} 
+          userRole={user.role}
+          onUpdateReno={(items) => handleUpdateReno(selectedProperty.id, items)}
+        />
+      )}
     </div>
   );
 };
