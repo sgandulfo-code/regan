@@ -67,7 +67,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [isSyncingInbox, setIsSyncingInbox] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
-  const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('snapshot');
+  const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('live');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
@@ -129,7 +129,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
     setProcessingLink(link);
     setMode(selectedMode);
-    setActiveRefTab('snapshot'); 
+    
+    // Si es manual, priorizamos el LIVE (Iframe)
+    // Si es AI, priorizamos el SNAPSHOT para ver los datos que la AI está extrayendo
+    setActiveRefTab(selectedMode === 'manual' ? 'live' : 'snapshot'); 
+    
     setSnapshotLoading(true);
     setSnapshotError(false);
     setSnapshotUrl(null);
@@ -150,7 +154,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         const isQuota = result?.error === 'QUOTA_EXCEEDED';
         setErrorStatus(isQuota ? 'Gemini AI Quota Exhausted (429). Switching to Standard mode.' : 'Neural analysis failed for this URL.');
         
-        // Auto-switch to manual to keep the flow going
         setTimeout(async () => {
           await switchToManual(link.url);
         }, isQuota ? 2000 : 500);
@@ -163,6 +166,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const switchToManual = async (url: string) => {
     setIsAnalyzing(true);
+    setActiveRefTab('live'); // Forzar Iframe en modo manual
     const meta = await dataService.fetchExternalMetadata(url);
     
     setAnalysisResult({ 
@@ -409,11 +413,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
+                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+                  <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
+                </button>
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
                   <ImageIcon className="w-3 h-3 inline mr-2" /> Neural Snapshot
-                </button>
-                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-50 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
                 </button>
               </div>
               <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
