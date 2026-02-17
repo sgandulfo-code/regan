@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Sparkles, 
   MapPin, 
@@ -138,6 +138,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       setIsAnalyzing(true);
       setErrorStatus(null);
       const result = await parseSemanticSearch(link.url);
+      
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
@@ -146,9 +147,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           setSnapshotLoading(false);
         });
       } else {
-        setErrorStatus(result?.error === 'QUOTA_EXCEEDED' ? 'AI Quota Exceeded.' : 'AI failed to parse URL.');
-        setMode('manual');
-        await switchToManual(link.url);
+        const isQuota = result?.error === 'QUOTA_EXCEEDED';
+        setErrorStatus(isQuota ? 'Gemini Quota Exceeded (429). Falling back to Standard Audit.' : 'Neural AI failed to parse this listing.');
+        
+        // Auto-fallback a manual si es un error de cuota para no bloquear al usuario
+        setTimeout(async () => {
+          await switchToManual(link.url);
+        }, isQuota ? 2000 : 0);
       }
       setIsAnalyzing(false);
     } else {
@@ -165,7 +170,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       price: 0, 
       confidence: 1, 
       dealScore: 50, 
-      analysis: { strategy: 'Manual audit based on high-fidelity reference.' }, 
+      analysis: { strategy: 'Standard audit mode activated. Please verify technical details manually.' }, 
       sources: []
     });
     
@@ -339,6 +344,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         </div>
       </div>
 
+      {errorStatus && errorStatus.includes('Quota') && (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-3xl flex items-center gap-3 text-amber-700 text-xs font-bold animate-in slide-in-from-top-4">
+           <AlertCircle className="w-5 h-5 shrink-0" />
+           <span>{errorStatus}</span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-5">
           <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
@@ -373,7 +385,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
                     <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                   </div>
-                  {errorStatus && <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {errorStatus}</div>}
+                  {errorStatus && !errorStatus.includes('Quota') && (
+                    <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" /> {errorStatus}
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -466,7 +482,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               )}
             </div>
 
-            {mode === 'ai' && !isAnalyzing && (
+            {mode === 'ai' && !isAnalyzing && analysisResult?.dealScore && (
               <div className="p-8 bg-indigo-600 text-white shrink-0">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">

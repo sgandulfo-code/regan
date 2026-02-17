@@ -150,17 +150,18 @@ export const dataService = {
 
   /**
    * Fetch Metadata via Microlink API
-   * Utilizamos parámetros de renderizado agresivos para asegurar que la captura sea fiel al portal original.
+   * Simplificamos los parámetros para evitar errores 400 y mejorar la tasa de éxito.
    */
   async fetchExternalMetadata(url: string) {
     try {
-      // Configuramos Microlink para forzar el renderizado de JS y esperar a que la red esté tranquila
-      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true&waitForTimeout=4000&viewport.width=1440&viewport.height=900&adblock=true`;
+      // Usamos una URL de Microlink más sencilla para mayor compatibilidad
+      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true`;
       
       const response = await fetch(microlinkUrl);
+      if (!response.ok) throw new Error(`Microlink responded with ${response.status}`);
+      
       const result = await response.json();
-
-      const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`;
+      const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
 
       if (result.status === 'success') {
         const { data } = result;
@@ -174,8 +175,11 @@ export const dataService = {
       }
       return { title: '', screenshot: mshotsFallback };
     } catch (e) {
-      console.error("Microlink API Call Failed", e);
-      return { title: '', screenshot: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440` };
+      console.error("Microlink Metadata Fetch Failed", e);
+      return { 
+        title: '', 
+        screenshot: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280` 
+      };
     }
   }
 };

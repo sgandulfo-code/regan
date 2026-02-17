@@ -8,7 +8,7 @@ export const parseSemanticSearch = async (description: string) => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `You are a high-precision real estate technical analyst. 
-      TASK: Visit this URL or analyze this description: "${description}" and extract ALL possible technical specifications.
+      TASK: Analyze this description or URL: "${description}" and extract ALL possible technical specifications.
       
       CRITICAL RULES:
       1. Use Google Search to find the EXACT listing if a URL is provided.
@@ -57,16 +57,23 @@ export const parseSemanticSearch = async (description: string) => {
     });
 
     const text = response.text || '{}';
-    const parsed = JSON.parse(text);
-    
-    return {
-      ...parsed,
-      sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
-    };
+    try {
+      const parsed = JSON.parse(text);
+      return {
+        ...parsed,
+        sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
+      };
+    } catch (e) {
+      console.error("Gemini JSON Parsing Error", text);
+      return { error: 'PARSE_ERROR' };
+    }
   } catch (error: any) {
-    console.error("Gemini Parsing Error:", error);
-    if (error.message?.includes('429')) return { error: 'QUOTA_EXCEEDED' };
-    return null;
+    console.error("Gemini API Error:", error);
+    // Detectar específicamente cuota excedida (429)
+    if (error.message?.includes('429') || error.status === 429 || JSON.stringify(error).includes('429')) {
+      return { error: 'QUOTA_EXCEEDED' };
+    }
+    return { error: 'GENERIC_ERROR' };
   }
 };
 
