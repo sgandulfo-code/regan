@@ -120,19 +120,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     }
   };
 
-  const isIframeBlocked = (url: string) => {
-    if (!url) return false;
-    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21', 'vivienda', 'pisos.com', 'yaencontre'];
-    return blocked.some(domain => url.toLowerCase().includes(domain));
-  };
-
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
     setProcessingLink(link);
     setMode(selectedMode);
-    
-    // Default to 'live' (iframe) as requested for the standard experience
     setActiveRefTab('live'); 
-    
     setSnapshotLoading(true);
     setSnapshotError(false);
     setSnapshotUrl(null);
@@ -145,15 +136,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (result && !result.error) {
         setAnalysisResult(result);
         setStep('verify');
-        // Pre-fetch snapshot in background
         dataService.fetchExternalMetadata(link.url).then(meta => {
           setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`);
           setSnapshotLoading(false);
         });
       } else {
         const isQuota = result?.error === 'QUOTA_EXCEEDED';
-        setErrorStatus(isQuota ? 'Gemini AI Quota Exhausted (429). Switching to Standard mode.' : 'Neural analysis failed.');
-        setTimeout(() => switchToManual(link.url), isQuota ? 2000 : 500);
+        setErrorStatus(isQuota ? 'AI Quota Exhausted (429). switching to manual audit.' : 'Analysis failed.');
+        setTimeout(() => switchToManual(link.url), isQuota ? 1500 : 500);
       }
       setIsAnalyzing(false);
     } else {
@@ -171,7 +161,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       price: 0, 
       confidence: 1, 
       dealScore: 50, 
-      analysis: { strategy: 'Standard audit mode activated. Iframe prioritizing.' }, 
+      analysis: { strategy: 'Standard audit mode activated.' }, 
       sources: []
     });
     
@@ -254,7 +244,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               rows={3}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Paste listing URLs here (one per line)..."
+              placeholder="Paste listing URLs here..."
               className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg font-medium placeholder:text-slate-300 resize-none"
             />
             <button 
@@ -273,22 +263,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <Inbox className="w-4 h-4" /> Pending Queue ({pendingLinks.length})
             </h3>
-            {pendingLinks.length > 0 && (
-              <button 
-                onClick={() => { if(window.confirm('Clear all pending links?')) dataService.clearInbox(userId, activeFolderId).then(fetchInbox) }} 
-                className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline"
-              >
-                Clear All
-              </button>
-            )}
           </div>
 
           {pendingLinks.length === 0 ? (
             <div className="bg-slate-50 rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-200">
-               <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
-                  <ClipboardList className="w-10 h-10 text-slate-200" />
-               </div>
-               <p className="text-slate-400 font-medium italic">Your inbox is empty. Start by adding some listing URLs above.</p>
+               <ClipboardList className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+               <p className="text-slate-400 font-medium italic">Inbox empty.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -301,27 +281,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       </p>
                       <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
                     </div>
-                    <button 
-                      onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)}
-                      className="p-2 text-slate-300 hover:text-rose-500 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)} className="p-2 text-slate-300 hover:text-rose-500 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-slate-50">
-                    <button 
-                      onClick={() => startProcessing(link, 'ai')}
-                      className="bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"
-                    >
-                      <Cpu className="w-3 h-3" /> Neural AI
-                    </button>
-                    <button 
-                      onClick={() => startProcessing(link, 'manual')}
-                      className="bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"
-                    >
-                      <Keyboard className="w-3 h-3" /> Standard
-                    </button>
+                    <button onClick={() => startProcessing(link, 'ai')} className="bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"><Cpu className="w-3 h-3" /> Neural AI</button>
+                    <button onClick={() => startProcessing(link, 'manual')} className="bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all border border-indigo-100"><Keyboard className="w-3 h-3" /> Standard</button>
                   </div>
                 </div>
               ))}
@@ -338,42 +303,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
           <ArrowRight className="w-4 h-4 rotate-180" /> Back to Inbox
         </button>
-        <div className="flex items-center gap-4">
-          <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-            {mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
-          </div>
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+          {mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
         </div>
       </div>
-
-      {errorStatus && errorStatus.toLowerCase().includes('quota') && (
-        <div className="bg-amber-50 border border-amber-200 p-4 rounded-3xl flex items-center gap-3 text-amber-700 text-xs font-bold animate-in slide-in-from-top-4">
-           <AlertCircle className="w-5 h-5 shrink-0" />
-           <span>{errorStatus}</span>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-5">
           <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
-            <div className="flex items-center justify-between border-b pb-8">
-              <div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Asset Audit</h3>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Confirm data before importing to search folder</p>
-              </div>
-              {mode === 'ai' && !isAnalyzing && (
-                <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
-                </div>
-              )}
-            </div>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Asset Audit</h3>
             
             <div className="flex-1 space-y-5 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
               {isAnalyzing ? (
                 <div className="py-20 text-center space-y-4">
                   <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
-                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                    {mode === 'ai' ? 'Neural AI is parsing listing data...' : 'Fetching portal metadata...'}
-                  </p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Processing listing...</p>
                 </div>
               ) : (
                 <>
@@ -383,24 +327,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
                     <FormField label="Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
                     <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
-                    <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
-                    <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                   </div>
-                  {errorStatus && !errorStatus.toLowerCase().includes('quota') && (
-                    <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" /> {errorStatus}
-                    </div>
-                  )}
                 </>
               )}
             </div>
 
             {!isAnalyzing && (
               <div className="flex gap-4 pt-6 mt-auto">
-                <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
-                  <CheckCircle2 className="w-6 h-6" /> IMPORT ASSET
-                </button>
-                <button onClick={resetProcessing} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Cancel</button>
+                <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all"><CheckCircle2 className="w-6 h-6" /> IMPORT ASSET</button>
               </div>
             )}
           </div>
@@ -410,95 +344,31 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
-                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <Monitor className="w-3 h-3 inline mr-2" /> Live Portal
-                </button>
-                <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                  <ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot
-                </button>
+                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><Monitor className="w-3 h-3 inline mr-2" /> Live Portal</button>
+                <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot</button>
               </div>
-              <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
-                ORIGINAL <ExternalLink className="w-3 h-3" />
-              </a>
+              <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">ORIGINAL <ExternalLink className="w-3 h-3" /></a>
             </div>
             
-            <div className="flex-1 bg-white relative overflow-hidden flex flex-col">
+            <div className="flex-1 bg-white relative flex flex-col">
               {activeRefTab === 'live' ? (
-                <div className="w-full h-full relative">
-                  <iframe 
-                    src={processingLink?.url} 
-                    className="w-full h-full border-none" 
-                    title="Live Portal View" 
-                    allowFullScreen
-                    style={{ border: 'none' }}
-                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                  />
-                  {isIframeBlocked(processingLink?.url || '') && (
-                    <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-12 text-center z-10 pointer-events-none">
-                      <div className="max-w-md pointer-events-auto">
-                        <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
-                        <h4 className="text-xl font-black text-white mb-2">Embedded View restricted</h4>
-                        <p className="text-slate-400 text-sm mb-8">
-                          The listing portal blocks direct embedding.
-                          <br/><br/>
-                          Try the <b>AI Snapshot</b> or open the <b>Original</b> link.
-                        </p>
-                        <div className="flex gap-4 justify-center">
-                          <button onClick={() => setActiveRefTab('snapshot')} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl">View Snapshot</button>
-                          <a href={processingLink?.url} target="_blank" rel="noopener noreferrer" className="bg-white/10 text-white border border-white/20 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest">Open Original</a>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <iframe 
+                  src={processingLink?.url} 
+                  className="w-full h-full" 
+                  title="Portal View" 
+                  allowFullScreen
+                  style={{ border: 'none', background: '#fff' }}
+                />
               ) : (
                 <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center bg-slate-100 p-8">
-                  {snapshotLoading && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center">
-                      <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating Visual Snapshot...</p>
-                    </div>
-                  )}
-                  {snapshotUrl ? (
-                    <img 
-                      src={snapshotUrl} 
-                      className="max-w-full h-auto shadow-2xl rounded-lg" 
-                      alt="Property Preview"
-                      onLoad={() => setSnapshotLoading(false)}
-                      onError={() => { 
-                        if (!snapshotUrl.includes('mshots')) {
-                           setSnapshotUrl(`https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink?.url || '')}?w=1440`);
-                        } else {
-                           setSnapshotError(true); setSnapshotLoading(false);
-                        }
-                      }}
-                    />
-                  ) : !snapshotLoading && (
-                    <div className="text-center p-12">
-                      <AlertOctagon className="w-16 h-16 text-rose-500 mx-auto mb-6" />
-                      <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
-                      <p className="text-slate-400 text-sm">Automated capture blocked by portal. Please use original link.</p>
-                    </div>
+                  {snapshotLoading ? (
+                    <div className="flex flex-col items-center justify-center"><Loader2 className="w-8 h-8 text-indigo-500 animate-spin mb-4" /><p className="text-[10px] font-black text-slate-400 uppercase">Generating Snapshot...</p></div>
+                  ) : snapshotUrl && (
+                    <img src={snapshotUrl} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />
                   )}
                 </div>
               )}
             </div>
-
-            {mode === 'ai' && !isAnalyzing && analysisResult?.dealScore && (
-              <div className="p-8 bg-indigo-600 text-white shrink-0">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                      <Sparkles className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Neural Verdict</p>
-                      <h4 className="text-2xl font-black">Deal Score: {analysisResult?.dealScore || '??'}/100</h4>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
