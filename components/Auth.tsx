@@ -1,62 +1,63 @@
 
 import React, { useState } from 'react';
-import { Mail, User as UserIcon, ArrowRight, Sparkles, Building2, UserCircle, Loader2 } from 'lucide-react';
-import { User, UserRole } from '../types';
+import { Mail, Lock, User as UserIcon, ArrowRight, Sparkles, Building2, UserCircle, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { UserRole } from '../types';
+import { supabase } from '../services/supabase';
 import { dataService } from '../services/dataService';
 
-interface AuthProps {
-  onLogin: (user: User) => void;
-}
-
-const Auth: React.FC<AuthProps> = ({ onLogin }) => {
+const Auth: React.FC = () => {
+  const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>(UserRole.BUYER);
-  const [step, setStep] = useState<'email' | 'details'>('email');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
-    
     setIsLoading(true);
-    const existingUser = await dataService.getProfileByEmail(email);
-    setIsLoading(false);
-    
-    if (existingUser) {
-      onLogin(existingUser);
-    } else {
-      setStep('details');
-    }
-  };
+    setErrorMsg(null);
 
-  const handleFullSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email) return;
-
-    setIsLoading(true);
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9), // Supabase can generate UUIDs too
-      name,
-      email,
-      role
-    };
-
-    const createdUser = await dataService.createProfile(newUser);
-    setIsLoading(false);
-    
-    if (createdUser) {
-      onLogin({
-        id: createdUser.id,
-        name: createdUser.full_name,
-        email: createdUser.email,
-        role: createdUser.role as UserRole
-      });
+    try {
+      if (mode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) throw error;
+      } else {
+        // Sign Up
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        
+        if (authError) throw authError;
+        
+        if (authData.user) {
+          // Crear el perfil en la tabla 'profiles'
+          const profile = await dataService.createProfile(
+            authData.user.id,
+            name,
+            email,
+            role
+          );
+          if (!profile) throw new Error("Could not create user profile record.");
+        }
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "An authentication error occurred.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 overflow-hidden relative">
+      {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/20 blur-[120px] rounded-full"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-rose-600/10 blur-[120px] rounded-full"></div>
 
@@ -66,48 +67,35 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
             PB
           </div>
           <h1 className="text-4xl font-black text-white tracking-tight mb-2">PropBrain</h1>
-          <p className="text-slate-400 font-medium">Synced with Supabase Cloud</p>
+          <p className="text-slate-400 font-medium">Secure Property Management</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-8 md:p-10 shadow-2xl">
-          {step === 'email' ? (
-            <form onSubmit={handleEmailSubmit} className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-white mb-2">Welcome Back</h2>
-                <p className="text-slate-400 text-sm">Enter your email to verify your session.</p>
-              </div>
+          <div className="flex bg-white/5 p-1 rounded-2xl mb-8">
+            <button 
+              onClick={() => setMode('login')}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${mode === 'login' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+            >
+              Login
+            </button>
+            <button 
+              onClick={() => setMode('signup')}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${mode === 'signup' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+            >
+              Register
+            </button>
+          </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <input
-                    required
-                    type="email"
-                    placeholder="name@company.com"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+          <form onSubmit={handleAuth} className="space-y-5">
+            {errorMsg && (
+              <div className="bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl flex items-start gap-3 text-rose-400 text-xs font-bold animate-pulse">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{errorMsg}</span>
               </div>
+            )}
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 group disabled:bg-slate-800"
-              >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleFullSignup} className="space-y-6">
-              <div className="text-center mb-8">
-                <h2 className="text-xl font-bold text-white mb-2">Finalize Profile</h2>
-                <p className="text-slate-400 text-sm">Tell us who you are to personalize PropBrain.</p>
-              </div>
-
-              <div className="space-y-2">
+            {mode === 'signup' && (
+              <div className="space-y-1.5">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
@@ -121,9 +109,48 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   />
                 </div>
               </div>
+            )}
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Your Role</label>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  required
+                  type="email"
+                  placeholder="name@company.com"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 pr-12 text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all font-medium"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-indigo-400 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            {mode === 'signup' && (
+              <div className="space-y-2 pt-2">
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Professional Role</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { id: UserRole.BUYER, icon: UserCircle, label: 'Buyer' },
@@ -146,24 +173,27 @@ const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                   ))}
                 </div>
               </div>
+            )}
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all disabled:bg-slate-800 flex justify-center"
-              >
-                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Launch Workspace"}
-              </button>
-              
-              <button 
-                type="button" 
-                onClick={() => setStep('email')}
-                className="w-full text-slate-500 text-xs font-bold hover:text-slate-400 transition-colors"
-              >
-                Back to email
-              </button>
-            </form>
-          )}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-5 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center justify-center gap-3 group disabled:bg-slate-800 mt-4"
+            >
+              {isLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <>
+                  {mode === 'login' ? 'Sign In' : 'Create Account'}
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-slate-500 text-[10px] mt-8 font-medium">
+            By continuing, you agree to PropBrain's Terms of Service and Privacy Policy.
+          </p>
         </div>
       </div>
     </div>

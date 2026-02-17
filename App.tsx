@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check } from 'lucide-react';
+// Fixed: Added Loader2 to the lucide-react imports to resolve the compilation error.
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -11,6 +12,7 @@ import PropertyMapView from './components/PropertyMapView';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
 import { dataService } from './services/dataService';
+import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -21,17 +23,41 @@ const App: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(true);
 
-  // Check for existing session
+  // Supabase Auth Session Listener
   useEffect(() => {
-    const savedSession = localStorage.getItem('propbrain_session');
-    if (savedSession) {
-      setUser(JSON.parse(savedSession));
-    }
+    // 1. Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        syncUserProfile(session.user.id);
+      } else {
+        setIsSyncing(false);
+      }
+    });
+
+    // 2. Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        syncUserProfile(session.user.id);
+      } else {
+        setUser(null);
+        setIsSyncing(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch Folders and Properties on login or change
+  const syncUserProfile = async (userId: string) => {
+    const profile = await dataService.getProfile(userId);
+    if (profile) {
+      setUser(profile);
+    }
+    setIsSyncing(false);
+  };
+
+  // Fetch Folders and Properties whenever user changes
   useEffect(() => {
     if (user) {
       loadInitialData();
@@ -59,7 +85,7 @@ const App: React.FC = () => {
       title: p.title,
       url: p.url,
       address: p.address,
-      exactAddress: p.exact_address,
+      exact_address: p.exact_address,
       price: Number(p.price),
       fees: Number(p.fees),
       environments: p.environments,
@@ -76,20 +102,19 @@ const App: React.FC = () => {
       rating: p.rating,
       notes: p.notes,
       images: p.images || [],
-      renovationCosts: [], 
+      renovationCosts: p.renovations ? p.renovations.map((r: any) => ({
+        id: r.id,
+        category: r.category,
+        description: r.description,
+        estimatedCost: Number(r.estimated_cost)
+      })) : [], 
       createdAt: p.created_at
     })));
     setIsSyncing(false);
   };
 
-  const handleLogin = (loggedUser: User) => {
-    setUser(loggedUser);
-    localStorage.setItem('propbrain_session', JSON.stringify(loggedUser));
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    localStorage.removeItem('propbrain_session');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
   const filteredProperties = useMemo(() => {
@@ -158,8 +183,17 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  if (isSyncing && !user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        {/* Fixed: Loader2 is now available from lucide-react imports */}
+        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+      </div>
+    );
+  }
+
   if (!user) {
-    return <Auth onLogin={handleLogin} />;
+    return <Auth />;
   }
 
   const DetailItem = ({ label, value, icon: Icon }: any) => (
@@ -212,7 +246,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4 animate-in slide-in-from-right duration-500">
             <div className="flex items-center gap-3 bg-white border border-slate-200 p-1.5 pr-5 rounded-2xl shadow-sm">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-black ${user.role === UserRole.ARCHITECT ? 'bg-orange-500' : user.role === UserRole.CONTRACTOR ? 'bg-emerald-600' : 'bg-indigo-600'}`}>
-                {user.name.charAt(0)}
+                {user.name?.charAt(0) || user.email?.charAt(0)}
               </div>
               <div className="hidden sm:block leading-none">
                 <p className="text-sm font-black text-slate-800">{user.name}</p>

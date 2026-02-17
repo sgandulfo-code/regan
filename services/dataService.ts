@@ -1,30 +1,42 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole } from '../types';
 
 export const dataService = {
   // Profiles
-  async getProfileByEmail(email: string) {
+  async getProfile(id: string) {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', email)
+      .eq('id', id)
       .single();
-    if (error) return null;
-    return data as User;
+    
+    if (error || !data) return null;
+    
+    return {
+      id: data.id,
+      name: data.full_name,
+      email: data.email,
+      role: data.role as UserRole
+    } as User;
   },
 
-  async createProfile(user: User) {
+  async createProfile(id: string, name: string, email: string, role: UserRole) {
     const { data, error } = await supabase
       .from('profiles')
       .insert([{ 
-        id: user.id, 
-        full_name: user.name, 
-        email: user.email, 
-        role: user.role 
+        id, // Usamos el ID de Auth
+        full_name: name, 
+        email: email, 
+        role: role 
       }])
       .select()
       .single();
+      
+    if (error) {
+      console.error("Error creating profile record:", error);
+      return null;
+    }
     return data;
   },
 
@@ -107,9 +119,7 @@ export const dataService = {
   },
 
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {
-    // Primero borramos los anteriores para este property
     await supabase.from('renovations').delete().eq('property_id', propertyId);
-    // Luego insertamos los nuevos
     if (items.length > 0) {
       const toInsert = items.map(item => ({
         property_id: propertyId,
