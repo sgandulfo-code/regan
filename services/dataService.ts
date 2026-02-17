@@ -7,6 +7,7 @@ export interface InboxLink {
   url: string;
   folder_id: string;
   user_id: string;
+  created_at: string;
 }
 
 export const dataService = {
@@ -31,19 +32,9 @@ export const dataService = {
   async createProfile(id: string, name: string, email: string, role: UserRole) {
     const { data, error } = await supabase
       .from('profiles')
-      .insert([{ 
-        id, // Usamos el ID de Auth
-        full_name: name, 
-        email: email, 
-        role: role 
-      }])
+      .insert([{ id, full_name: name, email, role }])
       .select()
       .single();
-      
-    if (error) {
-      console.error("Error creating profile record:", error);
-      return null;
-    }
     return data;
   },
 
@@ -68,16 +59,8 @@ export const dataService = {
   // Properties
   async getProperties(folderId?: string) {
     let query = supabase.from('properties').select('*, renovations(*)');
-    
-    if (folderId) {
-      query = query.eq('folder_id', folderId);
-    }
-    
+    if (folderId) query = query.eq('folder_id', folderId);
     const { data, error } = await query;
-    if (error) {
-      console.error("Error fetching properties:", error);
-      return [];
-    }
     return data || [];
   },
 
@@ -117,14 +100,6 @@ export const dataService = {
   },
 
   // Renovations
-  async getRenovations(propertyId: string) {
-    const { data, error } = await supabase
-      .from('renovations')
-      .select('*')
-      .eq('property_id', propertyId);
-    return data || [];
-  },
-
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {
     await supabase.from('renovations').delete().eq('property_id', propertyId);
     if (items.length > 0) {
@@ -139,14 +114,12 @@ export const dataService = {
     }
   },
 
-  // Link Inbox (NEW)
+  // Link Inbox
   async getInboxLinks(userId: string, folderId: string | null) {
     let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
-    if (folderId) {
-      query = query.eq('folder_id', folderId);
-    }
+    if (folderId) query = query.eq('folder_id', folderId);
     const { data, error } = await query.order('created_at', { ascending: false });
-    return data || [];
+    return (data || []) as InboxLink[];
   },
 
   async addInboxLinks(links: string[], userId: string, folderId: string | null) {
@@ -155,8 +128,7 @@ export const dataService = {
       folder_id: folderId,
       url: url
     }));
-    const { data, error } = await supabase.from('link_inbox').insert(toInsert).select();
-    return data || [];
+    await supabase.from('link_inbox').insert(toInsert);
   },
 
   async removeInboxLink(id: string) {
@@ -165,9 +137,7 @@ export const dataService = {
 
   async clearInbox(userId: string, folderId: string | null) {
     let query = supabase.from('link_inbox').delete().eq('user_id', userId);
-    if (folderId) {
-      query = query.eq('folder_id', folderId);
-    }
+    if (folderId) query = query.eq('folder_id', folderId);
     await query;
   }
 };

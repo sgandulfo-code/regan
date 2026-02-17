@@ -8,7 +8,7 @@ CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offere
 -- 2. TABLES
 -- Profiles table
 CREATE TABLE profiles (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id UUID PRIMARY KEY,
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
   role user_role DEFAULT 'Buyer'::user_role,
@@ -62,7 +62,7 @@ CREATE TABLE renovations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Link Inbox table (NEW)
+-- Link Inbox table (Persistencia de cola de búsqueda)
 CREATE TABLE link_inbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -71,7 +71,7 @@ CREATE TABLE link_inbox (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. RLS POLICIES (Simplified for dev, restrict more for production)
+-- 3. RLS POLICIES
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
