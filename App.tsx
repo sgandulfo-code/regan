@@ -173,7 +173,6 @@ const App: React.FC = () => {
     if (newFolder) {
       await loadInitialData();
       setActiveFolderId(newFolder.id);
-      // Redirigir a 'search' para que el usuario pueda empezar a buscar inmediatamente
       setActiveTab('search');
     }
     setIsFolderModalOpen(false);
@@ -307,7 +306,7 @@ const App: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {activeTab === 'search' && (
              <div className="max-w-5xl mx-auto">
-               <PropertyForm onAdd={handleAddProperty} />
+               <PropertyForm onAdd={handleAddProperty} userId={user.id} activeFolderId={activeFolderId} />
              </div>
           )}
 

@@ -62,13 +62,24 @@ CREATE TABLE renovations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- Link Inbox table (NEW)
+CREATE TABLE link_inbox (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- 3. RLS POLICIES (Simplified for dev, restrict more for production)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE renovations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE link_inbox ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all public access for development" ON profiles FOR ALL USING (true);
 CREATE POLICY "Allow all public access for development" ON folders FOR ALL USING (true);
 CREATE POLICY "Allow all public access for development" ON properties FOR ALL USING (true);
 CREATE POLICY "Allow all public access for development" ON renovations FOR ALL USING (true);
+CREATE POLICY "Allow all public access for development" ON link_inbox FOR ALL USING (true);

@@ -1,18 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler, Info, Map as MapIcon, Image as ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon } from 'lucide-react';
+import { Sparkles, MapPin, Euro, Maximize, Home, ShieldCheck, AlertTriangle, Lightbulb, CheckCircle2, PencilLine, AlertCircle, ExternalLink, Eye, FileText, ChevronRight, Car, Layers, History, Ruler, Info, Map as MapIcon, Image as ImageIcon, Link as LinkIcon, ListPlus, Trash2, ArrowRight, Monitor, AlertOctagon, Loader2 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
+import { dataService, InboxLink } from '../services/dataService';
 
 interface PropertyFormProps {
   onAdd: (prop: Property) => void;
+  userId: string;
+  activeFolderId: string | null;
 }
 
-const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
+const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId }) => {
   const [input, setInput] = useState('');
   const [bulkInput, setBulkInput] = useState('');
-  const [pendingLinks, setPendingLinks] = useState<string[]>([]);
+  const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSyncingInbox, setIsSyncingInbox] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'map'>('live');
@@ -36,6 +40,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
     floor: ''
   });
 
+  // Fetch pending links from Supabase
+  useEffect(() => {
+    fetchInbox();
+  }, [userId, activeFolderId]);
+
+  const fetchInbox = async () => {
+    setIsSyncingInbox(true);
+    const links = await dataService.getInboxLinks(userId, activeFolderId);
+    setPendingLinks(links);
+    setIsSyncingInbox(false);
+  };
+
   useEffect(() => {
     if (analysisResult && !analysisResult.error) {
       setEditedData({
@@ -58,23 +74,30 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
     }
   }, [analysisResult]);
 
-  const handleAddBulkLinks = () => {
+  const handleAddBulkLinks = async () => {
     const lines = bulkInput.split('\n');
     const urls = lines
       .map(line => line.trim())
       .filter(line => line.startsWith('http'));
     
     if (urls.length > 0) {
-      setPendingLinks(prev => [...new Set([...prev, ...urls])]);
+      setIsSyncingInbox(true);
+      await dataService.addInboxLinks(urls, userId, activeFolderId);
+      await fetchInbox();
       setBulkInput('');
       setShowBulkAdd(false);
+      setIsSyncingInbox(false);
     }
   };
 
-  const handleSelectPendingLink = (link: string) => {
-    setInput(link);
-    setPendingLinks(prev => prev.filter(l => l !== link));
-    handleAnalyzeWithInput(link);
+  const handleSelectPendingLink = async (link: InboxLink) => {
+    setInput(link.url);
+    setIsSyncingInbox(true);
+    // Remove from inbox as it's now being analyzed
+    await dataService.removeInboxLink(link.id);
+    await fetchInbox();
+    handleAnalyzeWithInput(link.url);
+    setIsSyncingInbox(false);
   };
 
   const handleAnalyze = async () => {
@@ -139,6 +162,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
     onAdd(newProp);
     setAnalysisResult(null);
     setInput('');
+  };
+
+  const handleClearInbox = async () => {
+    if (window.confirm("Are you sure you want to clear your Link Inbox?")) {
+      setIsSyncingInbox(true);
+      await dataService.clearInbox(userId, activeFolderId);
+      await fetchInbox();
+      setIsSyncingInbox(false);
+    }
   };
 
   const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => (
@@ -245,9 +277,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   />
                   <button
                     onClick={handleAddBulkLinks}
-                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest mt-4 hover:bg-slate-800 transition-all shadow-lg"
+                    disabled={isSyncingInbox}
+                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest mt-4 hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2"
                   >
-                    Load into Queue
+                    {isSyncingInbox ? <Loader2 className="w-4 h-4 animate-spin" /> : "Load into Cloud Queue"}
                   </button>
                 </div>
               ) : (
@@ -255,24 +288,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                   <div className="flex justify-between items-center mb-6 shrink-0">
                     <div className="flex items-center gap-2">
                       <LinkIcon className="w-4 h-4 text-indigo-600" />
-                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Analysis Queue</h3>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Cloud Queue</h3>
                     </div>
-                    <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">{pendingLinks.length}</span>
+                    <div className="flex items-center gap-2">
+                      {isSyncingInbox && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
+                      <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">{pendingLinks.length}</span>
+                    </div>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                     {pendingLinks.map((link, idx) => {
                       let domain = "Link";
-                      try { domain = new URL(link).hostname.replace('www.', ''); } catch(e) {}
+                      try { domain = new URL(link.url).hostname.replace('www.', ''); } catch(e) {}
                       return (
                         <button
-                          key={idx}
+                          key={link.id}
                           onClick={() => handleSelectPendingLink(link)}
                           className="w-full group bg-slate-50 border border-slate-100 p-4 rounded-2xl hover:border-indigo-200 hover:bg-white hover:shadow-md transition-all text-left flex items-center justify-between"
                         >
                           <div className="min-w-0 flex-1">
                             <p className="text-[10px] font-black text-indigo-500 uppercase tracking-tighter mb-0.5">{domain}</p>
-                            <p className="text-xs text-slate-400 font-medium truncate">{link}</p>
+                            <p className="text-xs text-slate-400 font-medium truncate">{link.url}</p>
                           </div>
                           <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
                         </button>
@@ -288,7 +324,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                       + Add More
                     </button>
                     <button 
-                      onClick={() => setPendingLinks([])}
+                      onClick={handleClearInbox}
                       className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-rose-500 transition-colors"
                     >
                       Clear All

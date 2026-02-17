@@ -2,6 +2,13 @@
 import { supabase } from './supabase';
 import { Property, SearchFolder, User, RenovationItem, UserRole } from '../types';
 
+export interface InboxLink {
+  id: string;
+  url: string;
+  folder_id: string;
+  user_id: string;
+}
+
 export const dataService = {
   // Profiles
   async getProfile(id: string) {
@@ -130,5 +137,37 @@ export const dataService = {
       }));
       await supabase.from('renovations').insert(toInsert);
     }
+  },
+
+  // Link Inbox (NEW)
+  async getInboxLinks(userId: string, folderId: string | null) {
+    let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    }
+    const { data, error } = await query.order('created_at', { ascending: false });
+    return data || [];
+  },
+
+  async addInboxLinks(links: string[], userId: string, folderId: string | null) {
+    const toInsert = links.map(url => ({
+      user_id: userId,
+      folder_id: folderId,
+      url: url
+    }));
+    const { data, error } = await supabase.from('link_inbox').insert(toInsert).select();
+    return data || [];
+  },
+
+  async removeInboxLink(id: string) {
+    await supabase.from('link_inbox').delete().eq('id', id);
+  },
+
+  async clearInbox(userId: string, folderId: string | null) {
+    let query = supabase.from('link_inbox').delete().eq('user_id', userId);
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    }
+    await query;
   }
 };
