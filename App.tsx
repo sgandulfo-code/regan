@@ -1,6 +1,5 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-// Fixed: Added Loader2 to the lucide-react imports to resolve the compilation error.
 import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -27,7 +26,6 @@ const App: React.FC = () => {
 
   // Supabase Auth Session Listener
   useEffect(() => {
-    // 1. Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         syncUserProfile(session.user.id);
@@ -36,7 +34,6 @@ const App: React.FC = () => {
       }
     });
 
-    // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         syncUserProfile(session.user.id);
@@ -57,7 +54,6 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
-  // Fetch Folders and Properties whenever user changes
   useEffect(() => {
     if (user) {
       loadInitialData();
@@ -85,7 +81,7 @@ const App: React.FC = () => {
       title: p.title,
       url: p.url,
       address: p.address,
-      exact_address: p.exact_address,
+      exactAddress: p.exact_address,
       price: Number(p.price),
       fees: Number(p.fees),
       environments: p.environments,
@@ -177,7 +173,8 @@ const App: React.FC = () => {
     if (newFolder) {
       await loadInitialData();
       setActiveFolderId(newFolder.id);
-      setActiveTab('properties');
+      // Redirigir a 'search' para que el usuario pueda empezar a buscar inmediatamente
+      setActiveTab('search');
     }
     setIsFolderModalOpen(false);
     setIsSyncing(false);
@@ -186,7 +183,6 @@ const App: React.FC = () => {
   if (isSyncing && !user) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        {/* Fixed: Loader2 is now available from lucide-react imports */}
         <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
       </div>
     );
@@ -222,7 +218,6 @@ const App: React.FC = () => {
       />
       
       <main className="flex-1 p-4 md:p-10 overflow-y-auto">
-        {/* Header */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="animate-in slide-in-from-left duration-500">
             <div className="flex items-center gap-3 mb-2">

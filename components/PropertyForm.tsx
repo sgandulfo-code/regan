@@ -74,24 +74,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
   const handleSelectPendingLink = (link: string) => {
     setInput(link);
     setPendingLinks(prev => prev.filter(l => l !== link));
-    // Opcional: Trigger automático de análisis
-    // handleAnalyze(link); 
+    // Trigger analysis automatically
+    handleAnalyzeWithInput(link);
   };
 
   const handleAnalyze = async () => {
-    const targetInput = input.trim();
-    if (!targetInput) return;
+    handleAnalyzeWithInput(input);
+  };
+
+  const handleAnalyzeWithInput = async (targetInput: string) => {
+    const trimmedInput = targetInput.trim();
+    if (!trimmedInput) return;
     setIsAnalyzing(true);
     setErrorStatus(null);
     
-    const result = await parseSemanticSearch(targetInput);
+    const result = await parseSemanticSearch(trimmedInput);
     
     if (result?.error === 'QUOTA_EXCEEDED') {
       setErrorStatus('AI Quota Exceeded (429). Please wait 60s for the free tier to reset.');
       setAnalysisResult(null);
     } else if (result) {
       setAnalysisResult(result);
-      setActiveRefTab(targetInput.startsWith('http') ? 'screenshot' : 'map');
+      setActiveRefTab(trimmedInput.startsWith('http') ? 'screenshot' : 'map');
     } else {
       setErrorStatus('Could not parse property. Check the URL/Text and try again.');
     }
@@ -163,9 +167,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main Search Panel */}
           <div className={`${pendingLinks.length > 0 || showBulkAdd ? 'lg:col-span-8' : 'lg:col-span-12'} transition-all duration-500`}>
-            <div className="bg-slate-900 rounded-[3rem] p-10 md:p-12 shadow-2xl border border-slate-800 relative overflow-hidden h-full">
+            <div className="bg-slate-900 rounded-[3rem] p-10 md:p-12 shadow-2xl border border-slate-800 relative overflow-hidden h-full min-h-[450px] flex flex-col justify-center">
               <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[120px]"></div>
-              <div className="relative z-10 max-w-2xl mx-auto space-y-8">
+              <div className="relative z-10 max-w-2xl mx-auto w-full space-y-8">
                 <div className="flex items-center justify-between">
                   <div className="w-16 h-16 bg-indigo-500 rounded-2xl shadow-xl shadow-indigo-500/20 flex items-center justify-center">
                     <Sparkles className="w-8 h-8 text-white" />
@@ -175,20 +179,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                       onClick={() => setShowBulkAdd(true)}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
                     >
-                      <ListPlus className="w-4 h-4" /> Bulk Import
+                      <ListPlus className="w-4 h-4" /> Bulk Link Inbox
                     </button>
                   )}
                 </div>
                 
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-white tracking-tight">Neural Technical Inspector</h2>
-                  <p className="text-slate-400 text-sm">Paste a property URL to extract specs and generate a deal score.</p>
+                  <p className="text-slate-400 text-sm">Paste a property URL or description to begin analysis.</p>
                 </div>
                 
                 <div className="space-y-4">
                   <textarea
-                    className={`w-full p-6 bg-slate-800/50 border-2 ${errorStatus ? 'border-rose-500/50' : 'border-slate-700'} rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[120px] outline-none transition-all resize-none text-lg leading-relaxed`}
-                    placeholder="https://www.remax.com.ar/..."
+                    className={`w-full p-6 bg-slate-800/50 border-2 ${errorStatus ? 'border-rose-500/50' : 'border-slate-700'} rounded-[2rem] text-white placeholder:text-slate-600 focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500/50 min-h-[140px] outline-none transition-all resize-none text-lg leading-relaxed`}
+                    placeholder="Paste the link from Zillow, Remax, Idealista, etc..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                   />
@@ -204,10 +208,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !input.trim()}
-                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-800 transition-all flex items-center justify-center gap-3"
+                  className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black shadow-2xl hover:bg-indigo-500 disabled:bg-slate-800 transition-all flex items-center justify-center gap-3 text-lg"
                 >
-                  {isAnalyzing ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Sparkles className="w-5 h-5" />}
-                  {isAnalyzing ? 'Extracting Data...' : 'Begin Analysis'}
+                  {isAnalyzing ? (
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <Sparkles className="w-6 h-6" />
+                      Run AI Inspection
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -220,37 +230,41 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                 <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-xl h-full flex flex-col">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                      <ListPlus className="w-4 h-4 text-indigo-600" /> Bulk Link Inbox
+                      <ListPlus className="w-4 h-4 text-indigo-600" /> Link Inbox
                     </h3>
-                    <button onClick={() => setShowBulkAdd(false)} className="text-slate-400 hover:text-slate-600"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => setShowBulkAdd(false)} className="text-slate-400 hover:text-slate-600">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-4">Paste multiple URLs (one per line)</p>
                   <textarea
                     autoFocus
-                    className="flex-1 w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-medium text-sm transition-all resize-none"
-                    placeholder={"https://link1.com\nhttps://link2.com"}
+                    className="flex-1 w-full p-5 bg-slate-50 border border-slate-200 rounded-3xl text-slate-700 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-medium text-sm transition-all resize-none"
+                    placeholder={"https://idealista.com/...\nhttps://fotocasa.es/..."}
                     value={bulkInput}
                     onChange={(e) => setBulkInput(e.target.value)}
                   />
                   <button
                     onClick={handleAddBulkLinks}
-                    className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs uppercase tracking-widest mt-4 hover:bg-slate-800 transition-all"
+                    className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest mt-4 hover:bg-slate-800 transition-all shadow-lg"
                   >
-                    Add to Analysis Queue
+                    Load into Queue
                   </button>
                 </div>
               ) : (
-                <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-xl h-full flex flex-col max-h-[500px]">
+                <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-xl h-full flex flex-col max-h-[600px]">
                   <div className="flex justify-between items-center mb-6 shrink-0">
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                      <LinkIcon className="w-4 h-4 text-indigo-600" /> Pending Queue
-                    </h3>
-                    <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-lg text-[10px] font-black">{pendingLinks.length}</span>
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-4 h-4 text-indigo-600" />
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Analysis Queue</h3>
+                    </div>
+                    <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black">{pendingLinks.length}</span>
                   </div>
                   
                   <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                     {pendingLinks.map((link, idx) => {
-                      const domain = new URL(link).hostname.replace('www.', '');
+                      let domain = "Link";
+                      try { domain = new URL(link).hostname.replace('www.', ''); } catch(e) {}
                       return (
                         <button
                           key={idx}
@@ -267,12 +281,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                     })}
                   </div>
                   
-                  <button 
-                    onClick={() => setPendingLinks([])}
-                    className="mt-6 text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-rose-500 transition-colors flex items-center justify-center gap-2"
-                  >
-                    Clear Queue
-                  </button>
+                  <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between gap-4">
+                    <button 
+                      onClick={() => setShowBulkAdd(true)}
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:text-indigo-700 transition-colors"
+                    >
+                      + Add More
+                    </button>
+                    <button 
+                      onClick={() => setPendingLinks([])}
+                      className="text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-rose-500 transition-colors"
+                    >
+                      Clear All
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -282,13 +304,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
 
       {analysisResult && (
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 duration-500">
-          {/* LEFT: Technical Inspector Form */}
           <div className="xl:col-span-7 space-y-6">
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 md:p-12 shadow-xl relative overflow-hidden">
               <div className="flex items-center justify-between mb-10 border-b border-slate-100 pb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800">Data Validation</h3>
-                  <p className="text-slate-400 font-medium text-sm">Contrast fields with the evidence on the right.</p>
+                  <h3 className="text-2xl font-black text-slate-800">Technical Data Validation</h3>
+                  <p className="text-slate-400 font-medium text-sm">Verify extracted fields before saving to folder.</p>
                 </div>
                 <div className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-widest border ${analysisResult.confidence > 80 ? 'bg-green-50 text-green-600 border-green-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                   AI Certainty: {analysisResult.confidence}%
@@ -343,7 +364,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
             </div>
           </div>
 
-          {/* RIGHT: Evidence Panel (Dual View) */}
           <div className="xl:col-span-5 space-y-6">
             <div className="bg-slate-900 rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden h-[650px] flex flex-col">
               <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5">
@@ -361,10 +381,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                     <MapIcon className="w-3 h-3" /> Spatial Check
                   </button>
                 </div>
-                {input.trim().startsWith('http') && <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg"><ExternalLink className="w-4 h-4" /></a>}
+                {input.trim().startsWith('http') && (
+                  <a href={input} target="_blank" className="p-2 text-indigo-400 hover:bg-white/5 rounded-lg transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
               </div>
               
-              <div className="flex-1 overflow-hidden relative group">
+              <div className="flex-1 overflow-hidden relative">
                 {activeRefTab === 'screenshot' && input.trim().startsWith('http') ? (
                   <div className="w-full h-full p-4 overflow-hidden flex items-center justify-center bg-slate-800">
                     <img 
@@ -396,13 +420,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd }) => {
                     </div>
                     <div>
                       <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Verdict</p>
-                      <p className="font-black text-xl">Score: {analysisResult.dealScore}/100</p>
+                      <p className="font-black text-xl">AI Deal Score: {analysisResult.dealScore}/100</p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 p-4 bg-white/10 rounded-2xl">
                    <p className="text-xs font-medium italic leading-relaxed opacity-90">
-                    "{analysisResult.analysis?.strategy}"
+                    "{analysisResult.analysis?.strategy || 'Analyzing investment potential...'}"
                    </p>
                 </div>
               </div>
