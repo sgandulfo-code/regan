@@ -64,13 +64,13 @@ export const parseSemanticSearch = async (description: string) => {
         sources: response.candidates?.[0]?.groundingMetadata?.groundingChunks || []
       };
     } catch (e) {
-      console.error("Gemini JSON Parsing Error", text);
+      console.warn("Gemini response was not valid JSON, but received text:", text);
       return { error: 'PARSE_ERROR' };
     }
   } catch (error: any) {
-    console.error("Gemini API Error:", error);
-    // Detectar específicamente cuota excedida (429)
-    if (error.message?.includes('429') || error.status === 429 || JSON.stringify(error).includes('429')) {
+    console.error("Gemini API Error details:", error);
+    const errorString = JSON.stringify(error).toLowerCase();
+    if (errorString.includes('429') || errorString.includes('quota') || errorString.includes('exhausted')) {
       return { error: 'QUOTA_EXCEEDED' };
     }
     return { error: 'GENERIC_ERROR' };

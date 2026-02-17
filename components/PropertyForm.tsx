@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   MapPin, 
@@ -122,7 +122,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const isIframeBlocked = (url: string) => {
     if (!url) return false;
-    const blocked = ['idealista', 'remax', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21', 'vivienda', 'pisos.com', 'yaencontre'];
+    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21', 'vivienda', 'pisos.com', 'yaencontre'];
     return blocked.some(domain => url.toLowerCase().includes(domain));
   };
 
@@ -148,12 +148,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         });
       } else {
         const isQuota = result?.error === 'QUOTA_EXCEEDED';
-        setErrorStatus(isQuota ? 'Gemini Quota Exceeded (429). Falling back to Standard Audit.' : 'Neural AI failed to parse this listing.');
+        setErrorStatus(isQuota ? 'Gemini AI Quota Exhausted (429). Switching to Standard mode.' : 'Neural analysis failed for this URL.');
         
-        // Auto-fallback a manual si es un error de cuota para no bloquear al usuario
+        // Auto-switch to manual to keep the flow going
         setTimeout(async () => {
           await switchToManual(link.url);
-        }, isQuota ? 2000 : 0);
+        }, isQuota ? 2000 : 500);
       }
       setIsAnalyzing(false);
     } else {
@@ -170,7 +170,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       price: 0, 
       confidence: 1, 
       dealScore: 50, 
-      analysis: { strategy: 'Standard audit mode activated. Please verify technical details manually.' }, 
+      analysis: { strategy: 'Standard audit mode based on portal metadata.' }, 
       sources: []
     });
     
@@ -344,7 +344,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         </div>
       </div>
 
-      {errorStatus && errorStatus.includes('Quota') && (
+      {errorStatus && errorStatus.toLowerCase().includes('quota') && (
         <div className="bg-amber-50 border border-amber-200 p-4 rounded-3xl flex items-center gap-3 text-amber-700 text-xs font-bold animate-in slide-in-from-top-4">
            <AlertCircle className="w-5 h-5 shrink-0" />
            <span>{errorStatus}</span>
@@ -385,7 +385,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
                     <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                   </div>
-                  {errorStatus && !errorStatus.includes('Quota') && (
+                  {errorStatus && !errorStatus.toLowerCase().includes('quota') && (
                     <div className="p-4 bg-rose-50 text-rose-500 text-[10px] font-bold uppercase rounded-2xl flex items-center gap-2">
                       <AlertCircle className="w-4 h-4" /> {errorStatus}
                     </div>
@@ -467,7 +467,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         <AlertOctagon className="w-16 h-16 text-amber-500 mx-auto mb-6" />
                         <h4 className="text-xl font-black text-white mb-2">Live View Restricted</h4>
                         <p className="text-slate-400 text-sm mb-8">
-                          Security headers on this portal block embedding.
+                          Security headers on this portal (RE/MAX, Idealista, etc.) block embedding for live browsing.
                           <br/><br/>
                           Use the <b>Neural Snapshot</b> for a high-quality reference without blocks.
                         </p>

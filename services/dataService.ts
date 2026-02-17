@@ -150,19 +150,21 @@ export const dataService = {
 
   /**
    * Fetch Metadata via Microlink API
-   * Simplificamos los parámetros para evitar errores 400 y mejorar la tasa de éxito.
+   * Optimizamos para evitar errores 400 y asegurar que siempre haya una imagen de respaldo.
    */
   async fetchExternalMetadata(url: string) {
+    const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     try {
-      // Usamos una URL de Microlink más sencilla para mayor compatibilidad
-      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true&meta=true`;
+      // Usamos los parámetros mínimos para evitar errores de validación 400 en el tier gratuito
+      const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true`;
       
       const response = await fetch(microlinkUrl);
-      if (!response.ok) throw new Error(`Microlink responded with ${response.status}`);
+      if (!response.ok) {
+        console.warn(`Microlink fetch failed (${response.status}). Using MShots fallback.`);
+        return { title: '', screenshot: mshotsFallback };
+      }
       
       const result = await response.json();
-      const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
-
       if (result.status === 'success') {
         const { data } = result;
         return {
@@ -175,10 +177,10 @@ export const dataService = {
       }
       return { title: '', screenshot: mshotsFallback };
     } catch (e) {
-      console.error("Microlink Metadata Fetch Failed", e);
+      console.error("Microlink API unreachable. Falling back to MShots.");
       return { 
         title: '', 
-        screenshot: `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280` 
+        screenshot: mshotsFallback 
       };
     }
   }
