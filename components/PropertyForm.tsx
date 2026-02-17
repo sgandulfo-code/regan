@@ -18,7 +18,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [step, setStep] = useState<CreationStep>('select');
   const [mode, setMode] = useState<CreationMode>('ai');
   const [input, setInput] = useState('');
-  const [verificationUrl, setVerificationUrl] = useState(''); // URL estable para la vista previa
+  const [verificationUrl, setVerificationUrl] = useState('');
   const [bulkInput, setBulkInput] = useState('');
   const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -26,7 +26,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
-  const [activeRefTab, setActiveRefTab] = useState<'live' | 'map' | 'snapshot'>('snapshot');
+  const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('snapshot');
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotLoading, setSnapshotLoading] = useState(true);
@@ -36,9 +36,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
   });
 
+  // Lista extendida de dominios que bloquean iFrames por X-Frame-Options
   const isIframeBlocked = (url: string) => {
     if (!url) return false;
-    const blocked = ['remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 'finca_raiz', 'tokkobroker'];
+    const blocked = [
+      'remax', 'idealista', 'zillow', 'fotocasa', 'arbol', 'zonaprop', 
+      'mercadolibre', 'portalinmobiliario', 'argenprop', 'inmuebles24', 
+      'finca_raiz', 'tokkobroker', 'properati', 'habitaclia', 'century21'
+    ];
     return blocked.some(domain => url.toLowerCase().includes(domain));
   };
 
@@ -53,6 +58,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setIsSyncingInbox(false);
   };
 
+  // Al cambiar el resultado de la IA o el modo manual, sincronizar los datos del formulario
   useEffect(() => {
     if (analysisResult && !analysisResult.error) {
       setEditedData({
@@ -72,16 +78,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         age: analysisResult.age || 0,
         floor: analysisResult.floor || ''
       });
-      
-      if (verificationUrl) {
-        if (isIframeBlocked(verificationUrl)) {
-          setActiveRefTab('snapshot');
-        } else {
-          setActiveRefTab('live');
-        }
-      }
     }
-  }, [analysisResult, verificationUrl]);
+  }, [analysisResult]);
 
   const handleAddBulkLinks = async () => {
     const urls = bulkInput.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
@@ -95,41 +93,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     }
   };
 
-  const handleDeleteInboxLink = async (e: React.MouseEvent, linkId: string) => {
-    e.stopPropagation();
-    setDeletingLinkId(linkId);
-    await dataService.removeInboxLink(linkId);
-    await fetchInbox();
-    setDeletingLinkId(null);
-  };
-
-  const handleClearAllInbox = async () => {
-    if (window.confirm('¿Limpiar todos los enlaces pendientes?')) {
-      setIsSyncingInbox(true);
-      await dataService.clearInbox(userId, activeFolderId);
-      await fetchInbox();
-      setIsSyncingInbox(false);
-    }
-  };
-
-  const handleSelectPendingLink = async (link: InboxLink) => {
-    setInput(link.url);
-    setIsSyncingInbox(true);
-    await dataService.removeInboxLink(link.id);
-    await fetchInbox();
-    handleStartCreation(link.url);
-    setIsSyncingInbox(false);
-  };
-
   const handleStartCreation = async (targetInput: string) => {
     const trimmedInput = targetInput.trim();
-    setVerificationUrl(trimmedInput); // Fijamos la URL de verificación inmediatamente
+    if (!trimmedInput) return;
+
+    // Seteamos la URL de verificación y decidimos el tab inicial de referencia inmediatamente
+    setVerificationUrl(trimmedInput);
+    if (isIframeBlocked(trimmedInput)) {
+      setActiveRefTab('snapshot');
+    } else {
+      setActiveRefTab('live');
+    }
+    
     setSnapshotError(false);
     setSnapshotLoading(true);
     setSnapshotVersion(Date.now());
 
     if (mode === 'ai') {
-      if (!trimmedInput) return;
       setIsAnalyzing(true);
       setErrorStatus(null);
       const result = await parseSemanticSearch(trimmedInput);
@@ -155,15 +135,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const switchToManual = () => {
     setAnalysisResult({ 
       title: '', price: 0, confidence: 1, dealScore: 50, 
-      analysis: { strategy: 'Manual verification in progress.' }, sources: []
-    });
-    setEditedData({
-      title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: ''
+      analysis: { strategy: 'Manual technical audit in progress.' }, sources: []
     });
     setStep('verify');
-    if (verificationUrl && isIframeBlocked(verificationUrl)) {
-      setActiveRefTab('snapshot');
-    }
   };
 
   const handleConfirm = () => {
@@ -257,7 +231,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className="mt-12 bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
             <div className="flex justify-between items-center mb-6 px-2">
               <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2"><LinkIcon className="w-4 h-4" /> Pending Queue</h3>
-              <button onClick={handleClearAllInbox} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Clear Inbox</button>
+              <button onClick={() => { if(window.confirm('Clear all?')) dataService.clearInbox(userId, activeFolderId).then(fetchInbox) }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline">Clear Inbox</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {pendingLinks.map(link => (
@@ -265,13 +239,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   key={link.id} 
                   className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:shadow-md transition-all flex items-center justify-between group"
                 >
-                  <button onClick={() => handleSelectPendingLink(link)} className="flex-1 min-w-0 text-left">
+                  <button onClick={() => { setInput(link.url); handleStartCreation(link.url); dataService.removeInboxLink(link.id).then(fetchInbox); }} className="flex-1 min-w-0 text-left">
                     <p className="text-[10px] font-black text-indigo-500 uppercase truncate">
                       {new URL(link.url).hostname.replace('www.', '')}
                     </p>
                     <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
                   </button>
-                  <button onClick={(e) => handleDeleteInboxLink(e, link.id)} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); dataService.removeInboxLink(link.id).then(fetchInbox); }} className="p-2 text-slate-300 hover:text-rose-500 transition-colors">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -291,12 +265,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         </button>
         
         <div className={`rounded-[3.5rem] p-12 shadow-2xl border relative overflow-hidden min-h-[500px] flex flex-col justify-center ${mode === 'ai' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
-          {mode === 'ai' && <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-600/10 blur-[120px]"></div>}
-          
           <div className="relative z-10 max-w-2xl mx-auto w-full space-y-8">
             <div className="flex items-center justify-between">
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-xl ${mode === 'ai' ? 'bg-indigo-50 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {mode === 'ai' ? <Cpu className="w-8 h-8" /> : <Keyboard className="w-8 h-8" />}
+                {mode === 'ai' ? <Cpu className="w-8 h-8 text-indigo-600" /> : <Keyboard className="w-8 h-8" />}
               </div>
               <button onClick={() => setShowBulkAdd(!showBulkAdd)} className={`px-5 py-2.5 rounded-xl border text-[10px] font-black uppercase transition-all ${mode === 'ai' ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100'}`}>
                 <ListPlus className="w-4 h-4 inline mr-2" /> Bulk Queue
@@ -308,16 +280,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 {mode === 'ai' ? 'Neural Link Inspection' : 'Manual Entry Reference'}
               </h2>
               <p className={mode === 'ai' ? 'text-slate-400 text-sm' : 'text-slate-500 text-sm'}>
-                {mode === 'ai' 
-                  ? 'Paste the portal link to start the neural extraction.' 
-                  : 'Link is optional, but useful for visual cross-checking.'}
+                {mode === 'ai' ? 'Paste the portal link to start the neural extraction.' : 'Link is optional, but useful for visual cross-checking.'}
               </p>
             </div>
 
             <div className="space-y-4">
               <textarea
                 className={`w-full p-7 rounded-[2.5rem] min-h-[160px] outline-none transition-all resize-none text-xl tracking-tight border-2 ${mode === 'ai' ? 'bg-slate-800/50 border-slate-700 text-white focus:border-indigo-500/50' : 'bg-slate-50 border-slate-100 text-slate-900 focus:border-indigo-200'}`}
-                placeholder={showBulkAdd ? "Paste links, one per line..." : "Paste the property link here..."} 
+                placeholder={showBulkAdd ? "Paste links, one per line..." : "Paste the property link here (Idealista, RE/MAX, etc)..."} 
                 value={showBulkAdd ? bulkInput : input} 
                 onChange={(e) => showBulkAdd ? setBulkInput(e.target.value) : setInput(e.target.value)}
               />
@@ -325,22 +295,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               {errorStatus && <div className="flex items-center gap-3 bg-rose-500/10 border border-rose-500/20 p-4 rounded-2xl text-rose-400 text-xs font-bold"><AlertCircle className="w-5 h-5" />{errorStatus}</div>}
               
               {showBulkAdd ? (
-                <button onClick={handleAddBulkLinks} disabled={isSyncingInbox} className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-sm uppercase shadow-xl hover:bg-indigo-500 transition-all flex items-center justify-center gap-3">
-                  {isSyncingInbox ? <Loader2 className="w-5 h-5 animate-spin" /> : <><ListPlus className="w-5 h-5" /> Add to Inbox</>}
+                <button onClick={handleAddBulkLinks} className="w-full bg-indigo-600 text-white py-6 rounded-3xl font-black text-sm uppercase shadow-xl hover:bg-indigo-500 transition-all flex items-center justify-center gap-3">
+                  <ListPlus className="w-5 h-5" /> Add to Inbox
                 </button>
               ) : (
                 <button
                   onClick={() => handleStartCreation(input)} disabled={isAnalyzing || (mode === 'ai' && !input.trim())}
                   className={`w-full py-6 rounded-3xl font-black shadow-2xl transition-all flex items-center justify-center gap-4 text-xl ${mode === 'ai' ? 'bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-slate-800' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
                 >
-                  {isAnalyzing ? (
-                    <Loader2 className="w-7 h-7 animate-spin" />
-                  ) : (
-                    <>
-                      {mode === 'ai' ? <Sparkles className="w-7 h-7" /> : <Keyboard className="w-7 h-7" />}
-                      {mode === 'ai' ? 'Inspect Property' : 'Continue to Form'}
-                    </>
-                  )}
+                  {isAnalyzing ? <Loader2 className="w-7 h-7 animate-spin" /> : <><Sparkles className="w-7 h-7" /> {mode === 'ai' ? 'Inspect Property' : 'Continue'}</>}
                 </button>
               )}
             </div>
@@ -351,78 +314,59 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
         <button onClick={() => setStep('input')} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Reference
+          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Input
         </button>
         <div className="flex items-center gap-4">
           <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
-            {mode === 'ai' ? 'Neural AI Mode' : 'Standard Manual Mode'}
+            {mode === 'ai' ? 'AI Verification Active' : 'Manual Data Sheet'}
           </div>
-          {mode === 'ai' && (
-            <button onClick={() => handleStartCreation(verificationUrl)} className="text-slate-400 hover:text-indigo-600 p-2"><RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} /></button>
-          )}
+          <button onClick={() => handleStartCreation(verificationUrl)} className="text-slate-400 hover:text-indigo-600 p-2"><RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} /></button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 animate-in zoom-in-95 duration-500">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        {/* Formulario de Verificación */}
         <div className="xl:col-span-5">
           <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
             <div className="flex items-center justify-between border-b pb-8">
               <div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Verification Engine</h3>
-                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">
-                  {mode === 'ai' ? 'Cross-check AI extractions' : 'Fill the property technical sheet'}
-                </p>
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight">Technical Audit</h3>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Cross-check the extracted property data</p>
               </div>
               {mode === 'ai' && (
-                <div className="text-right">
-                  <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
-                  </div>
+                <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black border border-emerald-100 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> CONFIDENCE: {Math.round((analysisResult?.confidence || 0) * 100)}%
                 </div>
               )}
             </div>
             
-            <div className="flex-1 space-y-6">
-              <FormField label="Full Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
+            <div className="flex-1 space-y-5 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+              <FormField label="Property Listing Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
                 <FormField label="Neighborhood" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
                 <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
-                <FormField label="Rooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
+                <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
+                <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
+                <FormField label="Fees/Expensas" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
               </div>
-
-              {mode === 'ai' && analysisResult?.sources && analysisResult.sources.length > 0 && (
-                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                     <FileSearch className="w-3 h-3 text-indigo-500" /> Evidence Logs
-                  </p>
-                  <div className="space-y-2">
-                    {analysisResult.sources.slice(0, 3).map((chunk: any, i: number) => (
-                      <div key={i} className="flex gap-2 items-start p-2.5 bg-white rounded-xl border border-slate-100">
-                        <div className="w-4 h-4 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center text-[9px] font-black shrink-0">{i+1}</div>
-                        <p className="text-[10px] text-slate-500 leading-tight truncate">"{chunk.web?.title || 'Grounding source found'}"</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="flex gap-4 pt-6 mt-auto">
-              <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
-                <CheckCircle2 className="w-6 h-6" /> VALIDATE & SAVE
+              <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
+                <CheckCircle2 className="w-6 h-6" /> VALIDATE ASSET
               </button>
               <button onClick={resetForm} className="px-10 bg-slate-100 text-slate-500 rounded-3xl font-bold text-sm hover:bg-slate-200 transition-all">Discard</button>
             </div>
           </div>
         </div>
 
+        {/* Panel de Vista Previa (Referencia) */}
         <div className="xl:col-span-7">
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
-            {/* Referencia Header */}
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
@@ -437,12 +381,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <button 
                     onClick={() => {setSnapshotVersion(Date.now()); setSnapshotLoading(true); setSnapshotError(false);}} 
                     className="p-2 text-slate-400 hover:text-white bg-white/5 rounded-xl transition-all"
-                    title="Force Refresh Reference"
+                    title="Refresh Capture"
                   >
                     <RefreshCw className={`w-3 h-3 ${snapshotLoading && activeRefTab === 'snapshot' ? 'animate-spin' : ''}`} />
                   </button>
                   <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl text-indigo-400 text-[10px] font-black uppercase flex items-center gap-2 hover:bg-white/10 transition-all">
-                    OPEN ORIGINAL <ExternalLink className="w-3 h-3" />
+                    ORIGINAL <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               )}
@@ -452,28 +396,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               {verificationUrl ? (
                 <>
                   {activeRefTab === 'snapshot' && (
-                    <div className="w-full h-full relative flex items-center justify-center bg-white overflow-auto p-4">
+                    <div className="w-full h-full relative flex items-center justify-center bg-white overflow-auto p-4 custom-scrollbar">
                        {snapshotLoading && (
                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 text-center p-8">
                             <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural AI is capturing portal view...</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Neural AI is capturing the portal...</p>
                          </div>
                        )}
                        {snapshotError ? (
                          <div className="text-center p-12 max-w-sm">
                             <ImageIcon className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                            <h4 className="text-xl font-black text-slate-800 mb-2">Neural Snapshot Failed</h4>
-                            <p className="text-slate-400 text-sm mb-6">Portal security prevents AI automated capture. Use <b>Live Portal</b> or open site directly.</p>
-                            <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-500 transition-all">
-                              Visit Website <ExternalLink className="w-3 h-3" />
-                            </a>
+                            <h4 className="text-xl font-black text-slate-800 mb-2">Capture Restricted</h4>
+                            <p className="text-slate-400 text-sm mb-6">Portal security blocks automated AI snapshots. Please open the site directly or use the <b>Live Portal</b> tab.</p>
+                            <a href={verificationUrl} target="_blank" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-2">Visit Website <ExternalLink className="w-3 h-3" /></a>
                          </div>
                        ) : (
                          <img 
                           key={snapshotVersion}
-                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1600&v=${snapshotVersion}`} 
+                          src={`https://s.wordpress.com/mshots/v1/${encodeURIComponent(verificationUrl)}?w=1280&v=${snapshotVersion}`} 
                           className="max-w-full h-auto shadow-2xl rounded-lg" 
-                          alt="AI Portal Reference"
+                          alt="Property View"
                           onLoad={() => setSnapshotLoading(false)}
                           onError={() => { setSnapshotError(true); setSnapshotLoading(false); }}
                         />
@@ -486,25 +428,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <iframe 
                         src={verificationUrl} 
                         className="w-full h-full border-none bg-white" 
-                        title="Live Reference View" 
+                        title="Live Reference" 
                         sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                        referrerPolicy="no-referrer"
                       />
                       {isIframeBlocked(verificationUrl) && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-10 z-10">
-                          <div className="max-w-md p-12 bg-slate-900 border border-white/10 rounded-[3rem] text-center shadow-3xl">
+                        <div className="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm p-10 z-10 text-center">
+                          <div className="max-w-md p-10 bg-slate-900 border border-white/10 rounded-[3rem] shadow-3xl">
                              <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto mb-6">
                                 <AlertOctagon className="w-10 h-10" />
                              </div>
-                             <h4 className="text-xl font-black text-white mb-2">Portal Shield Active</h4>
-                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                               Este portal bloquea la visualización incrustada por seguridad. 
-                               Utiliza <b>"Neural Snapshot"</b> para ver la última captura de la IA.
-                             </p>
+                             <h4 className="text-xl font-black text-white mb-2">Embedded Blocked</h4>
+                             <p className="text-slate-400 text-sm leading-relaxed mb-8">This portal (RE/MAX, Idealista, etc.) uses security policies that prevent embedding. Use <b>"Neural Snapshot"</b> for a visual capture.</p>
                              <div className="flex flex-col gap-3">
-                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Switch to AI Snapshot</button>
-                               <a href={verificationUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-                                 Open in New Tab <ExternalLink className="w-4 h-4" />
-                               </a>
+                               <button onClick={() => setActiveRefTab('snapshot')} className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-500 transition-all">Switch to Snapshot</button>
+                               <a href={verificationUrl} target="_blank" className="w-full bg-white/5 border border-white/10 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">Open Original Portal <ExternalLink className="w-3 h-3" /></a>
                              </div>
                           </div>
                         </div>
@@ -515,15 +453,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 p-12 text-center">
                   <Monitor className="w-16 h-16 mb-6 opacity-20" />
-                  <h4 className="text-xl font-black text-white mb-2">Reference Mode Offline</h4>
-                  <p className="text-slate-400 text-sm max-w-xs">No target URL for this session. Visual verification is disabled.</p>
+                  <h4 className="text-xl font-black text-white mb-2">No Target Selected</h4>
+                  <p className="text-slate-400 text-sm max-w-xs">Waiting for a property link to initialize the neural inspection panel.</p>
                 </div>
               )}
               
               <div className="absolute inset-0 pointer-events-none border-[12px] border-slate-900 rounded-[3.5rem] shadow-inner z-30"></div>
             </div>
             
-            {/* Footer Summary */}
             <div className="p-8 bg-indigo-600 text-white shrink-0 z-20">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
@@ -531,17 +468,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     {mode === 'ai' ? <Sparkles className="w-6 h-6" /> : <Keyboard className="w-6 h-6" />}
                   </div>
                   <div>
-                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em]">
-                      {mode === 'ai' ? 'Neural Verdict' : 'Manual Audit'}
-                    </p>
-                    <h4 className="text-2xl font-black">
-                      {mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Verification Active'}
-                    </h4>
+                    <p className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em]">Neural Verdict</p>
+                    <h4 className="text-2xl font-black">{mode === 'ai' ? `Deal Score: ${analysisResult?.dealScore || '??'}/100` : 'Technical Verify'}</h4>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Potential</p>
-                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Manual technical verification in progress...'}"</p>
+                  <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest">Investment Strategy</p>
+                  <p className="text-xs font-bold mt-1 max-w-xs line-clamp-2 italic">"{analysisResult?.analysis?.strategy || 'Analyzing data...'}"</p>
                 </div>
               </div>
             </div>
