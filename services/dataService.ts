@@ -39,35 +39,42 @@ export const dataService = {
   },
 
   // Folders
-  async getFolders() {
+  async getFolders(userId: string) {
     const { data, error } = await supabase
       .from('folders')
       .select('*')
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
     return data || [];
   },
 
-  async createFolder(folder: Partial<SearchFolder>) {
+  async createFolder(folder: Partial<SearchFolder>, userId: string) {
     const { data, error } = await supabase
       .from('folders')
-      .insert([folder])
+      .insert([{
+        user_id: userId,
+        name: folder.name,
+        description: folder.description,
+        color: folder.color
+      }])
       .select()
       .single();
     return data;
   },
 
   // Properties
-  async getProperties(folderId?: string) {
-    let query = supabase.from('properties').select('*, renovations(*)');
+  async getProperties(userId: string, folderId?: string) {
+    let query = supabase.from('properties').select('*, renovations(*)').eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
     const { data, error } = await query;
     return data || [];
   },
 
-  async createProperty(property: Partial<Property>) {
+  async createProperty(property: Partial<Property>, userId: string) {
     const { data, error } = await supabase
       .from('properties')
       .insert([{
+        user_id: userId,
         folder_id: property.folderId,
         title: property.title,
         url: property.url,

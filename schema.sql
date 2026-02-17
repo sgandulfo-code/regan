@@ -1,13 +1,23 @@
 
--- PropBrain Database Schema (Supabase)
+-- PropBrain Database Schema (Supabase) - Private Multi-tenant Version
+-- Ejecuta este script en el SQL Editor de Supabase para inicializar o resetear la base de datos.
+
+-- 0. EXTENSIONS
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. ENUMS
-CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
-CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offered', 'Discarded');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+DO $$ BEGIN
+    CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offered', 'Discarded');
+EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 -- 2. TABLES
+
 -- Profiles table
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY,
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
@@ -16,8 +26,9 @@ CREATE TABLE profiles (
 );
 
 -- Folders table
-CREATE TABLE folders (
+CREATE TABLE IF NOT EXISTS folders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL, -- Propiedad del usuario
   name TEXT NOT NULL,
   description TEXT,
   color TEXT DEFAULT 'bg-indigo-600',
@@ -25,9 +36,10 @@ CREATE TABLE folders (
 );
 
 -- Properties table
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL, -- Propiedad del usuario
+  folder_id UUID REFERENCES folders(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   url TEXT,
   address TEXT NOT NULL,
@@ -52,7 +64,7 @@ CREATE TABLE properties (
 );
 
 -- Renovations table
-CREATE TABLE renovations (
+CREATE TABLE IF NOT EXISTS renovations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
   author_id UUID REFERENCES profiles(id) NOT NULL,
@@ -62,24 +74,36 @@ CREATE TABLE renovations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Link Inbox table (Persistencia de cola de búsqueda)
-CREATE TABLE link_inbox (
+-- Link Inbox table
+CREATE TABLE IF NOT EXISTS link_inbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 3. RLS POLICIES
+-- 3. RLS POLICIES (Seguridad por usuario)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE renovations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE link_inbox ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow all public access for development" ON profiles FOR ALL USING (true);
-CREATE POLICY "Allow all public access for development" ON folders FOR ALL USING (true);
-CREATE POLICY "Allow all public access for development" ON properties FOR ALL USING (true);
-CREATE POLICY "Allow all public access for development" ON renovations FOR ALL USING (true);
-CREATE POLICY "Allow all public access for development" ON link_inbox FOR ALL USING (true);
+-- Solo el propio usuario puede ver/editar su perfil
+CREATE POLICY "Users can manage their own profile" ON profiles FOR ALL USING (auth.uid() = id);
+
+-- Cada usuario solo ve sus propias carpetas
+CREATE POLICY "Users can manage their own folders" ON folders FOR ALL USING (auth.uid() = user_id);
+
+-- Cada usuario solo ve sus propias propiedades
+CREATE POLICY "Users can manage their own properties" ON properties FOR ALL USING (auth.uid() = user_id);
+
+-- Solo el autor o el dueño de la propiedad pueden ver renovaciones
+CREATE POLICY "Users can manage renovations" ON renovations FOR ALL USING (
+  auth.uid() = author_id OR 
+  EXISTS (SELECT 1 FROM properties WHERE id = property_id AND user_id = auth.uid())
+);
+
+-- Cada usuario solo ve sus propios links en el inbox
+CREATE POLICY "Users can manage their own inbox" ON link_inbox FOR ALL USING (auth.uid() = user_id);

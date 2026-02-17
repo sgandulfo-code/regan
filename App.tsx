@@ -45,9 +45,17 @@ const App: React.FC = () => {
   useEffect(() => { if (user) loadInitialData(); }, [user]);
 
   const loadInitialData = async () => {
+    if (!user) return;
     setIsSyncing(true);
-    const [fetchedFolders, fetchedProperties] = await Promise.all([dataService.getFolders(), dataService.getProperties()]);
-    setFolders(fetchedFolders.map((f: any) => ({ id: f.id, name: f.name, description: f.description, color: f.color, createdAt: f.created_at })));
+    const [fetchedFolders, fetchedProperties] = await Promise.all([
+      dataService.getFolders(user.id), 
+      dataService.getProperties(user.id)
+    ]);
+    
+    setFolders(fetchedFolders.map((f: any) => ({ 
+      id: f.id, name: f.name, description: f.description, color: f.color, createdAt: f.created_at 
+    })));
+    
     setProperties(fetchedProperties.map((p: any) => ({
       id: p.id, folderId: p.folder_id, title: p.title, url: p.url, address: p.address, exactAddress: p.exact_address, price: Number(p.price), fees: Number(p.fees),
       environments: p.environments, rooms: p.rooms, bathrooms: p.bathrooms, toilets: p.toilets, parking: p.parking, sqft: Number(p.sqft), coveredSqft: Number(p.covered_sqft),
@@ -59,24 +67,28 @@ const App: React.FC = () => {
   };
 
   const handleCreateFolder = async (data: { name: string, description: string }) => {
+    if (!user) return;
     setIsSyncing(true);
     const colors = ['bg-indigo-600', 'bg-rose-600', 'bg-amber-600', 'bg-emerald-600'];
-    const newFolder = await dataService.createFolder({ name: data.name, description: data.description, color: colors[folders.length % colors.length] });
+    const newFolder = await dataService.createFolder(
+      { name: data.name, description: data.description, color: colors[folders.length % colors.length] },
+      user.id
+    );
     if (newFolder) {
       await loadInitialData();
       setActiveFolderId(newFolder.id);
-      setActiveTab('search'); // REDIRECCIÓN DIRECTA TRAS CREACIÓN
+      setActiveTab('search');
     }
     setIsFolderModalOpen(false);
     setIsSyncing(false);
   };
 
   const handleAddProperty = async (prop: Property) => {
-    if (user?.role !== UserRole.BUYER) return;
+    if (user?.role !== UserRole.BUYER || !user) return;
     setIsSyncing(true);
     const folderToAssign = activeFolderId || (folders.length > 0 ? folders[0].id : null);
     if (!folderToAssign) { alert("Create a search folder first."); setIsSyncing(false); return; }
-    const created = await dataService.createProperty({ ...prop, folderId: folderToAssign });
+    const created = await dataService.createProperty({ ...prop, folderId: folderToAssign }, user.id);
     if (created) { await loadInitialData(); setActiveTab('properties'); }
     setIsSyncing(false);
   };
