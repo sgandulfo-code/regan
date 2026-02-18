@@ -236,21 +236,42 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     });
   };
 
-  const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => (
-    <div className="space-y-1">
-      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-        {Icon && <Icon className="w-2.5 h-2.5" />} {label}
-      </label>
-      <div className="relative">
-        {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{prefix}</span>}
-        <input 
-          type={type} value={value}
-          onChange={(e) => onChange(type === "number" ? Number(e.target.value) : e.target.value)}
-          className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
-        />
+  const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => {
+    const isNumeric = type === "number";
+    
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (isNumeric) {
+        // Permitimos solo números y un punto decimal
+        const sanitized = val.replace(/[^0-9.]/g, '');
+        // Si hay más de un punto, nos quedamos con el primero
+        const parts = sanitized.split('.');
+        const finalVal = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
+        onChange(finalVal === '' ? 0 : Number(finalVal));
+      } else {
+        onChange(val);
+      }
+    };
+
+    return (
+      <div className="space-y-1">
+        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+          {Icon && <Icon className="w-2.5 h-2.5" />} {label}
+        </label>
+        <div className="relative">
+          {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{prefix}</span>}
+          <input 
+            type="text"
+            inputMode={isNumeric ? "decimal" : "text"}
+            value={isNumeric && value === 0 ? '' : value}
+            onChange={handleInputChange}
+            className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
+            placeholder={isNumeric ? "0" : ""}
+          />
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Helper to get the correct URL for the iframe
   const getPreviewUrl = () => {
