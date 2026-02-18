@@ -22,10 +22,10 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties }) => {
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
             <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} />
-            <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `€${value/1000}k`} />
+            <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12}} tickFormatter={(value) => `$${value/1000}k`} />
             <Tooltip 
               contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-              formatter={(value: number) => `€${value.toLocaleString()}`}
+              formatter={(value: number) => `$${value.toLocaleString()}`}
             />
             <Legend verticalAlign="top" align="right" height={36}/>
             <Bar dataKey="Price" stackId="a" fill="#4f46e5" radius={[0, 0, 0, 0]} barSize={40} />
@@ -39,13 +39,13 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties }) => {
           <div key={p.id} className="p-4 border border-slate-100 rounded-xl bg-slate-50">
             <h4 className="font-bold text-slate-800 mb-2 truncate">{p.title}</h4>
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-slate-500">€/m² (Base)</span>
-              <span className="font-medium">€{Math.round(p.price / p.sqft).toLocaleString()}</span>
+              <span className="text-slate-500">$/m² (Base)</span>
+              <span className="font-medium">${Math.round(p.price / p.sqft).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-slate-500">€/m² (Total)</span>
+              <span className="text-slate-500">$/m² (Total)</span>
               <span className="font-bold text-indigo-600">
-                €{Math.round((p.price + p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0)) / p.sqft).toLocaleString()}
+                ${Math.round((p.price + p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0)) / p.sqft).toLocaleString()}
               </span>
             </div>
           </div>

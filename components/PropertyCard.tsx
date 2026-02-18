@@ -74,12 +74,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
             </h3>
             <div className="flex items-center gap-3">
               <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                €{Math.round(property.price / property.sqft).toLocaleString()}/m²
+                ${Math.round(property.price / property.sqft).toLocaleString()}/m²
               </p>
               {property.fees && property.fees > 0 && (
                 <div className="flex items-center gap-1 text-[10px] text-amber-600 font-black uppercase tracking-widest">
                   <ShieldCheck className="w-3 h-3" />
-                  €{property.fees} fees
+                  ${property.fees} expensas
                 </div>
               )}
             </div>
@@ -108,7 +108,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
           <div>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Project Cost</p>
             <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-              €{(property.price + renoTotal).toLocaleString()}
+              ${(property.price + renoTotal).toLocaleString()}
             </p>
           </div>
           <button 

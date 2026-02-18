@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2 } from 'lucide-react';
+import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2, DollarSign } from 'lucide-react';
 import { Property, UserRole, RenovationItem } from '../types';
 import RenovationCalculator from './RenovationCalculator';
 import { dataService } from '../services/dataService';
@@ -63,14 +63,14 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
 
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-indigo-600 p-6 rounded-[2.5rem] shadow-xl text-white">
-                <Euro className="w-5 h-5 mb-3 opacity-60" />
+                <DollarSign className="w-5 h-5 mb-3 opacity-60" />
                 <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Price</p>
-                <p className="text-2xl font-black">€{property.price.toLocaleString()}</p>
+                <p className="text-2xl font-black">${property.price.toLocaleString()}</p>
               </div>
               <div className="bg-white p-6 rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <ShieldCheck className="w-5 h-5 mb-3 text-indigo-600" />
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monthly Fees</p>
-                <p className="text-2xl font-black text-slate-800">€{property.fees || 0}</p>
+                <p className="text-2xl font-black text-slate-800">${property.fees || 0}</p>
               </div>
             </div>
 
@@ -79,9 +79,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                 <Info className="w-4 h-4" /> Technical Specifications
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <TechBadge icon={Layers} label="Environments" value={property.environments} />
-                <TechBadge icon={Layers} label="Bedrooms" value={property.rooms} />
-                <TechBadge icon={Layers} label="Bathrooms" value={property.bathrooms} />
+                <TechBadge icon={Layers} label="Ambientes" value={property.environments} />
+                <TechBadge icon={Layers} label="Dormitorios" value={property.rooms} />
+                <TechBadge icon={Layers} label="Baños" value={property.bathrooms} />
                 <TechBadge icon={Ruler} label="Total Area" value={`${property.sqft} m²`} />
               </div>
             </section>

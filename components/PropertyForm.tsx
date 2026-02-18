@@ -26,7 +26,8 @@ import {
   Maximize,
   Save,
   Binary,
-  Hash
+  Hash,
+  DollarSign
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -369,8 +370,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">1. Base Information</h4>
                     <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Luxury Penthouse" />
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
-                      <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                      <FormField label="Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={DollarSign} />
+                      <FormField label="Monthly Fees" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                     </div>
                   </div>
 

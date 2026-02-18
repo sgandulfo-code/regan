@@ -77,7 +77,7 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
                   <p className="text-xs text-slate-500 max-w-[200px]">{item.description}</p>
                 </div>
                 <div className="text-right flex flex-col items-end">
-                  <span className="font-mono font-bold text-slate-700">€{item.estimatedCost.toLocaleString()}</span>
+                  <span className="font-mono font-bold text-slate-700">${item.estimatedCost.toLocaleString()}</span>
                   {isArchitect && (
                     <button className="text-[10px] text-orange-600 font-bold uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity underline">
                       Edit Estimate
@@ -92,15 +92,15 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
         <div className={`rounded-2xl p-5 space-y-3 shadow-inner ${isArchitect ? 'bg-orange-50' : 'bg-slate-900 text-white'}`}>
           <div className="flex justify-between text-xs font-semibold opacity-70 uppercase tracking-widest">
             <span>Purchase Price</span>
-            <span>€{property.price.toLocaleString()}</span>
+            <span>${property.price.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-xs font-semibold uppercase tracking-widest">
             <span>Renovation Budget</span>
-            <span className={isArchitect ? 'text-orange-600' : 'text-orange-400'}>+€{totalReno.toLocaleString()}</span>
+            <span className={isArchitect ? 'text-orange-600' : 'text-orange-400'}>+${totalReno.toLocaleString()}</span>
           </div>
           <div className={`pt-3 border-t flex justify-between font-bold text-xl ${isArchitect ? 'border-orange-200 text-slate-800' : 'border-white/10 text-white'}`}>
             <span className="text-sm self-center">TOTAL PROJECT</span>
-            <span>€{(property.price + totalReno).toLocaleString()}</span>
+            <span>${(property.price + totalReno).toLocaleString()}</span>
           </div>
         </div>
         

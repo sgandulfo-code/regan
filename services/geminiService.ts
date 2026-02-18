@@ -13,10 +13,11 @@ export const parseSemanticSearch = async (description: string) => {
       CRITICAL RULES:
       1. Use Google Search to find the EXACT listing if a URL is provided.
       2. Extract EXACT numbers for price, sqft, rooms, and fees.
-      3. "environments" = Total number of main spaces (Living + Bedrooms).
-      4. "rooms" = Total number of Bedrooms only.
-      5. "fees" = Monthly community costs/expensas (approximate if not exact).
-      6. "confidence" = Score from 0.0 to 1.0 based on how sure you are of the data.
+      3. Prices and fees are usually in USD or local currency ($). Do not use Euros.
+      4. "environments" = Total number of main spaces (Living + Bedrooms).
+      5. "rooms" = Total number of Bedrooms only.
+      6. "fees" = Monthly community costs/expensas (approximate if not exact).
+      7. "confidence" = Score from 0.0 to 1.0 based on how sure you are of the data.
       
       If any data point is absolutely not found, return 0 or empty string. Do not invent data.`,
       config: {
@@ -81,7 +82,7 @@ export const suggestRenovationCosts = async (propertyTitle: string, address: str
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Suggest 4 mid-range renovation costs for: "${propertyTitle}" in "${address}". Format: JSON array.`,
+      contents: `Suggest 4 mid-range renovation costs for: "${propertyTitle}" in "${address}". Format: JSON array. Use $ as currency symbol.`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {

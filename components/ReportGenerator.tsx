@@ -14,7 +14,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
     window.print();
   };
 
-  // Generamos una URL de mapa estático de alta calidad para el informe
   const getReportMapUrl = () => {
     if (properties.length === 0) return "Madrid";
     return properties.map(p => p.address).join(' OR ');
@@ -26,7 +25,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
     <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-md flex justify-center overflow-y-auto py-10 px-4 print:p-0 print:bg-white">
       <div className="w-full max-w-[1000px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none">
         
-        {/* Barra de Herramientas (Oculta en Impresión) */}
         <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-30 print:hidden rounded-t-[3rem]">
           <button onClick={onClose} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all">
             <ChevronLeft className="w-5 h-5" /> Volver
@@ -44,10 +42,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </div>
         </div>
 
-        {/* Cuerpo del Informe (Documento) */}
         <div id="report-content" className="p-16 space-y-12 print:p-10">
-          
-          {/* Header del Informe */}
           <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -63,7 +58,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </header>
 
-          {/* Mapa General del Informe */}
           <section className="space-y-4">
             <div className="flex items-center gap-3">
               <MapIcon className="w-5 h-5 text-indigo-600" />
@@ -88,7 +82,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          {/* Tabla Comparativa de Datos */}
           <section className="space-y-6 pt-6">
             <div className="flex items-center gap-3">
               <Table className="w-5 h-5 text-indigo-600" />
@@ -100,10 +93,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                   <tr className="bg-slate-50 border-b border-slate-100">
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Propiedad</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio Total</th>
-                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">€ / m²</th>
+                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">$ / m²</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Superficie</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Layout</th>
-                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Gastos</th>
+                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Expensas</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -114,10 +107,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium truncate max-w-[150px]">{p.address}</p>
                       </td>
                       <td className="p-5">
-                        <span className="font-black text-slate-900 text-sm">€{p.price.toLocaleString()}</span>
+                        <span className="font-black text-slate-900 text-sm">${p.price.toLocaleString()}</span>
                       </td>
                       <td className="p-5">
-                        <span className="font-bold text-slate-500 text-xs">€{Math.round(p.price / p.sqft).toLocaleString()}</span>
+                        <span className="font-bold text-slate-500 text-xs">${Math.round(p.price / p.sqft).toLocaleString()}</span>
                       </td>
                       <td className="p-5">
                         <span className="font-bold text-slate-800 text-sm">{p.sqft}m²</span>
@@ -130,7 +123,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         </div>
                       </td>
                       <td className="p-5 text-center">
-                        <span className="font-bold text-amber-600 text-xs">€{p.fees || 0}</span>
+                        <span className="font-bold text-amber-600 text-xs">${p.fees || 0}</span>
                       </td>
                     </tr>
                   ))}
@@ -139,7 +132,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          {/* Detalles Individuales sin Imágenes */}
           <section className="space-y-10 pt-10">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-4">Detalles Técnicos Individuales</h3>
             <div className="grid grid-cols-2 gap-10">
@@ -159,7 +151,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-white p-4 rounded-2xl border border-slate-100">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Compra</p>
-                        <p className="font-black text-slate-900">€{p.price.toLocaleString()}</p>
+                        <p className="font-black text-slate-900">${p.price.toLocaleString()}</p>
                       </div>
                       <div className="bg-white p-4 rounded-2xl border border-slate-100">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Métricas</p>
@@ -181,7 +173,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                           {p.renovationCosts.map(r => (
                             <div key={r.id} className="flex justify-between text-[10px]">
                               <span className="text-slate-500 font-medium">{r.category}</span>
-                              <span className="font-bold text-slate-900">€{r.estimatedCost.toLocaleString()}</span>
+                              <span className="font-bold text-slate-900">${r.estimatedCost.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
@@ -193,7 +185,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          {/* Footer del Documento */}
           <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
             <p>© 2024 PropBrain Technical Reports</p>
             <p>Página 1 de 1</p>
@@ -202,7 +193,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
         </div>
       </div>
 
-      {/* Estilos para impresión integrados */}
       <style>{`
         @media print {
           body {
