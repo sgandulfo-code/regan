@@ -18,6 +18,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [folders, setFolders] = useState<SearchFolder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -138,6 +139,7 @@ const App: React.FC = () => {
   };
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
+  const filteredProperties = useMemo(() => properties.filter(p => p.folderId === activeFolderId), [properties, activeFolderId]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -158,7 +160,7 @@ const App: React.FC = () => {
       />
       
       <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
-        <header className="mb-10 flex justify-between items-start">
+        <header className="mb-10 flex flex-col md:flex-row justify-between items-start gap-4">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
               {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Mis Búsquedas' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
@@ -167,11 +169,31 @@ const App: React.FC = () => {
               {activeFolder ? activeFolder.description : 'Plataforma inteligente para compradores de propiedades'}
             </p>
           </div>
-          <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
-              {user.name[0]}
+          
+          <div className="flex items-center gap-4">
+            {activeFolderId && activeTab === 'properties' && (
+              <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <LayoutGrid className="w-3 h-3" /> Grid
+                </button>
+                <button 
+                  onClick={() => setViewMode('map')}
+                  className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                >
+                  <MapIcon className="w-3 h-3" /> Map
+                </button>
+              </div>
+            )}
+            
+            <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
+                {user.name[0]}
+              </div>
+              <span className="text-sm font-bold pr-2">{user.name}</span>
             </div>
-            <span className="text-sm font-bold pr-2">{user.name}</span>
           </div>
         </header>
 
@@ -237,7 +259,7 @@ const App: React.FC = () => {
         
         {activeTab === 'properties' && (
           <div className="space-y-6">
-            {properties.filter(p => p.folderId === activeFolderId).length === 0 ? (
+            {filteredProperties.length === 0 ? (
               <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Home className="w-10 h-10 text-slate-300" />
@@ -251,18 +273,27 @@ const App: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-                {properties.filter(p => p.folderId === activeFolderId).map(p => (
-                  <PropertyCard 
-                    key={p.id} 
-                    property={p} 
-                    onSelect={setSelectedProperty} 
-                    onStatusChange={(id, s) => handleUpdateStatus(id, s)} 
-                    onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
-                    onDelete={handleDeleteProperty}
+              <>
+                {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+                    {filteredProperties.map(p => (
+                      <PropertyCard 
+                        key={p.id} 
+                        property={p} 
+                        onSelect={setSelectedProperty} 
+                        onStatusChange={(id, s) => handleUpdateStatus(id, s)} 
+                        onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                        onDelete={handleDeleteProperty}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <PropertyMapView 
+                    properties={filteredProperties} 
+                    onSelectProperty={setSelectedProperty} 
                   />
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         )}
