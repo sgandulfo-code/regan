@@ -7,29 +7,26 @@ import {
   Home, 
   ShieldCheck, 
   CheckCircle2, 
-  AlertCircle, 
-  ExternalLink, 
   ImageIcon, 
   Link as LinkIcon, 
   Trash2, 
   ArrowRight, 
   Monitor, 
-  AlertOctagon, 
   Loader2, 
   Cpu, 
   Keyboard, 
-  RefreshCw, 
   Ruler, 
   Layers, 
   Plus, 
   Inbox, 
-  ClipboardList,
   Navigation,
   Car,
   Clock,
   Building,
   Maximize,
-  Save
+  Save,
+  Binary,
+  Hash
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -66,35 +63,24 @@ interface PropertyFormData {
 type CreationStep = 'inbox' | 'verify';
 type ProcessingMode = 'ai' | 'manual' | 'edit' | null;
 
-// Componente FormField movido fuera para evitar que pierda el foco al re-renderizar
-const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => {
+// Componente FormField definido fuera para evitar re-montajes y pérdida de foco
+const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix, placeholder }: any) => {
   const isNumeric = type === "number";
-  
-  // Usamos un estado local para el input para que el usuario pueda escribir libremente
-  // y solo notificamos al padre cuando el valor es numérico.
   const [localValue, setLocalValue] = useState(isNumeric && value === 0 ? '' : value.toString());
 
-  // Sincronizamos el estado local si el valor externo cambia (por ejemplo, al cargar datos de IA)
   useEffect(() => {
     setLocalValue(isNumeric && value === 0 ? '' : value.toString());
   }, [value, isNumeric]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    
     if (isNumeric) {
-      // Permitimos solo números y un punto decimal mientras se escribe
       const sanitized = val.replace(/[^0-9.]/g, '');
       const parts = sanitized.split('.');
       const finalVal = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
-      
       setLocalValue(finalVal);
-      
-      // Enviamos el número al padre (si es válido)
       const numValue = finalVal === '' ? 0 : parseFloat(finalVal);
-      if (!isNaN(numValue)) {
-        onChange(numValue);
-      }
+      if (!isNaN(numValue)) onChange(numValue);
     } else {
       setLocalValue(val);
       onChange(val);
@@ -114,7 +100,7 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
           value={localValue}
           onChange={handleInputChange}
           className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
-          placeholder={isNumeric ? "0" : ""}
+          placeholder={placeholder || (isNumeric ? "0" : "")}
         />
       </div>
     </div>
@@ -265,7 +251,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       address: editedData.location || 'Unknown Address',
       status: PropertyStatus.WISHLIST,
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
-      notes: analysisResult.analysis?.strategy || '',
+      notes: analysisResult.analysis?.strategy || editedData.notes || '',
       renovationCosts: [],
       images: [snapshotUrl || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink.url)}?w=1200`],
       createdAt: new Date().toISOString(),
@@ -290,7 +276,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     });
   };
 
-  // Helper to get the correct URL for the iframe
   const getPreviewUrl = () => {
     if (propertyToEdit) return propertyToEdit.url;
     return processingLink?.url || '';
@@ -372,7 +357,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Refine asset specifications</p>
             </div>
             
-            <div className="flex-1 space-y-10 overflow-y-auto max-h-[600px] pr-4 custom-scrollbar">
+            <div className="flex-1 space-y-10 overflow-y-auto max-h-[650px] pr-4 custom-scrollbar">
               {isAnalyzing ? (
                 <div className="py-20 text-center space-y-4">
                   <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
@@ -382,34 +367,71 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 <>
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">1. Base Information</h4>
-                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
+                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Luxury Penthouse" />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
                       <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                     </div>
-                    {propertyToEdit && (
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Notes / Analysis</label>
-                        <textarea 
-                          className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-                          rows={3} value={editedData.notes} onChange={(e) => setEditedData({...editedData, notes: e.target.value})}
-                        />
-                      </div>
-                    )}
                   </div>
+
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">2. Geolocation</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
-                      <FormField label="Exact Address" type="text" value={editedData.exactAddress} onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} icon={Navigation} />
+                      <FormField label="Display Address" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
+                      <FormField label="Exact Address (GPS)" type="text" value={editedData.exactAddress} onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} icon={Navigation} />
                     </div>
                   </div>
+
                   <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">3. Layout</h4>
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">3. Internal Layout</h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      <FormField label="Ambientes" value={editedData.environments} onChange={(v:any) => setEditedData({...editedData, environments: v})} icon={Layers} />
+                      <FormField label="Dormitorios" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Binary} />
+                      <FormField label="Baños" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Binary} />
+                      <FormField label="Toilets" value={editedData.toilets} onChange={(v:any) => setEditedData({...editedData, toilets: v})} icon={Binary} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">4. Surface & Tech Specs</h4>
                     <div className="grid grid-cols-3 gap-4">
-                      <FormField label="Environments" value={editedData.environments} onChange={(v:any) => setEditedData({...editedData, environments: v})} icon={Layers} />
-                      <FormField label="Rooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
-                      <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
+                      <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
+                      <FormField label="Cubiertos m²" value={editedData.coveredSqft} onChange={(v:any) => setEditedData({...editedData, coveredSqft: v})} icon={Ruler} />
+                      <FormField label="Descubiertos m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData({...editedData, uncoveredSqft: v})} icon={Ruler} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField label="Cocheras" value={editedData.parking} onChange={(v:any) => setEditedData({...editedData, parking: v})} icon={Car} />
+                      <FormField label="Antigüedad" value={editedData.age} onChange={(v:any) => setEditedData({...editedData, age: v})} icon={Clock} />
+                      <FormField label="Piso / Planta" type="text" value={editedData.floor} onChange={(v:any) => setEditedData({...editedData, floor: v})} icon={Building} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">5. Strategic Context</h4>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Analysis & Personal Notes</label>
+                      <textarea 
+                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                        rows={4} 
+                        placeholder="Why this property? Any specific details to remember..."
+                        value={editedData.notes} 
+                        onChange={(e) => setEditedData({...editedData, notes: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rating (1-5)</label>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setEditedData({...editedData, rating: num})}
+                            className={`flex-1 py-2 rounded-lg font-black text-xs transition-all ${editedData.rating === num ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </>
@@ -429,8 +451,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[850px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
-                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}><Monitor className="w-3 h-3 inline mr-2" /> Live Portal</button>
-                <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white' : 'text-slate-400'}`}><ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot</button>
+                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><Monitor className="w-3 h-3 inline mr-2" /> Live Portal</button>
+                <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot</button>
               </div>
             </div>
             <div className="flex-1 bg-white relative">
