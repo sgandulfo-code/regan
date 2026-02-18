@@ -43,6 +43,7 @@ interface PropertyFormProps {
 
 interface PropertyFormData {
   title: string;
+  imageUrl: string;
   price: number;
   fees: number;
   location: string;
@@ -123,13 +124,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(propertyToEdit?.images[0] || null);
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
+    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
   });
 
   useEffect(() => {
     if (propertyToEdit) {
       setEditedData({
         title: propertyToEdit.title,
+        imageUrl: propertyToEdit.images[0] || '',
         price: propertyToEdit.price,
         fees: propertyToEdit.fees || 0,
         location: propertyToEdit.address,
@@ -207,7 +209,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         setAnalysisResult(result);
         setStep('verify');
         dataService.fetchExternalMetadata(link.url).then(meta => {
-          setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`);
+          const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`;
+          setSnapshotUrl(finalScreenshot);
+          setEditedData(prev => ({ ...prev, imageUrl: prev.imageUrl || finalScreenshot }));
           setSnapshotLoading(false);
         });
       } else {
@@ -223,21 +227,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setIsAnalyzing(true);
     setActiveRefTab('live'); 
     const meta = await dataService.fetchExternalMetadata(url);
+    const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`;
     setAnalysisResult({ title: meta?.title || '', price: 0, confidence: 1, dealScore: 50 });
-    if (meta?.title) setEditedData(prev => ({ ...prev, title: meta.title }));
-    setSnapshotUrl(meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`);
+    if (meta?.title) setEditedData(prev => ({ ...prev, title: meta.title, imageUrl: finalScreenshot }));
+    setSnapshotUrl(finalScreenshot);
     setStep('verify');
     setIsAnalyzing(false);
     setSnapshotLoading(false);
   };
 
   const handleConfirm = async () => {
+    // Definir la imagen final
+    const finalImage = editedData.imageUrl || snapshotUrl || (propertyToEdit?.images[0]) || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(propertyToEdit?.url || processingLink?.url || '')}?w=1200`;
+
     if (propertyToEdit) {
       const updated: Property = {
         ...propertyToEdit,
         ...editedData,
         address: editedData.location,
-        rating: editedData.rating
+        rating: editedData.rating,
+        images: [finalImage]
       };
       onAdd(updated);
       return;
@@ -254,7 +263,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
       notes: analysisResult.analysis?.strategy || editedData.notes || '',
       renovationCosts: [],
-      images: [snapshotUrl || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(processingLink.url)}?w=1200`],
+      images: [finalImage],
       createdAt: new Date().toISOString(),
     });
     await dataService.removeInboxLink(processingLink.id);
@@ -273,7 +282,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setStep('inbox');
     setSnapshotUrl(null);
     setEditedData({
-      title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
+      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
     });
   };
 
@@ -369,6 +378,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">1. Base Information</h4>
                     <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Luxury Penthouse" />
+                    <FormField label="Image URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData({...editedData, imageUrl: v})} icon={ImageIcon} placeholder="https://example.com/image.jpg" />
                     <div className="grid grid-cols-2 gap-4">
                       <FormField label="Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={DollarSign} />
                       <FormField label="Monthly Fees" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
@@ -461,7 +471,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 <iframe src={getPreviewUrl()} className="w-full h-full border-none" title="Portal View" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center p-8 bg-slate-100">
-                  {snapshotLoading ? <Loader2 className="w-8 h-8 animate-spin text-indigo-500" /> : <img src={snapshotUrl || ''} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />}
+                  {snapshotLoading ? <Loader2 className="w-8 h-8 animate-spin text-indigo-500" /> : <img src={editedData.imageUrl || snapshotUrl || ''} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />}
                 </div>
               )}
             </div>
