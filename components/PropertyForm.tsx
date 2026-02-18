@@ -64,7 +64,7 @@ interface PropertyFormData {
 }
 
 type CreationStep = 'inbox' | 'verify';
-type ProcessingMode = 'ai' | 'manual' | 'edit';
+type ProcessingMode = 'ai' | 'manual' | 'edit' | null;
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, onCancelEdit }) => {
   const [step, setStep] = useState<CreationStep>(propertyToEdit ? 'verify' : 'inbox');
@@ -391,7 +391,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             </div>
             <div className="flex-1 bg-white relative">
               {activeRefTab === 'live' && !propertyToEdit ? (
-                <iframe src={propertyToEdit?.url || processingLink?.url} className="w-full h-full border-none" title="Portal View" />
+                <iframe src={processingLink?.url || ''} className="w-full h-full border-none" title="Portal View" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center p-8 bg-slate-100">
                   {snapshotLoading ? <Loader2 className="w-8 h-8 animate-spin text-indigo-500" /> : <img src={snapshotUrl || ''} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />}
