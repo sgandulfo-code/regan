@@ -23,7 +23,12 @@ import {
   Layers, 
   Plus, 
   Inbox, 
-  ClipboardList 
+  ClipboardList,
+  Navigation,
+  Car,
+  Clock,
+  Building,
+  Maximize
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -298,50 +303,105 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4">
       <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
-        <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+        <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
           <ArrowRight className="w-4 h-4 rotate-180" /> Back to Inbox
         </button>
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-500'}`}>
+        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
           {mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
-        <div className="xl:col-span-5">
-          <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-8 h-full flex flex-col">
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight">Asset Audit</h3>
+        <div className="xl:col-span-6">
+          <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-10 h-full flex flex-col">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-3xl font-black text-slate-800 tracking-tight">Technical Audit</h3>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Refine and complete all property attributes</p>
+              </div>
+              {mode === 'ai' && !isAnalyzing && analysisResult?.confidence && (
+                <div className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-2xl border border-emerald-100 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Conf: {Math.round(analysisResult.confidence * 100)}%</span>
+                </div>
+              )}
+            </div>
             
-            <div className="flex-1 space-y-5 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+            <div className="flex-1 space-y-10 overflow-y-auto max-h-[600px] pr-4 custom-scrollbar">
               {isAnalyzing ? (
                 <div className="py-20 text-center space-y-4">
                   <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Processing listing...</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Neural AI processing listing...</p>
                 </div>
               ) : (
                 <>
-                  <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
-                    <FormField label="Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
-                    <FormField label="Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
-                    <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
+                  {/* General Section */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">1. Base Asset Information</h4>
+                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} />
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField label="Price" prefix="€" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={Euro} />
+                      <FormField label="Monthly Fees" prefix="€" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                    </div>
+                  </div>
+
+                  {/* Location Section */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">2. Geolocation</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField label="General Location" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
+                      <FormField label="Exact Address" type="text" value={editedData.exactAddress} onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} icon={Navigation} />
+                    </div>
+                  </div>
+
+                  {/* Spaces Section */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">3. Layout & Spaces</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField label="Ambientes" value={editedData.environments} onChange={(v:any) => setEditedData({...editedData, environments: v})} icon={Layers} />
+                      <FormField label="Bedrooms" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Layers} />
+                      <FormField label="Bathrooms" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Layers} />
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField label="Toilets" value={editedData.toilets} onChange={(v:any) => setEditedData({...editedData, toilets: v})} icon={Layers} />
+                      <FormField label="Parking Spots" value={editedData.parking} onChange={(v:any) => setEditedData({...editedData, parking: v})} icon={Car} />
+                      <FormField label="Floor / Level" type="text" value={editedData.floor} onChange={(v:any) => setEditedData({...editedData, floor: v})} icon={Building} />
+                    </div>
+                  </div>
+
+                  {/* Technical Section */}
+                  <div className="space-y-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">4. Surface & Age</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <FormField label="Total Area m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
+                      <FormField label="Covered m²" value={editedData.coveredSqft} onChange={(v:any) => setEditedData({...editedData, coveredSqft: v})} icon={Maximize} />
+                      <FormField label="Uncovered m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData({...editedData, uncoveredSqft: v})} icon={Maximize} />
+                    </div>
+                    <div className="grid grid-cols-1">
+                      <FormField label="Property Age (Years)" value={editedData.age} onChange={(v:any) => setEditedData({...editedData, age: v})} icon={Clock} />
+                    </div>
                   </div>
                 </>
               )}
             </div>
 
             {!isAnalyzing && (
-              <div className="flex gap-4 pt-6 mt-auto">
-                <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all"><CheckCircle2 className="w-6 h-6" /> IMPORT ASSET</button>
+              <div className="flex gap-4 pt-6 border-t">
+                <button 
+                  onClick={handleConfirm} 
+                  className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all hover:scale-[1.02]"
+                >
+                  <CheckCircle2 className="w-6 h-6" /> SAVE TO PORTFOLIO
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        <div className="xl:col-span-7">
-          <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[750px] flex flex-col overflow-hidden relative">
+        <div className="xl:col-span-6">
+          <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[850px] flex flex-col overflow-hidden relative">
             <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
               <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
                 <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><Monitor className="w-3 h-3 inline mr-2" /> Live Portal</button>
@@ -369,6 +429,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 </div>
               )}
             </div>
+
+            {mode === 'ai' && !isAnalyzing && analysisResult?.dealScore && (
+              <div className="p-6 bg-indigo-600 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-6 h-6 text-indigo-300" />
+                  <div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-indigo-300">Neural Deal Score</span>
+                    <h4 className="text-xl font-black">{analysisResult.dealScore}/100</h4>
+                  </div>
+                </div>
+                {analysisResult.analysis?.strategy && (
+                  <p className="text-[10px] font-medium text-indigo-100 italic max-w-xs text-right">
+                    "{analysisResult.analysis.strategy.substring(0, 100)}..."
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
