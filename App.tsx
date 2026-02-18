@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -14,6 +14,26 @@ import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
+
+interface PropertyFilters {
+  minPrice: string;
+  maxPrice: string;
+  minRooms: string;
+  minBathrooms: string;
+  minSqft: string;
+  status: string;
+  minRating: number;
+}
+
+const initialFilters: PropertyFilters = {
+  minPrice: '',
+  maxPrice: '',
+  minRooms: '',
+  minBathrooms: '',
+  minSqft: '',
+  status: '',
+  minRating: 0
+};
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -30,6 +50,8 @@ const App: React.FC = () => {
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isSyncing, setIsSyncing] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<PropertyFilters>(initialFilters);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -65,13 +87,12 @@ const App: React.FC = () => {
     
     setProperties(fetchedProperties.map((p: any) => ({
       id: p.id,
-      // Fix: Removed non-existent property folder_id and normalized keys to camelCase to match Property interface
       title: p.title, url: p.url, address: p.address, exactAddress: p.exact_address, price: Number(p.price), fees: Number(p.fees),
       environments: p.environments, rooms: p.rooms, bathrooms: p.bathrooms, toilets: p.toilets, parking: p.parking, sqft: Number(p.sqft), coveredSqft: Number(p.covered_sqft),
       uncoveredSqft: Number(p.uncovered_sqft), age: p.age, floor: p.floor, status: p.status as PropertyStatus, rating: p.rating, notes: p.notes, images: p.images || [],
       renovationCosts: p.renovations ? p.renovations.map((r: any) => ({ id: r.id, category: r.category, description: r.description, estimatedCost: Number(r.estimated_cost) })) : [],
       createdAt: p.created_at,
-      folderId: p.folder_id // Using folderId instead of folder_id
+      folderId: p.folder_id 
     })));
     setIsSyncing(false);
   };
@@ -150,13 +171,12 @@ const App: React.FC = () => {
   const displayProperties = useMemo(() => {
     let filtered = properties;
     
-    // Filtro por carpeta
+    // 1. Filtro por carpeta
     if (activeFolderId) {
-      // Fix: Use folderId instead of folder_id to match Property interface
       filtered = filtered.filter(p => p.folderId === activeFolderId);
     }
     
-    // Filtro por búsqueda de texto
+    // 2. Filtro por búsqueda de texto (Search Query)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
@@ -165,18 +185,32 @@ const App: React.FC = () => {
         (p.notes && p.notes.toLowerCase().includes(query))
       );
     }
+
+    // 3. Filtros Técnicos Avanzados
+    if (filters.minPrice) filtered = filtered.filter(p => p.price >= Number(filters.minPrice));
+    if (filters.maxPrice) filtered = filtered.filter(p => p.price <= Number(filters.maxPrice));
+    if (filters.minRooms) filtered = filtered.filter(p => p.rooms >= Number(filters.minRooms));
+    if (filters.minBathrooms) filtered = filtered.filter(p => p.bathrooms >= Number(filters.minBathrooms));
+    if (filters.minSqft) filtered = filtered.filter(p => p.sqft >= Number(filters.minSqft));
+    if (filters.status) filtered = filtered.filter(p => p.status === filters.status);
+    if (filters.minRating > 0) filtered = filtered.filter(p => p.rating >= filters.minRating);
     
     return filtered;
-  }, [properties, activeFolderId, searchQuery]);
+  }, [properties, activeFolderId, searchQuery, filters]);
 
   const handleOpenReport = (folder: SearchFolder) => {
     setReportFolder(folder);
     setIsReportOpen(true);
   };
 
+  const activeFilterCount = useMemo(() => {
+    return Object.values(filters).filter(v => v !== '' && v !== 0).length;
+  }, [filters]);
+
   // Limpiar búsqueda al cambiar de carpeta o pestaña
   useEffect(() => {
     setSearchQuery('');
+    setFilters(initialFilters);
   }, [activeFolderId, activeTab]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
@@ -245,25 +279,135 @@ const App: React.FC = () => {
         </header>
 
         {(activeTab === 'dashboard' || activeTab === 'properties') && (
-          <div className="mb-8 flex flex-col md:flex-row gap-4 items-center animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                type="text"
-                placeholder={`Search in ${activeFolder ? activeFolder.name : 'all assets'}...`}
-                className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-11 pr-11 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+          <div className="space-y-4 mb-8">
+            <div className="flex flex-col md:flex-row gap-4 items-center animate-in fade-in slide-in-from-top-2 duration-500">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input 
+                  type="text"
+                  placeholder={`Search in ${activeFolder ? activeFolder.name : 'all assets'}...`}
+                  className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-11 pr-11 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button 
+                onClick={() => setShowFilters(!showFilters)}
+                className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all border ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'}`}
+              >
+                <Filter className="w-4 h-4" /> 
+                Advanced Filters
+                {activeFilterCount > 0 && (
+                  <span className="bg-indigo-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[8px] animate-in zoom-in">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
             </div>
+
+            {showFilters && (
+              <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl animate-in slide-in-from-top-4 duration-500 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Price Range</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      placeholder="Min" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                      value={filters.minPrice}
+                      onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Max" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                      value={filters.maxPrice}
+                      onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Bed className="w-3 h-3" /> Rooms & Baths</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      placeholder="Min Rooms" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                      value={filters.minRooms}
+                      onChange={(e) => setFilters({...filters, minRooms: e.target.value})}
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Min Baths" 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                      value={filters.minBathrooms}
+                      onChange={(e) => setFilters({...filters, minBathrooms: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Ruler className="w-3 h-3" /> Surface (min m²)</label>
+                  <input 
+                    type="number" 
+                    placeholder="e.g. 100" 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
+                    value={filters.minSqft}
+                    onChange={(e) => setFilters({...filters, minSqft: e.target.value})}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Status & Rating</label>
+                  <div className="flex flex-col gap-2">
+                    <select 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all uppercase tracking-widest"
+                      value={filters.status}
+                      onChange={(e) => setFilters({...filters, status: e.target.value})}
+                    >
+                      <option value="">Any Status</option>
+                      {Object.values(PropertyStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <div className="flex gap-1 items-center justify-between px-2 bg-slate-50 rounded-xl p-2 border border-slate-100">
+                      <span className="text-[9px] font-black text-slate-400 uppercase">Min Stars:</span>
+                      <div className="flex gap-1">
+                        {[1,2,3,4,5].map(num => (
+                          <button 
+                            key={num} 
+                            onClick={() => setFilters({...filters, minRating: filters.minRating === num ? 0 : num})}
+                            className={`transition-all ${filters.minRating >= num ? 'text-amber-500 scale-110' : 'text-slate-300'}`}
+                          >
+                            <Star className={`w-4 h-4 ${filters.minRating >= num ? 'fill-current' : ''}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-4 pt-4 border-t border-slate-50 flex justify-between items-center">
+                  <p className="text-[10px] text-slate-400 font-bold italic uppercase tracking-widest">
+                    Showing {displayProperties.length} of {activeFolder ? properties.filter(p => p.folderId === activeFolderId).length : properties.length} properties
+                  </p>
+                  <button 
+                    onClick={() => setFilters(initialFilters)}
+                    className="text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-2"
+                  >
+                    <RefreshCw className="w-3 h-3" /> Reset all filters
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -307,7 +451,6 @@ const App: React.FC = () => {
                       </p>
                       <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          {/* Fix: Use folderId instead of folder_id to match Property interface */}
                           {properties.filter(p => p.folderId === f.id).length} Propiedades
                         </span>
                         <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
@@ -349,20 +492,20 @@ const App: React.FC = () => {
             {displayProperties.length === 0 ? (
               <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  {searchQuery ? <Search className="w-10 h-10 text-slate-300" /> : <Home className="w-10 h-10 text-slate-300" />}
+                  {searchQuery || activeFilterCount > 0 ? <Search className="w-10 h-10 text-slate-300" /> : <Home className="w-10 h-10 text-slate-300" />}
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">
-                  {searchQuery ? 'No results found for your search' : 'No properties here yet'}
+                  {searchQuery || activeFilterCount > 0 ? 'No results found for your filters' : 'No properties here yet'}
                 </h3>
                 <p className="text-slate-500 mb-8 max-w-xs mx-auto font-medium">
-                  {searchQuery ? 'Try adjusting your filters or searching for something else.' : 'Start by adding a property listing from any portal.'}
+                  {searchQuery || activeFilterCount > 0 ? 'Try adjusting your filters or resetting the search parameters.' : 'Start by adding a property listing from any portal.'}
                 </p>
-                {searchQuery ? (
+                {searchQuery || activeFilterCount > 0 ? (
                   <button 
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => { setSearchQuery(''); setFilters(initialFilters); }}
                     className="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all"
                   >
-                    Clear Search
+                    Reset all criteria
                   </button>
                 ) : (
                   <button 
@@ -410,7 +553,6 @@ const App: React.FC = () => {
       {isReportOpen && reportFolder && (
         <ReportGenerator 
           folder={reportFolder}
-          // Fix: Use folderId instead of folder_id to match Property interface
           properties={properties.filter(p => p.folderId === reportFolder.id)}
           onClose={() => { setIsReportOpen(false); setReportFolder(null); }}
         />
