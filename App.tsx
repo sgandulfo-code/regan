@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -29,6 +29,7 @@ const App: React.FC = () => {
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isSyncing, setIsSyncing] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,11 +64,14 @@ const App: React.FC = () => {
     })));
     
     setProperties(fetchedProperties.map((p: any) => ({
-      id: p.id, folderId: p.folder_id, title: p.title, url: p.url, address: p.address, exactAddress: p.exact_address, price: Number(p.price), fees: Number(p.fees),
+      id: p.id,
+      // Fix: Removed non-existent property folder_id and normalized keys to camelCase to match Property interface
+      title: p.title, url: p.url, address: p.address, exactAddress: p.exact_address, price: Number(p.price), fees: Number(p.fees),
       environments: p.environments, rooms: p.rooms, bathrooms: p.bathrooms, toilets: p.toilets, parking: p.parking, sqft: Number(p.sqft), coveredSqft: Number(p.covered_sqft),
       uncoveredSqft: Number(p.uncovered_sqft), age: p.age, floor: p.floor, status: p.status as PropertyStatus, rating: p.rating, notes: p.notes, images: p.images || [],
       renovationCosts: p.renovations ? p.renovations.map((r: any) => ({ id: r.id, category: r.category, description: r.description, estimatedCost: Number(r.estimated_cost) })) : [],
-      createdAt: p.created_at
+      createdAt: p.created_at,
+      folderId: p.folder_id // Using folderId instead of folder_id
     })));
     setIsSyncing(false);
   };
@@ -144,14 +148,36 @@ const App: React.FC = () => {
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
   const displayProperties = useMemo(() => {
-    if (activeFolderId) return properties.filter(p => p.folderId === activeFolderId);
-    return properties; // Global view
-  }, [properties, activeFolderId]);
+    let filtered = properties;
+    
+    // Filtro por carpeta
+    if (activeFolderId) {
+      // Fix: Use folderId instead of folder_id to match Property interface
+      filtered = filtered.filter(p => p.folderId === activeFolderId);
+    }
+    
+    // Filtro por búsqueda de texto
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.title.toLowerCase().includes(query) || 
+        p.address.toLowerCase().includes(query) ||
+        (p.notes && p.notes.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered;
+  }, [properties, activeFolderId, searchQuery]);
 
   const handleOpenReport = (folder: SearchFolder) => {
     setReportFolder(folder);
     setIsReportOpen(true);
   };
+
+  // Limpiar búsqueda al cambiar de carpeta o pestaña
+  useEffect(() => {
+    setSearchQuery('');
+  }, [activeFolderId, activeTab]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -211,12 +237,35 @@ const App: React.FC = () => {
             
             <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
               <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
-                {user.name[0]}
+                {user.name ? user.name[0] : 'U'}
               </div>
               <span className="text-sm font-bold pr-2">{user.name}</span>
             </div>
           </div>
         </header>
+
+        {(activeTab === 'dashboard' || activeTab === 'properties') && (
+          <div className="mb-8 flex flex-col md:flex-row gap-4 items-center animate-in fade-in slide-in-from-top-2 duration-500">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text"
+                placeholder={`Search in ${activeFolder ? activeFolder.name : 'all assets'}...`}
+                className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-11 pr-11 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-100 rounded-lg text-slate-400 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {activeTab === 'dashboard' && !activeFolderId && (
           <>
@@ -258,6 +307,7 @@ const App: React.FC = () => {
                       </p>
                       <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                          {/* Fix: Use folderId instead of folder_id to match Property interface */}
                           {properties.filter(p => p.folderId === f.id).length} Propiedades
                         </span>
                         <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
@@ -294,20 +344,34 @@ const App: React.FC = () => {
           />
         )}
         
-        {activeTab === 'properties' && activeFolderId && (
+        {activeTab === 'properties' && (
           <div className="space-y-6">
             {displayProperties.length === 0 ? (
               <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Home className="w-10 h-10 text-slate-300" />
+                  {searchQuery ? <Search className="w-10 h-10 text-slate-300" /> : <Home className="w-10 h-10 text-slate-300" />}
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Aún no hay propiedades aquí</h3>
-                <button 
-                  onClick={() => setActiveTab('search')}
-                  className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all"
-                >
-                  Agregar Propiedad
-                </button>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">
+                  {searchQuery ? 'No results found for your search' : 'No properties here yet'}
+                </h3>
+                <p className="text-slate-500 mb-8 max-w-xs mx-auto font-medium">
+                  {searchQuery ? 'Try adjusting your filters or searching for something else.' : 'Start by adding a property listing from any portal.'}
+                </p>
+                {searchQuery ? (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                  >
+                    Clear Search
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => setActiveTab('search')}
+                    className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all"
+                  >
+                    Add Property
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -346,6 +410,7 @@ const App: React.FC = () => {
       {isReportOpen && reportFolder && (
         <ReportGenerator 
           folder={reportFolder}
+          // Fix: Use folderId instead of folder_id to match Property interface
           properties={properties.filter(p => p.folderId === reportFolder.id)}
           onClose={() => { setIsReportOpen(false); setReportFolder(null); }}
         />
