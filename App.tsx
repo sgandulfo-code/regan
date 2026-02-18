@@ -139,10 +139,7 @@ const App: React.FC = () => {
   };
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
-  const displayProperties = useMemo(() => {
-    if (activeFolderId) return properties.filter(p => p.folderId === activeFolderId);
-    return properties; // Global view
-  }, [properties, activeFolderId]);
+  const filteredProperties = useMemo(() => properties.filter(p => p.folderId === activeFolderId), [properties, activeFolderId]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -174,7 +171,7 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            {(activeTab === 'dashboard' || activeTab === 'properties') && (
+            {activeFolderId && activeTab === 'properties' && (
               <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
                 <button 
                   onClick={() => setViewMode('grid')}
@@ -201,62 +198,53 @@ const App: React.FC = () => {
         </header>
 
         {activeTab === 'dashboard' && !activeFolderId && (
-          <>
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
-                {folders.map(f => (
-                  <div key={f.id} className="relative group">
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); setEditingFolder(f); setIsFolderModalOpen(true); }}
-                        className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
-                        title="Editar carpeta"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f.id); }}
-                        className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-rose-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
-                        title="Borrar carpeta"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <button 
-                      onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                      className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
-                    >
-                      <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
-                      <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
-                      <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1">
-                        {f.description || 'Sin descripción definida'}
-                      </p>
-                      <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          {properties.filter(p => p.folderId === f.id).length} Propiedades
-                        </span>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                          <ArrowRight className="w-4 h-4" />
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+            {folders.map(f => (
+              <div key={f.id} className="relative group">
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setEditingFolder(f); setIsFolderModalOpen(true); }}
+                    className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
+                    title="Editar carpeta"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f.id); }}
+                    className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-rose-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
+                    title="Borrar carpeta"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 <button 
-                  onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
-                  className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[220px]"
+                  onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
+                  className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
                 >
-                  <Plus className="w-10 h-10 mb-4" />
-                  <span className="text-xs font-black uppercase tracking-widest">Nueva Búsqueda</span>
+                  <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                  <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
+                  <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1">
+                    {f.description || 'Sin descripción definida'}
+                  </p>
+                  <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                      {properties.filter(p => p.folderId === f.id).length} Propiedades
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
                 </button>
               </div>
-            ) : (
-              <PropertyMapView 
-                properties={properties} 
-                onSelectProperty={setSelectedProperty} 
-              />
-            )}
-          </>
+            ))}
+            <button 
+              onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
+              className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[220px]"
+            >
+              <Plus className="w-10 h-10 mb-4" />
+              <span className="text-xs font-black uppercase tracking-widest">Nueva Búsqueda</span>
+            </button>
+          </div>
         )}
 
         {activeTab === 'search' && (
@@ -269,9 +257,9 @@ const App: React.FC = () => {
           />
         )}
         
-        {activeTab === 'properties' && activeFolderId && (
+        {activeTab === 'properties' && (
           <div className="space-y-6">
-            {displayProperties.length === 0 ? (
+            {filteredProperties.length === 0 ? (
               <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
                 <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Home className="w-10 h-10 text-slate-300" />
@@ -288,7 +276,7 @@ const App: React.FC = () => {
               <>
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-                    {displayProperties.map(p => (
+                    {filteredProperties.map(p => (
                       <PropertyCard 
                         key={p.id} 
                         property={p} 
@@ -301,7 +289,7 @@ const App: React.FC = () => {
                   </div>
                 ) : (
                   <PropertyMapView 
-                    properties={displayProperties} 
+                    properties={filteredProperties} 
                     onSelectProperty={setSelectedProperty} 
                   />
                 )}
