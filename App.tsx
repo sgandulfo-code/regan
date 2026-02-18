@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [reportFolder, setReportFolder] = useState<SearchFolder | null>(null);
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isSyncing, setIsSyncing] = useState(true);
@@ -141,10 +142,16 @@ const App: React.FC = () => {
   };
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
+  
   const displayProperties = useMemo(() => {
     if (activeFolderId) return properties.filter(p => p.folderId === activeFolderId);
     return properties; // Global view
   }, [properties, activeFolderId]);
+
+  const handleOpenReport = (folder: SearchFolder) => {
+    setReportFolder(folder);
+    setIsReportOpen(true);
+  };
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -176,12 +183,12 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            {activeFolderId && (
+            {activeFolderId && activeFolder && (
               <button 
-                onClick={() => setIsReportOpen(true)}
-                className="bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm"
+                onClick={() => handleOpenReport(activeFolder)}
+                className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 hover:border-indigo-100 transition-all shadow-sm"
               >
-                <Printer className="w-4 h-4" /> Informe PDF
+                <Printer className="w-4 h-4" /> Generar Informe PDF
               </button>
             )}
 
@@ -218,6 +225,13 @@ const App: React.FC = () => {
                 {folders.map(f => (
                   <div key={f.id} className="relative group">
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleOpenReport(f); }}
+                        className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
+                        title="Ver informe"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); setEditingFolder(f); setIsFolderModalOpen(true); }}
                         className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
@@ -329,11 +343,11 @@ const App: React.FC = () => {
         initialData={editingFolder}
       />
 
-      {isReportOpen && activeFolder && (
+      {isReportOpen && reportFolder && (
         <ReportGenerator 
-          folder={activeFolder}
-          properties={displayProperties}
-          onClose={() => setIsReportOpen(false)}
+          folder={reportFolder}
+          properties={properties.filter(p => p.folderId === reportFolder.id)}
+          onClose={() => { setIsReportOpen(false); setReportFolder(null); }}
         />
       )}
       
