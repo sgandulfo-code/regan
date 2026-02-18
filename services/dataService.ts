@@ -62,6 +62,23 @@ export const dataService = {
     return data;
   },
 
+  async updateFolder(id: string, folder: Partial<SearchFolder>) {
+    const { data, error } = await supabase
+      .from('folders')
+      .update({
+        name: folder.name,
+        description: folder.description
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return data;
+  },
+
+  async deleteFolder(id: string) {
+    await supabase.from('folders').delete().eq('id', id);
+  },
+
   // Properties
   async getProperties(userId: string, folderId?: string) {
     let query = supabase.from('properties').select('*, renovations(*)').eq('user_id', userId);
@@ -100,6 +117,38 @@ export const dataService = {
       .select()
       .single();
     return data;
+  },
+
+  async updateProperty(id: string, property: Partial<Property>) {
+    const { data, error } = await supabase
+      .from('properties')
+      .update({
+        title: property.title,
+        address: property.address,
+        exact_address: property.exactAddress,
+        price: property.price,
+        fees: property.fees,
+        environments: property.environments,
+        rooms: property.rooms,
+        bathrooms: property.bathrooms,
+        toilets: property.toilets,
+        parking: property.parking,
+        sqft: property.sqft,
+        covered_sqft: property.coveredSqft,
+        uncovered_sqft: property.uncoveredSqft,
+        age: property.age,
+        floor: property.floor,
+        notes: property.notes,
+        rating: property.rating
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return data;
+  },
+
+  async deleteProperty(id: string) {
+    await supabase.from('properties').delete().eq('id', id);
   },
 
   async updatePropertyStatus(id: string, status: string) {
@@ -150,20 +199,13 @@ export const dataService = {
 
   /**
    * Fetch Metadata via Microlink API
-   * Optimizamos para evitar errores 400 y asegurar que siempre haya una imagen de respaldo.
    */
   async fetchExternalMetadata(url: string) {
     const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     try {
-      // Usamos los parámetros mínimos para evitar errores de validación 400 en el tier gratuito
       const microlinkUrl = `https://api.microlink.io/?url=${encodeURIComponent(url)}&screenshot=true`;
-      
       const response = await fetch(microlinkUrl);
-      if (!response.ok) {
-        console.warn(`Microlink fetch failed (${response.status}). Using MShots fallback.`);
-        return { title: '', screenshot: mshotsFallback };
-      }
-      
+      if (!response.ok) return { title: '', screenshot: mshotsFallback };
       const result = await response.json();
       if (result.status === 'success') {
         const { data } = result;
@@ -177,11 +219,7 @@ export const dataService = {
       }
       return { title: '', screenshot: mshotsFallback };
     } catch (e) {
-      console.error("Microlink API unreachable. Falling back to MShots.");
-      return { 
-        title: '', 
-        screenshot: mshotsFallback 
-      };
+      return { title: '', screenshot: mshotsFallback };
     }
   }
 };

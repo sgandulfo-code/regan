@@ -2,7 +2,7 @@
 import React from 'react';
 import { ICONS } from '../constants';
 import { UserRole, SearchFolder } from '../types';
-import { Plus, LogOut, Cloud, Loader2 } from 'lucide-react';
+import { Plus, LogOut, Cloud, Loader2, Pencil, Trash2 } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -13,6 +13,8 @@ interface SidebarProps {
   setActiveFolderId: (id: string | null) => void;
   onLogout: () => void;
   isSyncing?: boolean;
+  onEditFolder: (folder: SearchFolder) => void;
+  onDeleteFolder: (id: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -23,7 +25,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeFolderId,
   setActiveFolderId,
   onLogout,
-  isSyncing
+  isSyncing,
+  onEditFolder,
+  onDeleteFolder
 }) => {
   const menuItems = [
     { id: 'dashboard', label: 'My Searches', icon: ICONS.Folder },
@@ -73,21 +77,36 @@ const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <div className="space-y-1">
             {folders.map(folder => (
-              <button
-                key={folder.id}
-                onClick={() => {
-                  setActiveFolderId(folder.id);
-                  setActiveTab('properties');
-                }}
-                className={`w-full flex items-center gap-3 p-2 px-3 rounded-lg text-xs font-medium transition-all ${
-                  activeFolderId === folder.id 
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                }`}
-              >
-                <div className={`w-2 h-2 rounded-full ${activeFolderId === folder.id ? 'bg-white' : folder.color.replace('bg-', 'bg-')}`}></div>
-                <span className="truncate">{folder.name}</span>
-              </button>
+              <div key={folder.id} className="group relative">
+                <button
+                  onClick={() => {
+                    setActiveFolderId(folder.id);
+                    setActiveTab('properties');
+                  }}
+                  className={`w-full flex items-center gap-3 p-2 px-3 rounded-lg text-xs font-medium transition-all ${
+                    activeFolderId === folder.id 
+                      ? 'bg-indigo-600 text-white shadow-md' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
+                  <span className="truncate pr-8">{folder.name}</span>
+                </button>
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }}
+                    className={`p-1 rounded hover:bg-white/20 ${activeFolderId === folder.id ? 'text-white' : 'text-slate-400'}`}
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }}
+                    className={`p-1 rounded hover:bg-rose-500 hover:text-white ${activeFolderId === folder.id ? 'text-white' : 'text-slate-400'}`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>

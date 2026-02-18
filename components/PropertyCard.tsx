@@ -2,16 +2,18 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2 } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
   onSelect: (p: Property) => void;
   onStatusChange: (id: string, status: PropertyStatus) => void;
+  onEdit: (p: Property) => void;
+  onDelete: (id: string) => void;
   isEditable?: boolean;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatusChange, isEditable = true }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatusChange, onEdit, onDelete, isEditable = true }) => {
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -40,6 +42,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
             {ICONS.Star} {property.rating}/5
           </span>
         </div>
+        
+        {/* Hover Actions */}
+        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(property); }}
+            className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-indigo-600 shadow-lg transition-all"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(property.id); }}
+            className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-rose-600 shadow-lg transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+
         <div className="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
           <p className="text-white text-xs font-bold truncate flex items-center gap-1">
              {ICONS.MapPin} {property.address}

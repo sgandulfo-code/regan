@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building } from 'lucide-react';
+import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2 } from 'lucide-react';
 import { Property, UserRole, RenovationItem } from '../types';
 import RenovationCalculator from './RenovationCalculator';
 import { dataService } from '../services/dataService';
@@ -15,7 +15,6 @@ interface PropertyDetailModalProps {
 const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno }) => {
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('live');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
-  const [snapshotError, setSnapshotError] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +44,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
         <div className="w-full xl:w-[650px] h-full overflow-y-auto border-r border-slate-200 bg-slate-50 flex flex-col custom-scrollbar">
           <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 flex items-center justify-between">
             <button onClick={onClose} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all"><ChevronLeft className="w-5 h-5" /> Dashboard</button>
-            <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">{property.status}</span>
+            <div className="flex items-center gap-3">
+              <span className="bg-indigo-50 text-indigo-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">{property.status}</span>
+            </div>
           </div>
 
           <div className="p-8 lg:p-10 space-y-10 pb-20">
@@ -57,15 +58,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               <h1 className="text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-4">{property.title}</h1>
               <div className="space-y-1">
                 <p className="flex items-center gap-2 text-slate-500 font-medium text-lg"><MapPin className="w-5 h-5 text-indigo-500" />{property.address}</p>
-                {property.exactAddress && (
-                  <p className="flex items-center gap-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest ml-7">
-                    <Navigation className="w-3 h-3" /> Exact: {property.exactAddress}
-                  </p>
-                )}
               </div>
             </section>
 
-            {/* Core Financials */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-indigo-600 p-6 rounded-[2.5rem] shadow-xl text-white">
                 <Euro className="w-5 h-5 mb-3 opacity-60" />
@@ -79,7 +74,6 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               </div>
             </div>
 
-            {/* Technical Breakdown */}
             <section className="space-y-6">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                 <Info className="w-4 h-4" /> Technical Specifications
@@ -88,20 +82,8 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                 <TechBadge icon={Layers} label="Environments" value={property.environments} />
                 <TechBadge icon={Layers} label="Bedrooms" value={property.rooms} />
                 <TechBadge icon={Layers} label="Bathrooms" value={property.bathrooms} />
-                <TechBadge icon={Layers} label="Toilets" value={property.toilets} />
-                <TechBadge icon={Car} label="Parking" value={property.parking} />
-                <TechBadge icon={Building} label="Floor" value={property.floor} />
                 <TechBadge icon={Ruler} label="Total Area" value={`${property.sqft} m²`} />
-                <TechBadge icon={Maximize} label="Covered" value={`${property.coveredSqft || property.sqft} m²`} />
-                <TechBadge icon={Maximize} label="Uncovered" value={`${property.uncoveredSqft || 0} m²`} />
-                <TechBadge icon={Clock} label="Age" value={`${property.age || 0} Years`} />
               </div>
-            </section>
-
-            <section className="bg-slate-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl">
-              <TrendingUp className="absolute top-0 right-0 p-8 opacity-5 w-32 h-32" />
-              <h3 className="text-xs font-black uppercase tracking-[0.3em] text-indigo-400 mb-6">Neural Insights</h3>
-              <p className="text-lg font-medium leading-relaxed text-slate-300 italic">"{property.notes || 'Asset metadata audit completed.'}"</p>
             </section>
 
             <section><RenovationCalculator property={property} userRole={userRole} onUpdate={onUpdateReno} /></section>
@@ -119,20 +101,10 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
 
           <div className="flex-1 bg-white relative">
             {activeRefTab === 'live' ? (
-              <iframe 
-                src={property.url} 
-                className="w-full h-full" 
-                title="Live View" 
-                allowFullScreen 
-                style={{ border: 'none', background: '#fff' }} 
-              />
+              <iframe src={property.url} className="w-full h-full border-none" title="Live View" allowFullScreen style={{ background: '#fff' }} />
             ) : (
               <div className="w-full h-full relative overflow-auto custom-scrollbar flex items-center justify-center p-8 bg-slate-100">
-                {snapshotLoading ? (
-                  <div className="flex flex-col items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" /><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rendering...</p></div>
-                ) : snapshotUrl && (
-                  <img src={snapshotUrl} className="max-w-full h-auto shadow-2xl rounded-2xl" alt="Portal Snapshot" onLoad={() => setSnapshotLoading(false)} />
-                )}
+                {snapshotLoading ? <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /> : snapshotUrl && <img src={snapshotUrl} className="max-w-full h-auto shadow-2xl rounded-2xl" alt="Portal Snapshot" onLoad={() => setSnapshotLoading(false)} />}
               </div>
             )}
           </div>

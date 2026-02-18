@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2 } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -18,11 +18,12 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [folders, setFolders] = useState<SearchFolder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
+  const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isSyncing, setIsSyncing] = useState(true);
 
   useEffect(() => {
@@ -67,30 +68,53 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
-  const handleCreateFolder = async (data: { name: string, description: string }) => {
+  const handleFolderConfirm = async (data: { name: string, description: string }) => {
     if (!user) return;
     setIsSyncing(true);
-    const colors = ['bg-indigo-600', 'bg-rose-600', 'bg-amber-600', 'bg-emerald-600'];
-    const newFolder = await dataService.createFolder(
-      { name: data.name, description: data.description, color: colors[folders.length % colors.length] },
-      user.id
-    );
-    if (newFolder) {
-      await loadInitialData();
-      setActiveFolderId(newFolder.id);
-      setActiveTab('properties');
+    if (editingFolder) {
+      await dataService.updateFolder(editingFolder.id, data);
+    } else {
+      const colors = ['bg-indigo-600', 'bg-rose-600', 'bg-amber-600', 'bg-emerald-600'];
+      await dataService.createFolder({ ...data, color: colors[folders.length % colors.length] }, user.id);
     }
+    await loadInitialData();
     setIsFolderModalOpen(false);
+    setEditingFolder(null);
     setIsSyncing(false);
   };
 
-  const handleAddProperty = async (prop: Property) => {
+  const handleDeleteFolder = async (id: string) => {
+    if (!window.confirm("Borrar búsqueda? Se eliminarán todas las propiedades asociadas.")) return;
+    setIsSyncing(true);
+    await dataService.deleteFolder(id);
+    if (activeFolderId === id) setActiveFolderId(null);
+    await loadInitialData();
+    setIsSyncing(false);
+  };
+
+  const handleAddOrUpdateProperty = async (prop: Property) => {
     if (user?.role !== UserRole.BUYER || !user) return;
     setIsSyncing(true);
-    const folderToAssign = activeFolderId || (folders.length > 0 ? folders[0].id : null);
-    if (!folderToAssign) { alert("Create a search folder first."); setIsSyncing(false); return; }
-    const created = await dataService.createProperty({ ...prop, folderId: folderToAssign }, user.id);
-    if (created) { await loadInitialData(); setActiveTab('properties'); }
+    if (propertyToEdit) {
+      await dataService.updateProperty(prop.id, prop);
+      setPropertyToEdit(null);
+      setActiveTab('properties');
+    } else {
+      const folderToAssign = activeFolderId || (folders.length > 0 ? folders[0].id : null);
+      if (!folderToAssign) { alert("Create a search folder first."); setIsSyncing(false); return; }
+      await dataService.createProperty({ ...prop, folderId: folderToAssign }, user.id);
+      setActiveTab('properties');
+    }
+    await loadInitialData();
+    setIsSyncing(false);
+  };
+
+  const handleDeleteProperty = async (id: string) => {
+    if (!window.confirm("Borrar propiedad?")) return;
+    setIsSyncing(true);
+    await dataService.deleteProperty(id);
+    if (selectedProperty?.id === id) setSelectedProperty(null);
+    await loadInitialData();
     setIsSyncing(false);
   };
 
@@ -98,9 +122,7 @@ const App: React.FC = () => {
     if (!user) return;
     setIsSyncing(true);
     await dataService.updateRenovations(propertyId, items, user.id);
-    // Recargar datos para ver el impacto en el total
     await loadInitialData();
-    // Actualizar también la propiedad seleccionada si está abierta
     if (selectedProperty && selectedProperty.id === propertyId) {
       const updatedProp = properties.find(p => p.id === propertyId);
       if (updatedProp) setSelectedProperty(updatedProp);
@@ -115,18 +137,25 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
-  // Obtener la carpeta activa para mostrar su info en el header
-  const activeFolder = useMemo(() => 
-    folders.find(f => f.id === activeFolderId), 
-    [folders, activeFolderId]
-  );
+  const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} userRole={user.role} folders={folders} activeFolderId={activeFolderId} setActiveFolderId={setActiveFolderId} onLogout={() => supabase.auth.signOut()} isSyncing={isSyncing} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        userRole={user.role} 
+        folders={folders} 
+        activeFolderId={activeFolderId} 
+        setActiveFolderId={setActiveFolderId} 
+        onLogout={() => supabase.auth.signOut()} 
+        isSyncing={isSyncing}
+        onEditFolder={(f) => { setEditingFolder(f); setIsFolderModalOpen(true); }}
+        onDeleteFolder={handleDeleteFolder}
+      />
       
       <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
         <header className="mb-10 flex justify-between items-start">
@@ -149,39 +178,46 @@ const App: React.FC = () => {
         {activeTab === 'dashboard' && !activeFolderId && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
             {folders.map(f => (
-              <button 
-                key={f.id} 
-                onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                className="bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group"
-              >
-                <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
-                <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
-                <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed">
-                  {f.description || 'Sin descripción definida'}
-                </p>
-                <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                    {properties.filter(p => p.folderId === f.id).length} Propiedades
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                    <ArrowRight className="w-4 h-4" />
+              <div key={f.id} className="relative group">
+                <button 
+                  onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
+                  className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left"
+                >
+                  <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                  <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
+                  <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed">
+                    {f.description || 'Sin descripción definida'}
+                  </p>
+                  <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                      {properties.filter(p => p.folderId === f.id).length} Propiedades
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
             <button 
-              onClick={() => setIsFolderModalOpen(true)} 
+              onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
               className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[220px]"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                <Plus className="w-6 h-6" />
-              </div>
+              <Plus className="w-10 h-10 mb-4" />
               <span className="text-xs font-black uppercase tracking-widest">Nueva Búsqueda</span>
             </button>
           </div>
         )}
 
-        {activeTab === 'search' && <PropertyForm onAdd={handleAddProperty} userId={user.id} activeFolderId={activeFolderId} />}
+        {activeTab === 'search' && (
+          <PropertyForm 
+            onAdd={handleAddOrUpdateProperty} 
+            userId={user.id} 
+            activeFolderId={activeFolderId} 
+            propertyToEdit={propertyToEdit}
+            onCancelEdit={() => { setPropertyToEdit(null); setActiveTab('properties'); }}
+          />
+        )}
         
         {activeTab === 'properties' && (
           <div className="space-y-6">
@@ -191,10 +227,9 @@ const App: React.FC = () => {
                   <Home className="w-10 h-10 text-slate-300" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">Aún no hay propiedades aquí</h3>
-                <p className="text-slate-400 mb-8 max-w-sm mx-auto">Comienza a buscar propiedades o agrégalas manualmente usando la búsqueda inteligente.</p>
                 <button 
                   onClick={() => setActiveTab('search')}
-                  className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all"
+                  className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all"
                 >
                   Agregar Propiedad
                 </button>
@@ -207,6 +242,8 @@ const App: React.FC = () => {
                     property={p} 
                     onSelect={setSelectedProperty} 
                     onStatusChange={(id, s) => handleUpdateStatus(id, s)} 
+                    onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                    onDelete={handleDeleteProperty}
                   />
                 ))}
               </div>
@@ -215,11 +252,11 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Vistas Modales */}
       <FolderFormModal 
         isOpen={isFolderModalOpen} 
-        onClose={() => setIsFolderModalOpen(false)} 
-        onConfirm={handleCreateFolder} 
+        onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} 
+        onConfirm={handleFolderConfirm} 
+        initialData={editingFolder}
       />
       
       {selectedProperty && (
