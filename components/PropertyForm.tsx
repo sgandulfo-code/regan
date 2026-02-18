@@ -252,6 +252,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     </div>
   );
 
+  // Helper to get the correct URL for the iframe
+  const getPreviewUrl = () => {
+    if (propertyToEdit) return propertyToEdit.url;
+    return processingLink?.url || '';
+  };
+
   if (step === 'inbox') {
     return (
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-10">
@@ -390,8 +396,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               </div>
             </div>
             <div className="flex-1 bg-white relative">
-              {activeRefTab === 'live' && !propertyToEdit ? (
-                <iframe src={processingLink?.url || ''} className="w-full h-full border-none" title="Portal View" />
+              {activeRefTab === 'live' ? (
+                <iframe src={getPreviewUrl()} className="w-full h-full border-none" title="Portal View" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center p-8 bg-slate-100">
                   {snapshotLoading ? <Loader2 className="w-8 h-8 animate-spin text-indigo-500" /> : <img src={snapshotUrl || ''} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />}

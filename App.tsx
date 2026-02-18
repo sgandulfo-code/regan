@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2 } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -84,7 +84,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteFolder = async (id: string) => {
-    if (!window.confirm("Borrar búsqueda? Se eliminarán todas las propiedades asociadas.")) return;
+    if (!window.confirm("¿Borrar búsqueda? Se eliminarán todas las propiedades asociadas permanentemente.")) return;
     setIsSyncing(true);
     await dataService.deleteFolder(id);
     if (activeFolderId === id) setActiveFolderId(null);
@@ -110,7 +110,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteProperty = async (id: string) => {
-    if (!window.confirm("Borrar propiedad?")) return;
+    if (!window.confirm("¿Borrar propiedad?")) return;
     setIsSyncing(true);
     await dataService.deleteProperty(id);
     if (selectedProperty?.id === id) setSelectedProperty(null);
@@ -179,13 +179,29 @@ const App: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
             {folders.map(f => (
               <div key={f.id} className="relative group">
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setEditingFolder(f); setIsFolderModalOpen(true); }}
+                    className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
+                    title="Editar carpeta"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f.id); }}
+                    className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-rose-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
+                    title="Borrar carpeta"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
                 <button 
                   onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                  className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left"
+                  className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
                 >
                   <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
                   <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
-                  <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed">
+                  <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1">
                     {f.description || 'Sin descripción definida'}
                   </p>
                   <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
