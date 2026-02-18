@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -24,6 +24,8 @@ interface PropertyFilters {
   status: string;
   minRating: number;
 }
+
+type SortOption = 'newest' | 'oldest' | 'price-asc' | 'price-desc' | 'sqft-desc' | 'rating-desc';
 
 const initialFilters: PropertyFilters = {
   minPrice: '',
@@ -52,6 +54,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<PropertyFilters>(initialFilters);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -195,8 +198,22 @@ const App: React.FC = () => {
     if (filters.status) filtered = filtered.filter(p => p.status === filters.status);
     if (filters.minRating > 0) filtered = filtered.filter(p => p.rating >= filters.minRating);
     
-    return filtered;
-  }, [properties, activeFolderId, searchQuery, filters]);
+    // 4. Ordenación (Sorting)
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc': return a.price - b.price;
+        case 'price-desc': return b.price - a.price;
+        case 'sqft-desc': return b.sqft - a.sqft;
+        case 'rating-desc': return b.rating - a.rating;
+        case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'newest': 
+        default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+    return sorted;
+  }, [properties, activeFolderId, searchQuery, filters, sortBy]);
 
   const handleOpenReport = (folder: SearchFolder) => {
     setReportFolder(folder);
@@ -211,6 +228,7 @@ const App: React.FC = () => {
   useEffect(() => {
     setSearchQuery('');
     setFilters(initialFilters);
+    setSortBy('newest');
   }, [activeFolderId, activeTab]);
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
@@ -299,19 +317,43 @@ const App: React.FC = () => {
                   </button>
                 )}
               </div>
-              <button 
-                onClick={() => setShowFilters(!showFilters)}
-                className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all border ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200'}`}
-              >
-                <Filter className="w-4 h-4" /> 
-                Advanced Filters
-                {activeFilterCount > 0 && (
-                  <span className="bg-indigo-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[8px] animate-in zoom-in">
-                    {activeFilterCount}
-                  </span>
-                )}
-                <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10 pointer-events-none">
+                    <ArrowUpDown className="w-4 h-4" />
+                  </div>
+                  <select 
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="bg-white border border-slate-200 text-slate-600 pl-11 pr-10 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[180px]"
+                  >
+                    <option value="newest">Most Recent</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="sqft-desc">Surface: Largest First</option>
+                    <option value="rating-desc">Top Rated (AI)</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                    <ChevronDown className="w-3 h-3" />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all border ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 shadow-sm'}`}
+                >
+                  <Filter className="w-4 h-4" /> 
+                  Advanced Filters
+                  {activeFilterCount > 0 && (
+                    <span className="bg-indigo-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[8px] animate-in zoom-in">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
             </div>
 
             {showFilters && (
