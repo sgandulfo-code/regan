@@ -66,6 +66,61 @@ interface PropertyFormData {
 type CreationStep = 'inbox' | 'verify';
 type ProcessingMode = 'ai' | 'manual' | 'edit' | null;
 
+// Componente FormField movido fuera para evitar que pierda el foco al re-renderizar
+const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => {
+  const isNumeric = type === "number";
+  
+  // Usamos un estado local para el input para que el usuario pueda escribir libremente
+  // y solo notificamos al padre cuando el valor es numérico.
+  const [localValue, setLocalValue] = useState(isNumeric && value === 0 ? '' : value.toString());
+
+  // Sincronizamos el estado local si el valor externo cambia (por ejemplo, al cargar datos de IA)
+  useEffect(() => {
+    setLocalValue(isNumeric && value === 0 ? '' : value.toString());
+  }, [value, isNumeric]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    
+    if (isNumeric) {
+      // Permitimos solo números y un punto decimal mientras se escribe
+      const sanitized = val.replace(/[^0-9.]/g, '');
+      const parts = sanitized.split('.');
+      const finalVal = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
+      
+      setLocalValue(finalVal);
+      
+      // Enviamos el número al padre (si es válido)
+      const numValue = finalVal === '' ? 0 : parseFloat(finalVal);
+      if (!isNaN(numValue)) {
+        onChange(numValue);
+      }
+    } else {
+      setLocalValue(val);
+      onChange(val);
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+        {Icon && <Icon className="w-2.5 h-2.5" />} {label}
+      </label>
+      <div className="relative">
+        {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{prefix}</span>}
+        <input 
+          type="text"
+          inputMode={isNumeric ? "decimal" : "text"}
+          value={localValue}
+          onChange={handleInputChange}
+          className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
+          placeholder={isNumeric ? "0" : ""}
+        />
+      </div>
+    </div>
+  );
+};
+
 const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, onCancelEdit }) => {
   const [step, setStep] = useState<CreationStep>(propertyToEdit ? 'verify' : 'inbox');
   const [processingLink, setProcessingLink] = useState<InboxLink | null>(null);
@@ -76,7 +131,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSyncingInbox, setIsSyncingInbox] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<any>(null);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>(propertyToEdit ? 'snapshot' : 'live');
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(propertyToEdit?.images[0] || null);
@@ -234,43 +288,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setEditedData({
       title: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
     });
-  };
-
-  const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix }: any) => {
-    const isNumeric = type === "number";
-    
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      if (isNumeric) {
-        // Permitimos solo números y un punto decimal
-        const sanitized = val.replace(/[^0-9.]/g, '');
-        // Si hay más de un punto, nos quedamos con el primero
-        const parts = sanitized.split('.');
-        const finalVal = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : sanitized;
-        onChange(finalVal === '' ? 0 : Number(finalVal));
-      } else {
-        onChange(val);
-      }
-    };
-
-    return (
-      <div className="space-y-1">
-        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-          {Icon && <Icon className="w-2.5 h-2.5" />} {label}
-        </label>
-        <div className="relative">
-          {prefix && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{prefix}</span>}
-          <input 
-            type="text"
-            inputMode={isNumeric ? "decimal" : "text"}
-            value={isNumeric && value === 0 ? '' : value}
-            onChange={handleInputChange}
-            className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
-            placeholder={isNumeric ? "0" : ""}
-          />
-        </div>
-      </div>
-    );
   };
 
   // Helper to get the correct URL for the iframe
