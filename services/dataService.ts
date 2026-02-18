@@ -139,7 +139,8 @@ export const dataService = {
         age: property.age,
         floor: property.floor,
         notes: property.notes,
-        rating: property.rating
+        rating: property.rating,
+        images: property.images // Se añade la persistencia de imágenes en la actualización
       })
       .eq('id', id)
       .select()
