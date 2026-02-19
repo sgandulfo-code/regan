@@ -95,8 +95,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
   }, [properties]);
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-md flex justify-center overflow-y-auto py-10 px-4 print:p-0 print:bg-white">
-      <div className="w-full max-w-[1000px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none">
+    <div className="report-overlay fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-md flex justify-center overflow-y-auto py-10 px-4 print:p-0 print:bg-white print:static print:overflow-visible">
+      <div className="report-container w-full max-w-[1000px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none print:w-full print:max-w-none">
         
         <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-30 print:hidden rounded-t-[3rem]">
           <button onClick={onClose} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all">
@@ -115,7 +115,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </div>
         </div>
 
-        <div id="report-content" className="p-16 space-y-12 print:p-10">
+        <div id="report-content" className="p-16 space-y-12 print:p-10 print:space-y-8">
           <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -131,14 +131,14 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </header>
 
-          <section className="space-y-4">
+          <section className="space-y-4 print:break-inside-avoid">
             <div className="flex items-center gap-3">
               <MapIcon className="w-5 h-5 text-indigo-600" />
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Distribución de Activos en el Mapa</h3>
             </div>
-            <div className="w-full h-[450px] rounded-[2.5rem] overflow-hidden border-2 border-slate-100 relative bg-slate-50 shadow-inner">
+            <div className="w-full h-[450px] rounded-[2.5rem] overflow-hidden border-2 border-slate-100 relative bg-slate-50 shadow-inner print:h-[400px]">
               <div ref={mapContainerRef} className="w-full h-full z-0" />
-              <div className="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-slate-100 flex items-center gap-3">
+              <div className="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-slate-100 flex items-center gap-3 print:hidden">
                 {isGeocoding ? (
                   <>
                     <Loader2 className="w-3 h-3 text-indigo-600 animate-spin" />
@@ -154,15 +154,15 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <section className="space-y-6 pt-6">
+          <section className="space-y-6 pt-6 print:break-inside-auto">
             <div className="flex items-center gap-3">
               <Table className="w-5 h-5 text-indigo-600" />
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Matriz de Comparativa Técnica</h3>
             </div>
-            <div className="overflow-hidden border-2 border-slate-100 rounded-[2rem]">
+            <div className="overflow-hidden border-2 border-slate-100 rounded-[2rem] print:rounded-none print:border-slate-200">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
+                  <tr className="bg-slate-50 border-b border-slate-100 print:bg-slate-100">
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ref</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Propiedad</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio Total</th>
@@ -171,20 +171,20 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Layout</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-50 print:divide-slate-200">
                   {properties.map((p, idx) => (
-                    <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                    <tr key={p.id} className="hover:bg-slate-50/50 transition-colors print:break-inside-avoid">
                       <td className="p-5">
                         <span className="bg-slate-900 text-white w-6 h-6 rounded flex items-center justify-center text-[10px] font-black">
                           {idx + 1}
                         </span>
                       </td>
                       <td className="p-5">
-                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 text-sm leading-tight hover:underline flex items-center gap-1 group/link">
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 text-sm leading-tight hover:underline flex items-center gap-1 group/link print:text-indigo-800">
                           {p.title}
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity print:hidden" />
                         </a>
-                        <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium leading-relaxed">
+                        <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium leading-relaxed print:text-slate-600">
                           {p.address}
                         </p>
                       </td>
@@ -200,8 +200,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                       </td>
                       <td className="p-5">
                         <div className="flex gap-2">
-                          <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-black">{p.rooms}H</span>
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black">{p.bathrooms}B</span>
+                          <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-black print:border print:border-indigo-200">{p.rooms}H</span>
+                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black print:border print:border-slate-200">{p.bathrooms}B</span>
                         </div>
                       </td>
                     </tr>
@@ -211,12 +211,12 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <section className="space-y-10 pt-10">
+          <section className="space-y-10 pt-10 print:break-inside-auto">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-4">Detalles Técnicos Individuales</h3>
-            <div className="grid grid-cols-2 gap-10">
+            <div className="grid grid-cols-2 gap-10 print:grid-cols-1 print:gap-8">
               {properties.map((p, idx) => (
-                <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col">
-                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
                     <span className="text-6xl font-black text-slate-900">{(idx + 1).toString().padStart(2, '0')}</span>
                   </div>
                   <div className="flex justify-between items-start mb-6">
@@ -237,17 +237,17 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                      <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Compra</p>
                         <p className="font-black text-slate-900">${p.price.toLocaleString()}</p>
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-slate-100">
+                      <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Métricas</p>
                         <p className="font-black text-slate-900">{p.sqft}m² | {p.rooms}Hab</p>
                       </div>
                     </div>
 
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100">
+                    <div className="bg-white p-5 rounded-2xl border border-slate-100 print:border-slate-200">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Análisis de la Oportunidad</p>
                       <p className="text-xs text-slate-600 leading-relaxed italic">
                         {p.notes || 'Sin notas analíticas adicionales para este activo.'}
@@ -255,7 +255,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     </div>
 
                     {p.renovationCosts.length > 0 && (
-                      <div className="pt-4 border-t border-slate-100">
+                      <div className="pt-4 border-t border-slate-100 print:border-slate-200">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimación de Reformas</p>
                         <div className="space-y-1">
                           {p.renovationCosts.map(r => (
@@ -269,12 +269,12 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     )}
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-100">
+                  <div className="mt-6 pt-4 border-t border-slate-100 print:border-slate-200">
                     <a 
                       href={p.url} 
                       target="_blank" 
                       rel="noopener noreferrer" 
-                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline"
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline print:text-indigo-800"
                     >
                       <ExternalLink className="w-3.5 h-3.5" /> Ver listado original
                     </a>
@@ -284,7 +284,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200 print:mt-8">
             <p>© 2024 PropBrain Technical Reports</p>
             <p>Carpeta: {folder.name}</p>
             <p>Confidencial - Propiedad del Usuario</p>
@@ -294,59 +294,91 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
 
       <style>{`
         @media print {
-          body {
+          @page {
+            size: A4;
+            margin: 1cm;
+          }
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
             background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           #root main, #root aside {
             display: none !important;
           }
-          .fixed {
-            position: absolute !important;
-            left: 0;
-            top: 0;
-            width: 100%;
+          .report-overlay {
+            position: static !important;
             display: block !important;
             background: white !important;
-            backdrop-filter: none !important;
             padding: 0 !important;
+            overflow: visible !important;
+            width: 100% !important;
+            height: auto !important;
+            backdrop-filter: none !important;
+          }
+          .report-container {
+            position: relative !important;
+            width: 100% !important;
+            max-width: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            display: block !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          #report-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
           }
           .print\\:hidden {
             display: none !important;
           }
-          .print\\:p-0 {
-            padding: 0 !important;
+          section {
+            page-break-inside: auto;
+            margin-bottom: 2rem !important;
           }
-          .print\\:shadow-none {
-            box-shadow: none !important;
-          }
-          .print\\:rounded-none {
-            border-radius: 0 !important;
-          }
-          #report-content {
-            padding: 0 !important;
-            width: 100% !important;
+          .print\\:break-inside-avoid {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           .leaflet-container {
             border: 1px solid #e2e8f0 !important;
-            height: 450px !important;
+            height: 400px !important;
             width: 100% !important;
+            page-break-inside: avoid;
           }
           table {
-            border: 1px solid #e2e8f0 !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
             page-break-inside: auto;
           }
           tr {
-            page-break-inside: avoid;
+            page-break-inside: avoid !important;
             page-break-after: auto;
-          }
-          section {
-            page-break-inside: avoid;
           }
           a {
             text-decoration: none !important;
             color: #4f46e5 !important;
+          }
+          /* Fix for grids and multiple columns in print */
+          .grid {
+             display: block !important;
+          }
+          .grid > div {
+             width: 100% !important;
+             margin-bottom: 1.5rem !important;
+          }
+          /* Re-enable flex where strictly needed but with block flow */
+          .flex {
+            display: flex !important;
           }
         }
       `}</style>
