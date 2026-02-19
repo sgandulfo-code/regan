@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -45,7 +45,17 @@ export const dataService = {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    return data || [];
+    
+    return (data || []).map(f => ({
+      id: f.id,
+      name: f.name,
+      description: f.description,
+      color: f.color,
+      status: f.status as FolderStatus,
+      startDate: f.start_date,
+      statusUpdatedAt: f.status_updated_at,
+      createdAt: f.created_at
+    }));
   },
 
   async createFolder(folder: Partial<SearchFolder>, userId: string) {
@@ -55,7 +65,10 @@ export const dataService = {
         user_id: userId,
         name: folder.name,
         description: folder.description,
-        color: folder.color
+        color: folder.color,
+        status: folder.status || FolderStatus.PENDIENTE,
+        start_date: folder.startDate || new Date().toISOString(),
+        status_updated_at: new Date().toISOString()
       }])
       .select()
       .single();
@@ -63,12 +76,21 @@ export const dataService = {
   },
 
   async updateFolder(id: string, folder: Partial<SearchFolder>) {
+    const updatePayload: any = {
+      name: folder.name,
+      description: folder.description,
+      status: folder.status,
+      start_date: folder.startDate
+    };
+
+    // Si el estado cambió, actualizamos status_updated_at
+    if (folder.status) {
+      updatePayload.status_updated_at = new Date().toISOString();
+    }
+
     const { data, error } = await supabase
       .from('folders')
-      .update({
-        name: folder.name,
-        description: folder.description
-      })
+      .update(updatePayload)
       .eq('id', id)
       .select()
       .single();
@@ -140,7 +162,7 @@ export const dataService = {
         floor: property.floor,
         notes: property.notes,
         rating: property.rating,
-        images: property.images // Se añade la persistencia de imágenes en la actualización
+        images: property.images 
       })
       .eq('id', id)
       .select()

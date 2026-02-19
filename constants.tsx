@@ -18,7 +18,7 @@ import {
   Star,
   FolderOpen
 } from 'lucide-react';
-import { Property, User, PropertyStatus, UserRole, SearchFolder } from './types';
+import { Property, User, PropertyStatus, UserRole, SearchFolder, FolderStatus } from './types';
 
 export const ICONS = {
   Home: <Home className="w-5 h-5" />,
@@ -39,12 +39,16 @@ export const ICONS = {
   Folder: <FolderOpen className="w-5 h-5" />
 };
 
+// Fix: Added missing status, startDate, and statusUpdatedAt to comply with SearchFolder interface
 export const MOCK_FOLDERS: SearchFolder[] = [
   {
     id: 'f1',
     name: 'Madrid Investment',
     description: 'Looking for 2-bedroom apartments near Metro',
     color: 'bg-indigo-600',
+    status: FolderStatus.ABIERTA,
+    startDate: new Date().toISOString(),
+    statusUpdatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   },
   {
@@ -52,6 +56,9 @@ export const MOCK_FOLDERS: SearchFolder[] = [
     name: 'Family Home',
     description: 'Villas or large attics with terrace in north area',
     color: 'bg-rose-600',
+    status: FolderStatus.PENDIENTE,
+    startDate: new Date().toISOString(),
+    statusUpdatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString()
   }
 ];

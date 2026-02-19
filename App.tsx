@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -11,7 +11,7 @@ import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder } from './types';
+import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder, FolderStatus } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -84,23 +84,21 @@ const App: React.FC = () => {
       dataService.getProperties(user.id)
     ]);
     
-    setFolders(fetchedFolders.map((f: any) => ({ 
-      id: f.id, name: f.name, description: f.description, color: f.color, createdAt: f.created_at 
-    })));
+    setFolders(fetchedFolders);
     
     setProperties(fetchedProperties.map((p: any) => ({
       id: p.id,
       title: p.title, url: p.url, address: p.address, exactAddress: p.exact_address, price: Number(p.price), fees: Number(p.fees),
       environments: p.environments, rooms: p.rooms, bathrooms: p.bathrooms, toilets: p.toilets, parking: p.parking, sqft: Number(p.sqft), coveredSqft: Number(p.covered_sqft),
       uncoveredSqft: Number(p.uncovered_sqft), age: p.age, floor: p.floor, status: p.status as PropertyStatus, rating: p.rating, notes: p.notes, images: p.images || [],
-      renovationCosts: p.renovations ? p.renovations.map((r: any) => ({ id: r.id, category: r.category, description: r.description, estimatedCost: Number(r.estimated_cost) })) : [],
+      renovationCosts: p.renovations ? p.renovations.map((r: any) => ({ id: r.id, category: r.category, description: r.description, estimated_cost: Number(r.estimated_cost) })) : [],
       createdAt: p.created_at,
       folderId: p.folder_id 
     })));
     setIsSyncing(false);
   };
 
-  const handleFolderConfirm = async (data: { name: string, description: string }) => {
+  const handleFolderConfirm = async (data: Omit<SearchFolder, 'id' | 'createdAt' | 'color' | 'statusUpdatedAt'>) => {
     if (!user) return;
     setIsSyncing(true);
     if (editingFolder) {
@@ -133,7 +131,7 @@ const App: React.FC = () => {
       setActiveTab('properties');
     } else {
       const folderToAssign = activeFolderId || (folders.length > 0 ? folders[0].id : null);
-      if (!folderToAssign) { alert("Create a search folder first."); setIsSyncing(false); return; }
+      if (!folderToAssign) { alert("Crea primero una carpeta de búsqueda."); setIsSyncing(false); return; }
       await dataService.createProperty({ ...prop, folderId: folderToAssign }, user.id);
       setActiveTab('properties');
     }
@@ -174,12 +172,10 @@ const App: React.FC = () => {
   const displayProperties = useMemo(() => {
     let filtered = properties;
     
-    // 1. Filtro por carpeta
     if (activeFolderId) {
       filtered = filtered.filter(p => p.folderId === activeFolderId);
     }
     
-    // 2. Filtro por búsqueda de texto (Search Query)
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
@@ -189,7 +185,6 @@ const App: React.FC = () => {
       );
     }
 
-    // 3. Filtros Técnicos Avanzados
     if (filters.minPrice) filtered = filtered.filter(p => p.price >= Number(filters.minPrice));
     if (filters.maxPrice) filtered = filtered.filter(p => p.price <= Number(filters.maxPrice));
     if (filters.minRooms) filtered = filtered.filter(p => p.rooms >= Number(filters.minRooms));
@@ -198,7 +193,6 @@ const App: React.FC = () => {
     if (filters.status) filtered = filtered.filter(p => p.status === filters.status);
     if (filters.minRating > 0) filtered = filtered.filter(p => p.rating >= filters.minRating);
     
-    // 4. Ordenación (Sorting)
     const sorted = [...filtered];
     sorted.sort((a, b) => {
       switch (sortBy) {
@@ -224,12 +218,27 @@ const App: React.FC = () => {
     return Object.values(filters).filter(v => v !== '' && v !== 0).length;
   }, [filters]);
 
-  // Limpiar búsqueda al cambiar de carpeta o pestaña
   useEffect(() => {
     setSearchQuery('');
     setFilters(initialFilters);
     setSortBy('newest');
   }, [activeFolderId, activeTab]);
+
+  const getDaysElapsed = (date: string) => {
+    const start = new Date(date).getTime();
+    const now = new Date().getTime();
+    const diff = now - start;
+    return Math.floor(diff / (1000 * 60 * 60 * 24));
+  };
+
+  const getStatusBadgeColor = (status: FolderStatus) => {
+    switch (status) {
+      case FolderStatus.PENDIENTE: return 'bg-amber-100 text-amber-600 border-amber-200';
+      case FolderStatus.ABIERTA: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
+      case FolderStatus.CERRADA: return 'bg-slate-100 text-slate-500 border-slate-200';
+      default: return 'bg-slate-100 text-slate-400';
+    }
+  };
 
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -303,7 +312,7 @@ const App: React.FC = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input 
                   type="text"
-                  placeholder={`Search in ${activeFolder ? activeFolder.name : 'all assets'}...`}
+                  placeholder={`Buscar en ${activeFolder ? activeFolder.name : 'todos los activos'}...`}
                   className="w-full bg-white border border-slate-200 rounded-2xl py-3.5 pl-11 pr-11 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all shadow-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -328,12 +337,12 @@ const App: React.FC = () => {
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
                     className="bg-white border border-slate-200 text-slate-600 pl-11 pr-10 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-sm min-w-[180px]"
                   >
-                    <option value="newest">Most Recent</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="sqft-desc">Surface: Largest First</option>
-                    <option value="rating-desc">Top Rated (AI)</option>
+                    <option value="newest">Más recientes</option>
+                    <option value="oldest">Antiguas primero</option>
+                    <option value="price-asc">Precio: Menor a Mayor</option>
+                    <option value="price-desc">Precio: Mayor a Menor</option>
+                    <option value="sqft-desc">Superficie: Mayor primero</option>
+                    <option value="rating-desc">Mejor Calificadas (AI)</option>
                   </select>
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                     <ChevronDown className="w-3 h-3" />
@@ -345,7 +354,7 @@ const App: React.FC = () => {
                   className={`px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all border ${showFilters ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-200 shadow-sm'}`}
                 >
                   <Filter className="w-4 h-4" /> 
-                  Advanced Filters
+                  Filtros Avanzados
                   {activeFilterCount > 0 && (
                     <span className="bg-indigo-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[8px] animate-in zoom-in">
                       {activeFilterCount}
@@ -359,7 +368,7 @@ const App: React.FC = () => {
             {showFilters && (
               <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-xl animate-in slide-in-from-top-4 duration-500 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Price Range</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><DollarSign className="w-3 h-3" /> Rango Precio</label>
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" 
@@ -379,18 +388,18 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Bed className="w-3 h-3" /> Rooms & Baths</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Bed className="w-3 h-3" /> Amb. & Baños</label>
                   <div className="flex items-center gap-2">
                     <input 
                       type="number" 
-                      placeholder="Min Rooms" 
+                      placeholder="Min Amb." 
                       className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                       value={filters.minRooms}
                       onChange={(e) => setFilters({...filters, minRooms: e.target.value})}
                     />
                     <input 
                       type="number" 
-                      placeholder="Min Baths" 
+                      placeholder="Min Baños" 
                       className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                       value={filters.minBathrooms}
                       onChange={(e) => setFilters({...filters, minBathrooms: e.target.value})}
@@ -399,10 +408,10 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Ruler className="w-3 h-3" /> Surface (min m²)</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><Ruler className="w-3 h-3" /> Superficie (min m²)</label>
                   <input 
                     type="number" 
-                    placeholder="e.g. 100" 
+                    placeholder="ej: 100" 
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all"
                     value={filters.minSqft}
                     onChange={(e) => setFilters({...filters, minSqft: e.target.value})}
@@ -410,18 +419,18 @@ const App: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Status & Rating</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Estado & Rating</label>
                   <div className="flex flex-col gap-2">
                     <select 
                       className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs font-bold outline-none focus:border-indigo-500 transition-all uppercase tracking-widest"
                       value={filters.status}
                       onChange={(e) => setFilters({...filters, status: e.target.value})}
                     >
-                      <option value="">Any Status</option>
+                      <option value="">Cualquier Estado</option>
                       {Object.values(PropertyStatus).map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                     <div className="flex gap-1 items-center justify-between px-2 bg-slate-50 rounded-xl p-2 border border-slate-100">
-                      <span className="text-[9px] font-black text-slate-400 uppercase">Min Stars:</span>
+                      <span className="text-[9px] font-black text-slate-400 uppercase">Min Rating:</span>
                       <div className="flex gap-1">
                         {[1,2,3,4,5].map(num => (
                           <button 
@@ -439,13 +448,13 @@ const App: React.FC = () => {
 
                 <div className="lg:col-span-4 pt-4 border-t border-slate-50 flex justify-between items-center">
                   <p className="text-[10px] text-slate-400 font-bold italic uppercase tracking-widest">
-                    Showing {displayProperties.length} of {activeFolder ? properties.filter(p => p.folderId === activeFolderId).length : properties.length} properties
+                    Mostrando {displayProperties.length} de {activeFolder ? properties.filter(p => p.folderId === activeFolderId).length : properties.length} activos
                   </p>
                   <button 
                     onClick={() => setFilters(initialFilters)}
                     className="text-indigo-600 text-[10px] font-black uppercase tracking-widest hover:underline flex items-center gap-2"
                   >
-                    <RefreshCw className="w-3 h-3" /> Reset all filters
+                    <RefreshCw className="w-3 h-3" /> Limpiar filtros
                   </button>
                 </div>
               </div>
@@ -486,11 +495,37 @@ const App: React.FC = () => {
                       onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
                       className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
                     >
-                      <div className={`w-12 h-12 ${f.color} rounded-xl mb-6 shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                      <div className="flex justify-between items-start mb-6">
+                        <div className={`w-12 h-12 ${f.color} rounded-xl shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase border ${getStatusBadgeColor(f.status)}`}>
+                          {f.status}
+                        </span>
+                      </div>
+                      
                       <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
                       <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1">
                         {f.description || 'Sin descripción definida'}
                       </p>
+
+                      <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-50">
+                        <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <Calendar className="w-2 h-2" /> Inicio
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-700">
+                            {new Date(f.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
+                            <Timer className="w-2 h-2" /> En Estado
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-700">
+                            {getDaysElapsed(f.statusUpdatedAt)} días
+                          </p>
+                        </div>
+                      </div>
+
                       <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
                           {properties.filter(p => p.folderId === f.id).length} Propiedades
@@ -537,24 +572,24 @@ const App: React.FC = () => {
                   {searchQuery || activeFilterCount > 0 ? <Search className="w-10 h-10 text-slate-300" /> : <Home className="w-10 h-10 text-slate-300" />}
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-2">
-                  {searchQuery || activeFilterCount > 0 ? 'No results found for your filters' : 'No properties here yet'}
+                  {searchQuery || activeFilterCount > 0 ? 'Sin resultados para los filtros' : 'No hay propiedades aquí aún'}
                 </h3>
                 <p className="text-slate-500 mb-8 max-w-xs mx-auto font-medium">
-                  {searchQuery || activeFilterCount > 0 ? 'Try adjusting your filters or resetting the search parameters.' : 'Start by adding a property listing from any portal.'}
+                  {searchQuery || activeFilterCount > 0 ? 'Prueba ajustando tus filtros o reseteando los parámetros.' : 'Comienza añadiendo un enlace de propiedad desde cualquier portal.'}
                 </p>
                 {searchQuery || activeFilterCount > 0 ? (
                   <button 
                     onClick={() => { setSearchQuery(''); setFilters(initialFilters); }}
                     className="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all"
                   >
-                    Reset all criteria
+                    Resetear criterios
                   </button>
                 ) : (
                   <button 
                     onClick={() => setActiveTab('search')}
                     className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all"
                   >
-                    Add Property
+                    Añadir Propiedad
                   </button>
                 )}
               </div>

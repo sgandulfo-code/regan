@@ -2,7 +2,7 @@
 -- PropBrain Database Schema (Supabase) - CLEAN INSTALL
 -- Instrucciones: Borra todo lo que tengas en el SQL Editor de Supabase, pega esto y dale a "Run".
 
--- 0. LIMPIEZA (Borra tablas anteriores para evitar el error de "columna no existe")
+-- 0. LIMPIEZA
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 DROP TABLE IF EXISTS renovations CASCADE;
@@ -14,13 +14,16 @@ DROP TABLE IF EXISTS profiles CASCADE;
 -- 1. EXTENSIONES
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. TIPOS ENUM (Si fallan porque ya existen, se ignora el error)
+-- 2. TIPOS ENUM
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
         CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'property_status') THEN
         CREATE TYPE property_status AS ENUM ('Wishlist', 'Contacted', 'Visited', 'Offered', 'Discarded');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'folder_status') THEN
+        CREATE TYPE folder_status AS ENUM ('Pendiente', 'Abierta', 'Cerrada');
     END IF;
 END $$;
 
@@ -42,6 +45,9 @@ CREATE TABLE folders (
   name TEXT NOT NULL,
   description TEXT,
   color TEXT DEFAULT 'bg-indigo-600',
+  status folder_status DEFAULT 'Pendiente'::folder_status,
+  start_date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  status_updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

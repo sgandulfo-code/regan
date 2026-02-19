@@ -8,6 +8,12 @@ export enum PropertyStatus {
   DISCARDED = 'Discarded'
 }
 
+export enum FolderStatus {
+  PENDIENTE = 'Pendiente',
+  ABIERTA = 'Abierta',
+  CERRADA = 'Cerrada'
+}
+
 // UserRole enum defining permissions and views within the application
 export enum UserRole {
   BUYER = 'Buyer',
@@ -20,6 +26,9 @@ export interface SearchFolder {
   name: string;
   description: string;
   color: string;
+  status: FolderStatus;
+  startDate: string;
+  statusUpdatedAt: string;
   createdAt: string;
 }
 
