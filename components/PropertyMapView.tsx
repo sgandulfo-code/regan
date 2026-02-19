@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
-import { MapPin, Navigation, Info, ExternalLink, Home, Star, DollarSign, Maximize2, Crosshair, ChevronRight, Search, X, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Info, ExternalLink, Home, Star, DollarSign, Maximize2, Crosshair, ChevronRight, Search, X, Loader2, AlertTriangle } from 'lucide-react';
 import { Property } from '../types';
 import L from 'leaflet';
 
@@ -12,6 +12,7 @@ interface PropertyMapViewProps {
 interface GeocodedProperty extends Property {
   lat: number;
   lng: number;
+  geocodeFailed?: boolean;
 }
 
 const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectProperty }) => {
@@ -22,12 +23,12 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<GeocodedProperty | null>(null);
 
-  // Icono Azul Personalizado (Indigo-600)
+  // Icono Azul (Indigo-600) con validación de escalado
   const createBlueIcon = (isSelected: boolean) => L.divIcon({
     className: 'custom-div-icon',
     html: `
-      <div class="relative flex items-center justify-center">
-        <div class="absolute w-8 h-8 bg-indigo-600/20 rounded-full animate-pulse ${isSelected ? 'scale-150' : 'scale-0'}"></div>
+      <div class="relative flex items-center justify-center" style="width: 32px; height: 40px;">
+        <div class="absolute w-8 h-8 bg-indigo-600/20 rounded-full ${isSelected ? 'animate-pulse scale-150' : 'scale-0'}" style="transition: transform 0.3s ease;"></div>
         <div class="relative w-8 h-10 flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 -translate-y-2' : ''}">
           <svg viewBox="0 0 24 24" class="w-full h-full drop-shadow-xl" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 21.7C17.3 17.1 20 13.1 20 9.7C20 5.2 16.4 1.6 12 1.6C7.6 1.6 4 5.2 4 9.7C4 13.1 6.7 17.1 12 21.7Z" fill="#4f46e5" stroke="white" stroke-width="2"/>
@@ -41,35 +42,43 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     popupAnchor: [0, -40]
   });
 
-  // Efecto para geocodificar direcciones dinámicamente
+  // Geocodificación robusta y en paralelo
   useEffect(() => {
     const geocodeAll = async () => {
+      if (properties.length === 0) {
+        setGeocodedProperties([]);
+        return;
+      }
+
       setIsGeocoding(true);
-      const results: GeocodedProperty[] = [];
       
-      for (const p of properties) {
+      const promises = properties.map(async (p) => {
         try {
-          // Intentamos buscar por dirección exacta o normal
           const query = p.exactAddress || p.address;
+          if (!query) return { ...p, lat: 0, lng: 0, geocodeFailed: true };
+
           const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
           const data = await response.json();
           
           if (data.features && data.features.length > 0) {
             const [lng, lat] = data.features[0].geometry.coordinates;
-            results.push({ ...p, lat, lng });
+            // Validar que las coordenadas sean números finitos
+            if (Number.isFinite(lat) && Number.isFinite(lng)) {
+              return { ...p, lat, lng };
+            }
           }
+          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
         } catch (error) {
-          console.error(`Geocoding failed for ${p.title}:`, error);
+          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
         }
-      }
-      
-      setGeocodedProperties(results);
+      });
+
+      const results = await Promise.all(promises);
+      setGeocodedProperties(results as GeocodedProperty[]);
       setIsGeocoding(false);
     };
 
-    if (properties.length > 0) {
-      geocodeAll();
-    }
+    geocodeAll();
   }, [properties]);
 
   // Inicializar Mapa
@@ -77,13 +86,12 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [40.4168, -3.7038], // Default Madrid
+      center: [40.4168, -3.7038], 
       zoom: 13,
       zoomControl: false,
       attributionControl: false
     });
 
-    // Capa de Mapa Estilo "Clean / Positron"
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19
     }).addTo(map);
@@ -99,13 +107,16 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     };
   }, []);
 
-  // Actualizar Marcadores cuando cambian las propiedades geocodificadas
+  // Actualizar Marcadores con validación estricta
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
 
     markersLayerRef.current.clearLayers();
+    const validMarkers: L.Marker[] = [];
 
     geocodedProperties.forEach(p => {
+      if (p.geocodeFailed || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return;
+
       const isSelected = selectedProperty?.id === p.id;
       const marker = L.marker([p.lat, p.lng], {
         icon: createBlueIcon(isSelected)
@@ -117,15 +128,23 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
       });
 
       marker.addTo(markersLayerRef.current!);
+      validMarkers.push(marker);
     });
 
-    if (geocodedProperties.length > 0) {
-      const bounds = markersLayerRef.current.getBounds();
-      mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
+    if (validMarkers.length > 0) {
+      try {
+        const bounds = markersLayerRef.current.getBounds();
+        if (bounds.isValid()) {
+          mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+      } catch (e) {
+        console.warn("Invalid bounds calculation", e);
+      }
     }
   }, [geocodedProperties, selectedProperty]);
 
   const handleSelectFromList = (p: GeocodedProperty) => {
+    if (p.geocodeFailed) return;
     setSelectedProperty(p);
     mapInstanceRef.current?.flyTo([p.lat, p.lng], 17, { duration: 1 });
   };
@@ -143,7 +162,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
             {isGeocoding && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
           </div>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-            {geocodedProperties.length} Assets Mapped in this folder
+            {geocodedProperties.filter(p => !p.geocodeFailed).length} Assets Mapped
           </p>
         </div>
         
@@ -151,11 +170,14 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
           {geocodedProperties.map(p => (
             <button
               key={p.id}
+              disabled={p.geocodeFailed}
               onClick={() => handleSelectFromList(p)}
               className={`w-full text-left p-5 rounded-[2.2rem] transition-all border group relative ${
                 selectedProperty?.id === p.id 
                   ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-50 scale-[1.02] z-10' 
-                  : 'bg-transparent border-transparent hover:bg-white/50'
+                  : p.geocodeFailed 
+                    ? 'opacity-50 grayscale bg-slate-100 border-slate-200'
+                    : 'bg-transparent border-transparent hover:bg-white/50'
               }`}
             >
               <div className="flex justify-between items-start mb-3">
@@ -164,15 +186,21 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
                 }`}>
                   ${p.price.toLocaleString()}
                 </span>
-                <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-black">
-                  <Star className={`w-3.5 h-3.5 ${p.rating >= 4 ? 'fill-current' : ''}`} />
-                  {p.rating}.0
-                </div>
+                {p.geocodeFailed ? (
+                  <AlertTriangle className="w-4 h-4 text-rose-500" />
+                ) : (
+                  <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-black">
+                    <Star className={`w-3.5 h-3.5 ${p.rating >= 4 ? 'fill-current' : ''}`} />
+                    {p.rating}.0
+                  </div>
+                )}
               </div>
               <h4 className="font-black text-slate-800 text-sm leading-snug group-hover:text-indigo-600 transition-colors">{p.title}</h4>
               <div className="flex items-center gap-2 mt-3 text-slate-400">
                 <MapPin className="w-3 h-3 shrink-0" />
-                <p className="text-[10px] font-bold truncate uppercase tracking-tight">{p.address}</p>
+                <p className="text-[10px] font-bold truncate uppercase tracking-tight">
+                  {p.geocodeFailed ? 'Ubicación no encontrada' : p.address}
+                </p>
               </div>
             </button>
           ))}
