@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2, ExternalLink, Bed, Bath, Car, Clock, Layers, DollarSign } from 'lucide-react';
+import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2, ExternalLink, Bed, Bath, Car, Clock, Layers, DollarSign, ShieldCheck } from 'lucide-react';
 import { Property, SearchFolder } from '../types';
 import L from 'leaflet';
 
@@ -115,7 +115,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </div>
         </div>
 
-        <div id="report-content" className="p-16 space-y-12 print:p-10 print:space-y-8">
+        <div id="report-content" className="p-16 space-y-12 print:p-8 print:space-y-6">
           <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -138,19 +138,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
             <div className="w-full h-[450px] rounded-[2.5rem] overflow-hidden border-2 border-slate-100 relative bg-slate-50 shadow-inner print:h-[400px]">
               <div ref={mapContainerRef} className="w-full h-full z-0" />
-              <div className="absolute top-4 left-4 z-[500] bg-white/95 backdrop-blur-md p-3 rounded-xl shadow-lg border border-slate-100 flex items-center gap-3 print:hidden">
-                {isGeocoding ? (
-                  <>
-                    <Loader2 className="w-3 h-3 text-indigo-600 animate-spin" />
-                    <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">Mapeando activos...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
-                    <span className="text-[9px] font-black text-slate-900 uppercase tracking-widest">{properties.length} Propiedades Georeferenciadas</span>
-                  </>
-                )}
-              </div>
             </div>
           </section>
 
@@ -166,6 +153,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ref</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Propiedad</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio Total</th>
+                    <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Expensas</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">$ / m²</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Superficie</th>
                     <th className="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Layout</th>
@@ -180,9 +168,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         </span>
                       </td>
                       <td className="p-5">
-                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 text-sm leading-tight hover:underline flex items-center gap-1 group/link print:text-indigo-800">
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 text-sm leading-tight hover:underline print:text-indigo-800">
                           {p.title}
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity print:hidden" />
                         </a>
                         <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium leading-relaxed print:text-slate-600">
                           {p.address}
@@ -191,17 +178,20 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                       <td className="p-5">
                         <span className="font-black text-slate-900 text-sm">${p.price.toLocaleString()}</span>
                       </td>
+                      <td className="p-5 text-slate-500 font-bold text-xs">
+                        ${(p.fees || 0).toLocaleString()}
+                      </td>
                       <td className="p-5">
                         <span className="font-bold text-slate-500 text-xs">${Math.round(p.price / p.sqft).toLocaleString()}</span>
                       </td>
                       <td className="p-5">
                         <span className="font-bold text-slate-800 text-sm">{p.sqft}m²</span>
-                        <p className="text-[9px] text-slate-400 uppercase">{p.coveredSqft || p.sqft} cubiertos</p>
+                        <p className="text-[9px] text-slate-400 uppercase">{p.coveredSqft || p.sqft} cub.</p>
                       </td>
                       <td className="p-5">
                         <div className="flex gap-2">
-                          <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-black print:border print:border-indigo-200">{p.rooms}H</span>
-                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black print:border print:border-slate-200">{p.bathrooms}B</span>
+                          <span className="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded text-[10px] font-black">{p.rooms}H</span>
+                          <span className="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-black">{p.bathrooms}B</span>
                         </div>
                       </td>
                     </tr>
@@ -211,125 +201,91 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <section className="space-y-10 pt-10 print:break-inside-auto">
+          <section className="space-y-6 pt-6 print:break-inside-auto">
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b pb-4 flex-1">Detalles Técnicos Individuales</h3>
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b pb-4 flex-1">Análisis Detallado por Activo</h3>
             </div>
-            <div className="grid grid-cols-2 gap-10 print:grid-cols-1 print:gap-8">
+            
+            <div className="grid grid-cols-1 gap-6">
               {properties.map((p, idx) => {
                 const pricePerSqft = Math.round(p.price / p.sqft);
                 return (
-                  <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
-                      <span className="text-6xl font-black text-slate-900">{(idx + 1).toString().padStart(2, '0')}</span>
-                    </div>
-                    <div className="flex justify-between items-start mb-6">
+                  <div key={p.id} className="p-6 border-2 border-slate-50 rounded-[2rem] bg-slate-50/20 relative flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
+                    <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                         <span className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
+                        <span className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
                           {idx + 1}
                         </span>
-                        <h4 className="font-black text-slate-900 text-lg leading-tight flex-1">{p.title}</h4>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4 flex-1">
-                      <div className="flex items-start gap-3">
-                        <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
-                        <p className="text-xs font-bold text-slate-600 uppercase tracking-tight leading-relaxed">
-                          {p.address}
-                        </p>
-                      </div>
-                      
-                      {/* Grid de Métricas Principales */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Compra</p>
-                          <p className="font-black text-slate-900 text-lg">${p.price.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-indigo-600 p-4 rounded-2xl border border-indigo-500 shadow-lg shadow-indigo-100">
-                          <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-1">Valor m²</p>
-                          <p className="font-black text-white text-lg">${pricePerSqft.toLocaleString()}/m²</p>
-                        </div>
-                      </div>
-
-                      {/* Grid de Especificaciones Técnicas */}
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Bed className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Habitaciones</p>
-                          <p className="font-bold text-slate-800 text-xs">{p.rooms}</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Bath className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Baños / Toil.</p>
-                          <p className="font-bold text-slate-800 text-xs">{p.bathrooms}{p.toilets ? ` + ${p.toilets}` : ''}</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Car className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Cocheras</p>
-                          <p className="font-bold text-slate-800 text-xs">{p.parking || 0}</p>
-                        </div>
-                      </div>
-
-                      {/* Grid de Superficies y Ubicación */}
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Ruler className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Superficie</p>
-                          <p className="font-bold text-slate-800 text-[10px] leading-tight">{p.sqft}m² total</p>
-                          <p className="text-[7px] text-slate-400 uppercase">{p.coveredSqft || p.sqft} cub.</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Clock className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Antigüedad</p>
-                          <p className="font-bold text-slate-800 text-xs">{p.age ? `${p.age} años` : 'A estrenar'}</p>
-                        </div>
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
-                          <Building className="w-3.5 h-3.5 text-indigo-600 mb-1" />
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Piso / Ubic.</p>
-                          <p className="font-bold text-slate-800 text-xs truncate w-full px-1">{p.floor || 'N/A'}</p>
-                        </div>
-                      </div>
-
-                      <div className="bg-white p-5 rounded-2xl border border-slate-100 print:border-slate-200">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                          <FileText className="w-2.5 h-2.5" /> Análisis de la Oportunidad
-                        </p>
-                        <p className="text-xs text-slate-600 leading-relaxed italic">
-                          {p.notes || 'Sin notas analíticas adicionales para este activo.'}
-                        </p>
-                      </div>
-
-                      {p.renovationCosts.length > 0 && (
-                        <div className="pt-4 border-t border-slate-100 print:border-slate-200">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimación de Reformas</p>
-                          <div className="space-y-1 bg-slate-100/50 p-3 rounded-xl border border-slate-200/50">
-                            {p.renovationCosts.map(r => (
-                              <div key={r.id} className="flex justify-between text-[10px]">
-                                <span className="text-slate-500 font-medium">{r.category}</span>
-                                <span className="font-bold text-slate-900">${r.estimatedCost.toLocaleString()}</span>
-                              </div>
-                            ))}
-                            <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-slate-200">
-                              <span className="font-black text-slate-500 uppercase">Total Reformas</span>
-                              <span className="font-black text-indigo-600">${p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0).toLocaleString()}</span>
-                            </div>
+                        <div>
+                          <h4 className="font-black text-slate-900 text-base leading-tight">{p.title}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                             <MapPin className="w-3 h-3 text-indigo-600" />
+                             <p className="text-[10px] font-bold text-slate-500 uppercase truncate max-w-[500px]">{p.address}</p>
                           </div>
                         </div>
-                      )}
+                      </div>
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[9px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1 hover:underline print:hidden">
+                        <ExternalLink className="w-3 h-3" /> Listado original
+                      </a>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-slate-100 print:border-slate-200 flex justify-between items-center">
-                      <a 
-                        href={p.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline print:text-indigo-800"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" /> Ver listado original
-                      </a>
-                      <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Lead Ref: {p.id.substring(0, 8)}</p>
+                    <div className="grid grid-cols-12 gap-4">
+                      {/* Métricas Principales de Costo */}
+                      <div className="col-span-12 md:col-span-5 grid grid-cols-3 gap-2">
+                        <div className="bg-white p-3 rounded-2xl border border-slate-100 text-center">
+                          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Precio</p>
+                          <p className="font-black text-slate-900 text-sm">${p.price.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-2xl border border-slate-100 text-center">
+                          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Expensas</p>
+                          <p className="font-black text-slate-900 text-sm">${(p.fees || 0).toLocaleString()}</p>
+                        </div>
+                        <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-100 text-center">
+                          <p className="text-[8px] font-black text-white/60 uppercase mb-1">Valor m²</p>
+                          <p className="font-black text-white text-sm">${pricePerSqft.toLocaleString()}</p>
+                        </div>
+                      </div>
+
+                      {/* Especificaciones Compactas */}
+                      <div className="col-span-12 md:col-span-7 flex flex-wrap gap-2">
+                        {[
+                          { icon: Bed, label: 'Hab.', val: p.rooms },
+                          { icon: Bath, label: 'Baños', val: `${p.bathrooms}${p.toilets ? `+${p.toilets}` : ''}` },
+                          { icon: Car, label: 'Coch.', val: p.parking || 0 },
+                          { icon: Ruler, label: 'm² Tot.', val: p.sqft },
+                          { icon: Clock, label: 'Ant.', val: p.age ? `${p.age}a` : 'Estrenar' },
+                          { icon: Building, label: 'Piso', val: p.floor || 'N/A' }
+                        ].map((spec, i) => (
+                          <div key={i} className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl flex items-center gap-2 min-w-[70px]">
+                            <spec.icon className="w-3 h-3 text-indigo-500" />
+                            <div>
+                              <p className="text-[7px] font-black text-slate-400 uppercase leading-none">{spec.label}</p>
+                              <p className="text-[10px] font-black text-slate-800 leading-tight">{spec.val}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-12 gap-4">
+                       <div className="col-span-12 md:col-span-8 bg-white p-4 rounded-2xl border border-slate-100">
+                          <p className="text-[8px] font-black text-slate-400 uppercase mb-2 flex items-center gap-1">
+                            <FileText className="w-2.5 h-2.5" /> Notas Analíticas
+                          </p>
+                          <p className="text-[11px] text-slate-600 leading-relaxed italic">
+                            {p.notes || 'Análisis técnico no disponible para este activo.'}
+                          </p>
+                       </div>
+                       <div className="col-span-12 md:col-span-4 bg-slate-900 p-4 rounded-2xl text-white">
+                          <p className="text-[8px] font-black text-slate-500 uppercase mb-2">Costos de Reforma</p>
+                          <div className="flex justify-between items-center">
+                             <span className="text-[10px] font-medium opacity-70">Presupuesto estimado:</span>
+                             <span className="text-sm font-black text-indigo-400">
+                               ${p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0).toLocaleString()}
+                             </span>
+                          </div>
+                       </div>
                     </div>
                   </div>
                 );
@@ -337,10 +293,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200 print:mt-8">
+          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200">
             <p>© 2024 PropBrain Technical Reports</p>
-            <p>Carpeta: {folder.name}</p>
-            <p>Confidencial - Propiedad del Usuario</p>
+            <p>Búsqueda: {folder.name}</p>
+            <p>Informe Confidencial</p>
           </footer>
         </div>
       </div>
@@ -349,7 +305,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
         @media print {
           @page {
             size: A4;
-            margin: 1cm;
+            margin: 0.8cm;
           }
           html, body {
             height: auto !important;
@@ -359,79 +315,28 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          #root main, #root aside {
-            display: none !important;
-          }
           .report-overlay {
             position: static !important;
             display: block !important;
             background: white !important;
             padding: 0 !important;
             overflow: visible !important;
-            width: 100% !important;
-            height: auto !important;
-            backdrop-filter: none !important;
           }
           .report-container {
-            position: relative !important;
             width: 100% !important;
-            max-width: none !important;
             box-shadow: none !important;
             border: none !important;
-            display: block !important;
-            height: auto !important;
-            margin: 0 !important;
-            padding: 0 !important;
             overflow: visible !important;
-          }
-          #report-content {
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-          .print\\:hidden {
-            display: none !important;
           }
           section {
             page-break-inside: auto;
-            margin-bottom: 2rem !important;
           }
           .print\\:break-inside-avoid {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
-          .leaflet-container {
-            border: 1px solid #e2e8f0 !important;
-            height: 400px !important;
-            width: 100% !important;
-            page-break-inside: avoid;
-          }
-          table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            page-break-inside: auto;
-          }
-          tr {
-            page-break-inside: avoid !important;
-            page-break-after: auto;
-          }
-          a {
-            text-decoration: none !important;
-            color: #4f46e5 !important;
-          }
-          /* Fix for grids and multiple columns in print */
           .grid {
-             display: block !important;
-          }
-          .grid > div {
-             width: 100% !important;
-             margin-bottom: 1.5rem !important;
-          }
-          /* Re-enable flex where strictly needed but with block flow */
-          .flex {
-            display: flex !important;
+            display: grid !important;
           }
         }
       `}</style>
