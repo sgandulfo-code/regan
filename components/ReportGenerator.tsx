@@ -96,7 +96,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
 
   return (
     <div className="report-overlay fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-md flex justify-center overflow-y-auto py-10 px-4 print:p-0 print:bg-white print:static print:overflow-visible">
-      <div className="report-container w-full max-w-[1000px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none print:w-full print:max-w-none">
+      <div className="report-container w-full max-w-[1000px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none print:w-full print:max-w-none print:block">
         
         <div className="p-8 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-30 print:hidden rounded-t-[3rem]">
           <button onClick={onClose} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold text-xs uppercase tracking-widest transition-all">
@@ -115,7 +115,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </div>
         </div>
 
-        <div id="report-content" className="p-16 space-y-12 print:p-8 print:space-y-6">
+        <div id="report-content" className="p-16 space-y-12 print:p-10 print:space-y-6">
           <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
             <div>
               <div className="flex items-center gap-3 mb-4">
@@ -182,7 +182,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         ${(p.fees || 0).toLocaleString()}
                       </td>
                       <td className="p-5">
-                        <span className="font-bold text-slate-500 text-xs">${Math.round(p.price / p.sqft).toLocaleString()}</span>
+                        <span className="font-bold text-slate-500 text-xs">${Math.round(p.price / (p.sqft || 1)).toLocaleString()}</span>
                       </td>
                       <td className="p-5">
                         <span className="font-bold text-slate-800 text-sm">{p.sqft}m²</span>
@@ -207,48 +207,50 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b pb-4 flex-1">Análisis Detallado por Activo</h3>
             </div>
             
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6 print:block">
               {properties.map((p, idx) => {
-                const pricePerSqft = Math.round(p.price / p.sqft);
+                const pricePerSqft = Math.round(p.price / (p.sqft || 1));
+                const totalReno = p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0);
+                
                 return (
-                  <div key={p.id} className="p-6 border-2 border-slate-50 rounded-[2rem] bg-slate-50/20 relative flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
+                  <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/20 relative flex flex-col mb-8 print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-3xl print:p-6">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-4">
+                        <span className="bg-slate-900 text-white w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-xl shrink-0">
                           {idx + 1}
                         </span>
                         <div>
-                          <h4 className="font-black text-slate-900 text-base leading-tight">{p.title}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                             <MapPin className="w-3 h-3 text-indigo-600" />
-                             <p className="text-[10px] font-bold text-slate-500 uppercase truncate max-w-[500px]">{p.address}</p>
+                          <h4 className="font-black text-slate-900 text-lg leading-tight mb-1">{p.title}</h4>
+                          <div className="flex items-center gap-2">
+                             <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                             <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">{p.address}</p>
                           </div>
                         </div>
                       </div>
-                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[9px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1 hover:underline print:hidden">
-                        <ExternalLink className="w-3 h-3" /> Listado original
+                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5 hover:underline print:hidden">
+                        <ExternalLink className="w-3.5 h-3.5" /> Ver original
                       </a>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-4">
+                    <div className="grid grid-cols-12 gap-6">
                       {/* Métricas Principales de Costo */}
-                      <div className="col-span-12 md:col-span-5 grid grid-cols-3 gap-2">
-                        <div className="bg-white p-3 rounded-2xl border border-slate-100 text-center">
-                          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Precio</p>
-                          <p className="font-black text-slate-900 text-sm">${p.price.toLocaleString()}</p>
+                      <div className="col-span-12 lg:col-span-5 grid grid-cols-3 gap-3 print:grid-cols-3">
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 text-center flex flex-col justify-center print:border-slate-200">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio</p>
+                          <p className="font-black text-slate-900 text-base">${p.price.toLocaleString()}</p>
                         </div>
-                        <div className="bg-white p-3 rounded-2xl border border-slate-100 text-center">
-                          <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Expensas</p>
-                          <p className="font-black text-slate-900 text-sm">${(p.fees || 0).toLocaleString()}</p>
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 text-center flex flex-col justify-center print:border-slate-200">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Expensas</p>
+                          <p className="font-black text-slate-900 text-base">${(p.fees || 0).toLocaleString()}</p>
                         </div>
-                        <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-100 text-center">
-                          <p className="text-[8px] font-black text-white/60 uppercase mb-1">Valor m²</p>
-                          <p className="font-black text-white text-sm">${pricePerSqft.toLocaleString()}</p>
+                        <div className="bg-indigo-600 p-4 rounded-2xl shadow-lg shadow-indigo-100 text-center flex flex-col justify-center">
+                          <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-1">Valor m²</p>
+                          <p className="font-black text-white text-base">${pricePerSqft.toLocaleString()}</p>
                         </div>
                       </div>
 
-                      {/* Especificaciones Compactas */}
-                      <div className="col-span-12 md:col-span-7 flex flex-wrap gap-2">
+                      {/* Especificaciones Técnicas Compactas en Grid */}
+                      <div className="col-span-12 lg:col-span-7 grid grid-cols-3 sm:grid-cols-6 gap-2 print:grid-cols-6">
                         {[
                           { icon: Bed, label: 'Hab.', val: p.rooms },
                           { icon: Bath, label: 'Baños', val: `${p.bathrooms}${p.toilets ? `+${p.toilets}` : ''}` },
@@ -257,33 +259,37 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                           { icon: Clock, label: 'Ant.', val: p.age ? `${p.age}a` : 'Estrenar' },
                           { icon: Building, label: 'Piso', val: p.floor || 'N/A' }
                         ].map((spec, i) => (
-                          <div key={i} className="bg-slate-50 border border-slate-100 px-3 py-2 rounded-xl flex items-center gap-2 min-w-[70px]">
-                            <spec.icon className="w-3 h-3 text-indigo-500" />
-                            <div>
-                              <p className="text-[7px] font-black text-slate-400 uppercase leading-none">{spec.label}</p>
-                              <p className="text-[10px] font-black text-slate-800 leading-tight">{spec.val}</p>
-                            </div>
+                          <div key={i} className="bg-white border border-slate-100 p-2.5 rounded-2xl flex flex-col items-center justify-center text-center print:border-slate-200">
+                            <spec.icon className="w-4 h-4 text-indigo-500 mb-1" />
+                            <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-1">{spec.label}</p>
+                            <p className="text-[10px] font-black text-slate-800 leading-tight truncate w-full">{spec.val}</p>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-12 gap-4">
-                       <div className="col-span-12 md:col-span-8 bg-white p-4 rounded-2xl border border-slate-100">
-                          <p className="text-[8px] font-black text-slate-400 uppercase mb-2 flex items-center gap-1">
-                            <FileText className="w-2.5 h-2.5" /> Notas Analíticas
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 print:grid-cols-12">
+                       <div className="md:col-span-8 bg-white p-5 rounded-3xl border border-slate-100 print:border-slate-200">
+                          <p className="text-[9px] font-black text-slate-400 uppercase mb-3 flex items-center gap-2">
+                            <FileText className="w-3 h-3 text-indigo-600" /> Notas Analíticas
                           </p>
-                          <p className="text-[11px] text-slate-600 leading-relaxed italic">
+                          <p className="text-[12px] text-slate-600 leading-relaxed italic">
                             {p.notes || 'Análisis técnico no disponible para este activo.'}
                           </p>
                        </div>
-                       <div className="col-span-12 md:col-span-4 bg-slate-900 p-4 rounded-2xl text-white">
-                          <p className="text-[8px] font-black text-slate-500 uppercase mb-2">Costos de Reforma</p>
-                          <div className="flex justify-between items-center">
-                             <span className="text-[10px] font-medium opacity-70">Presupuesto estimado:</span>
-                             <span className="text-sm font-black text-indigo-400">
-                               ${p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0).toLocaleString()}
-                             </span>
+                       <div className="md:col-span-4 bg-slate-900 p-5 rounded-3xl text-white flex flex-col justify-center">
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Proyecto de Reforma</p>
+                          <div className="space-y-2">
+                             <div className="flex justify-between items-center text-[11px] opacity-70">
+                                <span>Reforma estimada:</span>
+                                <span className="font-bold">${totalReno.toLocaleString()}</span>
+                             </div>
+                             <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                                <span className="text-[10px] font-black text-indigo-400 uppercase tracking-tighter">Total Proyecto:</span>
+                                <span className="text-lg font-black text-white">
+                                   ${(p.price + totalReno).toLocaleString()}
+                                </span>
+                             </div>
                           </div>
                        </div>
                     </div>
@@ -293,10 +299,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             </div>
           </section>
 
-          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200">
-            <p>© 2024 PropBrain Technical Reports</p>
-            <p>Búsqueda: {folder.name}</p>
-            <p>Informe Confidencial</p>
+          <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200 print:pt-6">
+            <p>© 2024 PropBrain Technical Intelligence</p>
+            <p>Ref Búsqueda: {folder.name}</p>
+            <p>Uso Exclusivo & Confidencial</p>
           </footer>
         </div>
       </div>
@@ -305,15 +311,19 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
         @media print {
           @page {
             size: A4;
-            margin: 0.8cm;
+            margin: 1cm;
           }
           html, body {
             height: auto !important;
+            min-height: auto !important;
             overflow: visible !important;
             background: white !important;
             color: black !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+          }
+          #root main, #root aside {
+            display: none !important;
           }
           .report-overlay {
             position: static !important;
@@ -321,22 +331,73 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             background: white !important;
             padding: 0 !important;
             overflow: visible !important;
+            width: 100% !important;
+            height: auto !important;
+            backdrop-filter: none !important;
           }
           .report-container {
             width: 100% !important;
+            max-width: none !important;
             box-shadow: none !important;
             border: none !important;
             overflow: visible !important;
+            height: auto !important;
+            display: block !important;
+            padding: 0 !important;
+          }
+          #report-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            overflow: visible !important;
+          }
+          .print\\:hidden {
+            display: none !important;
           }
           section {
             page-break-inside: auto;
+            margin-bottom: 2rem !important;
+            display: block !important;
           }
           .print\\:break-inside-avoid {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
+            display: block !important;
           }
+          .leaflet-container {
+            border: 1px solid #e2e8f0 !important;
+            height: 400px !important;
+            width: 100% !important;
+            page-break-inside: avoid;
+          }
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            page-break-after: auto;
+          }
+          /* Fix for grid systems in chrome print */
           .grid {
             display: grid !important;
+          }
+          .print\\:block {
+            display: block !important;
+          }
+          .print\\:grid-cols-3 {
+             grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+          }
+          .print\\:grid-cols-6 {
+             grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+          }
+          .col-span-12 {
+            grid-column: span 12 / span 12 !important;
+          }
+          /* Force column spans in print */
+          .print\\:grid-cols-12 {
+             grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
           }
         }
       `}</style>
