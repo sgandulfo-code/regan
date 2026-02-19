@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Sparkles, 
   MapPin, 
@@ -27,7 +27,9 @@ import {
   Save,
   Binary,
   Hash,
-  DollarSign
+  DollarSign,
+  AlertTriangle,
+  CheckCircle
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -64,9 +66,9 @@ interface PropertyFormData {
 
 type CreationStep = 'inbox' | 'verify';
 type ProcessingMode = 'ai' | 'manual' | 'edit' | null;
+type ValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
-// Componente FormField definido fuera para evitar re-montajes y pérdida de foco
-const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix, placeholder }: any) => {
+const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix, placeholder, error, success, loading }: any) => {
   const isNumeric = type === "number";
   const [localValue, setLocalValue] = useState(isNumeric && value === 0 ? '' : value.toString());
 
@@ -101,10 +103,17 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
           inputMode={isNumeric ? "decimal" : "text"}
           value={localValue}
           onChange={handleInputChange}
-          className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
+          className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} ${error ? 'border-rose-300 bg-rose-50' : success ? 'border-emerald-300 bg-emerald-50' : 'bg-slate-50 border-slate-200'} border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
           placeholder={placeholder || (isNumeric ? "0" : "")}
         />
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {loading && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
+          {success && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+          {error && <AlertTriangle className="w-3 h-3 text-rose-500" />}
+        </div>
       </div>
+      {error && <p className="text-[8px] font-bold text-rose-500 uppercase ml-1 tracking-tighter">{error}</p>}
+      {success && <p className="text-[8px] font-bold text-emerald-600 uppercase ml-1 tracking-tighter">Verified: {success}</p>}
     </div>
   );
 };
@@ -123,9 +132,51 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(propertyToEdit?.images[0] || null);
 
+  const [addressStatus, setAddressStatus] = useState<ValidationStatus>('idle');
+  const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+
   const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
   });
+
+  // Validador de dirección exacta
+  const validateAddress = useCallback(async (address: string) => {
+    if (!address || address.length < 5) {
+      setAddressStatus('idle');
+      setResolvedAddress(null);
+      return;
+    }
+
+    setAddressStatus('validating');
+    try {
+      const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const feature = data.features[0];
+        const { name, street, city, country } = feature.properties;
+        const displayName = [name || street, city, country].filter(Boolean).join(', ');
+        setAddressStatus('valid');
+        setResolvedAddress(displayName);
+      } else {
+        setAddressStatus('invalid');
+        setResolvedAddress(null);
+      }
+    } catch (err) {
+      setAddressStatus('invalid');
+      setResolvedAddress(null);
+    }
+  }, []);
+
+  // Debounce para validación de dirección
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (editedData.exactAddress) {
+        validateAddress(editedData.exactAddress);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [editedData.exactAddress, validateAddress]);
 
   useEffect(() => {
     if (propertyToEdit) {
@@ -237,7 +288,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const handleConfirm = async () => {
-    // Definir la imagen final
+    // Validación final antes de guardar
+    if (!editedData.exactAddress) {
+      alert("Por favor, ingresa una dirección exacta para geolocalizar el activo.");
+      return;
+    }
+
+    if (addressStatus === 'invalid') {
+      if (!window.confirm("La dirección exacta no parece ser válida para el mapa. ¿Deseas guardar de todas formas? (Es posible que no aparezca el pin)")) {
+        return;
+      }
+    }
+
     const finalImage = editedData.imageUrl || snapshotUrl || (propertyToEdit?.images[0]) || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(propertyToEdit?.url || processingLink?.url || '')}?w=1200`;
 
     if (propertyToEdit) {
@@ -281,6 +343,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAnalysisResult(null);
     setStep('inbox');
     setSnapshotUrl(null);
+    setAddressStatus('idle');
+    setResolvedAddress(null);
     setEditedData({
       title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
     });
@@ -388,8 +452,25 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <div className="space-y-6">
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">2. Geolocation</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Display Address" type="text" value={editedData.location} onChange={(v:any) => setEditedData({...editedData, location: v})} icon={MapPin} />
-                      <FormField label="Exact Address (GPS)" type="text" value={editedData.exactAddress} onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} icon={Navigation} />
+                      <FormField 
+                        label="Display Address" 
+                        type="text" 
+                        value={editedData.location} 
+                        onChange={(v:any) => setEditedData({...editedData, location: v})} 
+                        icon={MapPin} 
+                        placeholder="e.g. Barrio Norte"
+                      />
+                      <FormField 
+                        label="Exact Address (GPS)" 
+                        type="text" 
+                        value={editedData.exactAddress} 
+                        onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} 
+                        icon={Navigation} 
+                        placeholder="Calle 123, Ciudad"
+                        loading={addressStatus === 'validating'}
+                        success={resolvedAddress}
+                        error={addressStatus === 'invalid' ? "Ubicación no encontrada" : null}
+                      />
                     </div>
                   </div>
 
@@ -450,7 +531,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
             </div>
             {!isAnalyzing && (
               <div className="flex gap-4 pt-6 border-t">
-                <button onClick={handleConfirm} className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all">
+                <button 
+                  onClick={handleConfirm} 
+                  disabled={addressStatus === 'validating' || !editedData.exactAddress}
+                  className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   {propertyToEdit ? <Save className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
                   {propertyToEdit ? 'UPDATE ASSET' : 'SAVE TO PORTFOLIO'}
                 </button>
