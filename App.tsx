@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer, Activity } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -228,13 +228,14 @@ const App: React.FC = () => {
     const start = new Date(date).getTime();
     const now = new Date().getTime();
     const diff = now - start;
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return days < 0 ? 0 : days;
   };
 
   const getStatusBadgeColor = (status: FolderStatus) => {
     switch (status) {
       case FolderStatus.PENDIENTE: return 'bg-amber-100 text-amber-600 border-amber-200';
-      case FolderStatus.ABIERTA: return 'bg-indigo-100 text-indigo-600 border-indigo-200';
+      case FolderStatus.ABIERTA: return 'bg-emerald-100 text-emerald-600 border-emerald-200';
       case FolderStatus.CERRADA: return 'bg-slate-100 text-slate-500 border-slate-200';
       default: return 'bg-slate-100 text-slate-400';
     }
@@ -265,7 +266,7 @@ const App: React.FC = () => {
               {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Mis Búsquedas' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
             </h1>
             <p className="text-slate-500 font-medium mt-1">
-              {activeFolder ? activeFolder.description : 'Plataforma inteligente para compradores de propiedades'}
+              {activeFolder ? activeFolder.description : 'Panel central de gestión inmobiliaria inteligente'}
             </p>
           </div>
           
@@ -493,45 +494,53 @@ const App: React.FC = () => {
                     </div>
                     <button 
                       onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                      className="w-full bg-white p-8 rounded-[2rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
+                      className="w-full bg-white p-8 rounded-[3rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
                     >
                       <div className="flex justify-between items-start mb-6">
                         <div className={`w-12 h-12 ${f.color} rounded-xl shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
-                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase border ${getStatusBadgeColor(f.status)}`}>
-                          {f.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase border flex items-center gap-1.5 ${getStatusBadgeColor(f.status)}`}>
+                            <Activity className="w-3 h-3" />
+                            {f.status}
+                          </span>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {getDaysElapsed(f.statusUpdatedAt)} días en estado
+                          </span>
+                        </div>
                       </div>
                       
-                      <h3 className="text-xl font-black mb-2 text-slate-800">{f.name}</h3>
-                      <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1">
-                        {f.description || 'Sin descripción definida'}
+                      <h3 className="text-xl font-black mb-2 text-slate-800 tracking-tight">{f.name}</h3>
+                      <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1 italic">
+                        {f.description || 'Sin descripción estratégica definida'}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-slate-50">
-                        <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                            <Calendar className="w-2 h-2" /> Inicio
+                      <div className="grid grid-cols-2 gap-4 mb-6 pt-6 border-t border-slate-50">
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
+                            <Calendar className="w-3 h-3 text-indigo-500" /> Inicio Búsqueda
                           </p>
-                          <p className="text-[10px] font-bold text-slate-700">
-                            {new Date(f.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          <p className="text-[11px] font-black text-slate-700">
+                            {new Date(f.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                         </div>
-                        <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1">
-                            <Timer className="w-2 h-2" /> En Estado
+                        <div className="bg-indigo-50/30 p-4 rounded-2xl border border-indigo-100/50">
+                          <p className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
+                            <Timer className="w-3 h-3" /> Actividad Total
                           </p>
-                          <p className="text-[10px] font-bold text-slate-700">
-                            {getDaysElapsed(f.statusUpdatedAt)} días
+                          <p className="text-[11px] font-black text-indigo-700">
+                            {getDaysElapsed(f.startDate)} días transcurridos
                           </p>
                         </div>
                       </div>
 
                       <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                          {properties.filter(p => p.folderId === f.id).length} Propiedades
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                          {properties.filter(p => p.folderId === f.id).length} Activos registrados
                         </span>
-                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                          <ArrowRight className="w-4 h-4" />
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                          <ArrowRight className="w-5 h-5" />
                         </div>
                       </div>
                     </button>
@@ -539,10 +548,12 @@ const App: React.FC = () => {
                 ))}
                 <button 
                   onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
-                  className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[220px]"
+                  className="border-2 border-dashed border-slate-200 rounded-[3rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[300px] group"
                 >
-                  <Plus className="w-10 h-10 mb-4" />
-                  <span className="text-xs font-black uppercase tracking-widest">Nueva Búsqueda</span>
+                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-50 transition-all">
+                    <Plus className="w-8 h-8" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Nueva Búsqueda</span>
                 </button>
               </div>
             ) : (
@@ -567,36 +578,36 @@ const App: React.FC = () => {
         {activeTab === 'properties' && (
           <div className="space-y-6">
             {displayProperties.length === 0 ? (
-              <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                  {searchQuery || activeFilterCount > 0 ? <Search className="w-10 h-10 text-slate-300" /> : <Home className="w-10 h-10 text-slate-300" />}
+              <div className="bg-white rounded-[4rem] p-24 text-center border-2 border-dashed border-slate-100 animate-in zoom-in-95">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-8">
+                  {searchQuery || activeFilterCount > 0 ? <Search className="w-12 h-12 text-slate-200" /> : <Home className="w-12 h-12 text-slate-200" />}
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">
-                  {searchQuery || activeFilterCount > 0 ? 'Sin resultados para los filtros' : 'No hay propiedades aquí aún'}
+                <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">
+                  {searchQuery || activeFilterCount > 0 ? 'Sin resultados para la búsqueda' : 'No hay activos registrados'}
                 </h3>
-                <p className="text-slate-500 mb-8 max-w-xs mx-auto font-medium">
-                  {searchQuery || activeFilterCount > 0 ? 'Prueba ajustando tus filtros o reseteando los parámetros.' : 'Comienza añadiendo un enlace de propiedad desde cualquier portal.'}
+                <p className="text-slate-400 mb-10 max-w-sm mx-auto font-medium leading-relaxed">
+                  {searchQuery || activeFilterCount > 0 ? 'Ajusta los filtros o borra los términos de búsqueda para encontrar lo que buscas.' : 'Comienza capturando enlaces de propiedades desde portales inmobiliarios.'}
                 </p>
                 {searchQuery || activeFilterCount > 0 ? (
                   <button 
                     onClick={() => { setSearchQuery(''); setFilters(initialFilters); }}
-                    className="bg-slate-100 text-slate-600 px-8 py-3 rounded-2xl font-bold hover:bg-slate-200 transition-all"
+                    className="bg-slate-900 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-xl"
                   >
-                    Resetear criterios
+                    Resetear Criterios
                   </button>
                 ) : (
                   <button 
                     onClick={() => setActiveTab('search')}
-                    className="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all"
+                    className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
                   >
-                    Añadir Propiedad
+                    Ingresar Activo
                   </button>
                 )}
               </div>
             ) : (
               <>
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
                     {displayProperties.map((p, index) => (
                       <PropertyCard 
                         key={p.id} 

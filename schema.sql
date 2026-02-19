@@ -1,20 +1,8 @@
 
--- PropBrain Database Schema (Supabase) - CLEAN INSTALL
--- Instrucciones: Borra todo lo que tengas en el SQL Editor de Supabase, pega esto y dale a "Run".
+-- PropBrain Database Schema (Supabase) - REVISED WITH FOLDER TRACKING
+-- Instrucciones: Ejecuta este script en el SQL Editor de Supabase.
 
--- 0. LIMPIEZA
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user();
-DROP TABLE IF EXISTS renovations CASCADE;
-DROP TABLE IF EXISTS link_inbox CASCADE;
-DROP TABLE IF EXISTS properties CASCADE;
-DROP TABLE IF EXISTS folders CASCADE;
-DROP TABLE IF EXISTS profiles CASCADE;
-
--- 1. EXTENSIONES
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-
--- 2. TIPOS ENUM
+-- 1. TIPOS ENUM (Si ya existen, el bloque DO $$ los ignorará)
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
         CREATE TYPE user_role AS ENUM ('Buyer', 'Architect', 'Contractor');
@@ -27,10 +15,10 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- 3. TABLAS
+-- 2. TABLAS
 
 -- Perfiles de usuario
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
   full_name TEXT NOT NULL,
   email TEXT UNIQUE NOT NULL,
@@ -38,8 +26,8 @@ CREATE TABLE profiles (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Carpetas de búsqueda
-CREATE TABLE folders (
+-- Carpetas de búsqueda (Actualizada con campos de seguimiento)
+CREATE TABLE IF NOT EXISTS folders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
@@ -52,7 +40,7 @@ CREATE TABLE folders (
 );
 
 -- Propiedades
-CREATE TABLE properties (
+CREATE TABLE IF NOT EXISTS properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   folder_id UUID REFERENCES folders(id) ON DELETE CASCADE NOT NULL,
@@ -80,7 +68,7 @@ CREATE TABLE properties (
 );
 
 -- Renovaciones
-CREATE TABLE renovations (
+CREATE TABLE IF NOT EXISTS renovations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   property_id UUID REFERENCES properties(id) ON DELETE CASCADE NOT NULL,
   author_id UUID REFERENCES profiles(id) NOT NULL,
@@ -91,7 +79,7 @@ CREATE TABLE renovations (
 );
 
 -- Inbox de Enlaces
-CREATE TABLE link_inbox (
+CREATE TABLE IF NOT EXISTS link_inbox (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
@@ -99,33 +87,22 @@ CREATE TABLE link_inbox (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 4. SEGURIDAD (Row Level Security - RLS)
+-- 3. SEGURIDAD (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE folders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE properties ENABLE ROW LEVEL SECURITY;
 ALTER TABLE renovations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE link_inbox ENABLE ROW LEVEL SECURITY;
 
--- Políticas de Privacidad
-CREATE POLICY "Profiles are private" ON profiles FOR ALL USING (auth.uid() = id);
-CREATE POLICY "Folders are private" ON folders FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Properties are private" ON properties FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Inbox is private" ON link_inbox FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Renovations are private/collaborative" ON renovations FOR ALL USING (
-  auth.uid() = author_id OR 
-  EXISTS (SELECT 1 FROM properties WHERE id = property_id AND user_id = auth.uid())
-);
-
--- 5. TRIGGER PARA PERFIL AUTOMÁTICO
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.profiles (id, full_name, email, role)
-  VALUES (new.id, COALESCE(new.raw_user_meta_data->>'full_name', new.email), new.email, 'Buyer');
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+-- Políticas (Solo se crean si no existen)
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Profiles are private') THEN
+        CREATE POLICY "Profiles are private" ON profiles FOR ALL USING (auth.uid() = id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Folders are private') THEN
+        CREATE POLICY "Folders are private" ON folders FOR ALL USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Properties are private') THEN
+        CREATE POLICY "Properties are private" ON properties FOR ALL USING (auth.uid() = user_id);
+    END IF;
+END $$;

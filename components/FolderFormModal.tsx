@@ -58,7 +58,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight">
                   {initialData ? 'Editar Búsqueda' : 'Crear Búsqueda'}
                 </h2>
-                <p className="text-slate-400 text-sm font-medium">Define los parámetros estratégicos de adquisición.</p>
+                <p className="text-slate-400 text-sm font-medium">Define los parámetros de tu próxima adquisición.</p>
               </div>
             </div>
             <button 
@@ -92,21 +92,26 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   <Activity className="w-3 h-3" />
                   Estado
                 </label>
-                <select
-                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as FolderStatus })}
-                >
-                  {Object.values(FolderStatus).map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as FolderStatus })}
+                  >
+                    {Object.values(FolderStatus).map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
                   <Calendar className="w-3 h-3" />
-                  Inicio Búsqueda
+                  Fecha de Comienzo
                 </label>
                 <input
                   type="date"
@@ -120,7 +125,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
                 <FileText className="w-3 h-3" />
-                Objetivo Estratégico
+                Notas y Objetivo
               </label>
               <textarea
                 rows={3}
@@ -144,7 +149,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                 className="flex-[2] bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center justify-center gap-3"
               >
                 {initialData ? <Save className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                {initialData ? 'ACTUALIZAR' : 'INICIALIZAR'}
+                {initialData ? 'GUARDAR CAMBIOS' : 'CREAR BÚSQUEDA'}
               </button>
             </div>
           </form>

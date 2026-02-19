@@ -76,6 +76,9 @@ export const dataService = {
   },
 
   async updateFolder(id: string, folder: Partial<SearchFolder>) {
+    // Obtenemos el estado actual para ver si cambió
+    const { data: currentFolder } = await supabase.from('folders').select('status').eq('id', id).single();
+
     const updatePayload: any = {
       name: folder.name,
       description: folder.description,
@@ -83,8 +86,8 @@ export const dataService = {
       start_date: folder.startDate
     };
 
-    // Si el estado cambió, actualizamos status_updated_at
-    if (folder.status) {
+    // Si el estado cambió, actualizamos status_updated_at para el contador de días
+    if (folder.status && currentFolder && folder.status !== currentFolder.status) {
       updatePayload.status_updated_at = new Date().toISOString();
     }
 
