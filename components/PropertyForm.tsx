@@ -133,8 +133,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const [addressStatus, setAddressStatus] = useState<ValidationStatus>('idle');
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
-  // Fix: Replaced NodeJS.Timeout with ReturnType<typeof setTimeout> to resolve build error in browser environments.
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [editedData, setEditedData] = useState<PropertyFormData>({
+    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
+  });
 
   // Validador de dirección mejorado
   const performAddressValidation = useCallback(async (address: string) => {
@@ -146,7 +149,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
     setAddressStatus('validating');
     try {
-      // Usamos limit=3 para buscar la mejor coincidencia
       const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
       const data = await response.json();
       
@@ -154,7 +156,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         const feature = data.features[0];
         const props = feature.properties;
         
-        // Construir un nombre de visualización rico para confirmar al usuario
         const parts = [
           props.name || props.street,
           props.housenumber,
@@ -188,7 +189,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     if (editedData.exactAddress) {
       validationTimerRef.current = setTimeout(() => {
         performAddressValidation(editedData.exactAddress);
-      }, 1000); // 1 segundo de espera tras dejar de escribir
+      }, 1000); 
     } else {
       setAddressStatus('idle');
       setResolvedAddress(null);
@@ -236,7 +237,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   useEffect(() => {
     if (analysisResult && !analysisResult.error && !propertyToEdit) {
-      setEditedData(prev => ({
+      setEditedData((prev: PropertyFormData) => ({
         ...prev,
         title: analysisResult.title || prev.title,
         price: analysisResult.price || 0,
@@ -283,7 +284,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         dataService.fetchExternalMetadata(link.url).then(meta => {
           const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`;
           setSnapshotUrl(finalScreenshot);
-          setEditedData(prev => ({ ...prev, imageUrl: prev.imageUrl || finalScreenshot }));
+          setEditedData((prev: PropertyFormData) => ({ ...prev, imageUrl: prev.imageUrl || finalScreenshot }));
           setSnapshotLoading(false);
         });
       } else {
@@ -301,7 +302,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     const meta = await dataService.fetchExternalMetadata(url);
     const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1440`;
     setAnalysisResult({ title: meta?.title || '', price: 0, confidence: 1, dealScore: 50 });
-    if (meta?.title) setEditedData(prev => ({ ...prev, title: meta.title, imageUrl: finalScreenshot }));
+    if (meta?.title) setEditedData((prev: PropertyFormData) => ({ ...prev, title: meta.title, imageUrl: finalScreenshot }));
     setSnapshotUrl(finalScreenshot);
     setStep('verify');
     setIsAnalyzing(false);
@@ -309,7 +310,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const handleConfirm = async () => {
-    // Si la validación está en curso, esperamos o avisamos
     if (addressStatus === 'validating') {
       alert("Esperando validación de dirección...");
       return;
@@ -508,11 +508,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
                       <div className="w-8 h-[2px] bg-indigo-500"></div> Core Identity
                     </h4>
-                    <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                    <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
                     
                     <div className="grid grid-cols-2 gap-6">
-                      <FormField label="Acquisition Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={DollarSign} />
-                      <FormField label="Monthly Expensas" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                      <FormField label="Acquisition Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, price: v}))} icon={DollarSign} />
+                      <FormField label="Monthly Expensas" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, fees: v}))} icon={ShieldCheck} />
                     </div>
                   </div>
 
@@ -525,7 +525,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         label="Exact Map Address (Geocoding)" 
                         type="text" 
                         value={editedData.exactAddress} 
-                        onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} 
+                        onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, exactAddress: v}))} 
                         icon={Navigation} 
                         placeholder="Calle, Altura, Localidad"
                         loading={addressStatus === 'validating'}
@@ -536,7 +536,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         label="Commercial Display Location" 
                         type="text" 
                         value={editedData.location} 
-                        onChange={(v:any) => setEditedData({...editedData, location: v})} 
+                        onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, location: v}))} 
                         icon={MapPin} 
                         placeholder="e.g. Palermo Hollywood"
                       />
@@ -548,10 +548,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <div className="w-8 h-[2px] bg-indigo-500"></div> Structural Matrix
                     </h4>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                      <FormField label="Ambientes" value={editedData.environments} onChange={(v:any) => setEditedData({...editedData, environments: v})} icon={Layers} />
-                      <FormField label="Cuartos" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Binary} />
-                      <FormField label="Baños Full" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Binary} />
-                      <FormField label="Toilettes" value={editedData.toilets} onChange={(v:any) => setEditedData({...editedData, toilets: v})} icon={Binary} />
+                      <FormField label="Ambientes" value={editedData.environments} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, environments: v}))} icon={Layers} />
+                      <FormField label="Cuartos" value={editedData.rooms} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, rooms: v}))} icon={Binary} />
+                      <FormField label="Baños Full" value={editedData.bathrooms} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, bathrooms: v}))} icon={Binary} />
+                      <FormField label="Toilettes" value={editedData.toilets} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, toilets: v}))} icon={Binary} />
                     </div>
                   </div>
 
@@ -560,14 +560,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <div className="w-8 h-[2px] bg-indigo-500"></div> Surface Metrics
                     </h4>
                     <div className="grid grid-cols-3 gap-6">
-                      <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
-                      <FormField label="Cubiertos m²" value={editedData.coveredSqft} onChange={(v:any) => setEditedData({...editedData, coveredSqft: v})} icon={Ruler} />
-                      <FormField label="Libres m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData({...editedData, uncoveredSqft: v})} icon={Ruler} />
+                      <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, sqft: v}))} icon={Ruler} />
+                      <FormField label="Cubiertos m²" value={editedData.coveredSqft} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, coveredSqft: v}))} icon={Ruler} />
+                      <FormField label="Libres m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, uncoveredSqft: v}))} icon={Ruler} />
                     </div>
                     <div className="grid grid-cols-3 gap-6">
-                      <FormField label="Cocheras" value={editedData.parking} onChange={(v:any) => setEditedData({...editedData, parking: v})} icon={Car} />
-                      <FormField label="Años Ant." value={editedData.age} onChange={(v:any) => setEditedData({...editedData, age: v})} icon={Clock} />
-                      <FormField label="Piso" type="text" value={editedData.floor} onChange={(v:any) => setEditedData({...editedData, floor: v})} icon={Building} />
+                      <FormField label="Cocheras" value={editedData.parking} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, parking: v}))} icon={Car} />
+                      <FormField label="Años Ant." value={editedData.age} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, age: v}))} icon={Clock} />
+                      <FormField label="Piso" type="text" value={editedData.floor} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, floor: v}))} icon={Building} />
                     </div>
                   </div>
 
@@ -584,7 +584,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         rows={5} 
                         placeholder="Define the buy-case for this asset..."
                         value={editedData.notes} 
-                        onChange={(e) => setEditedData({...editedData, notes: e.target.value})}
+                        onChange={(e) => setEditedData((prev: PropertyFormData) => ({...prev, notes: e.target.value}))}
                       />
                     </div>
                     <div className="space-y-4">
@@ -594,7 +594,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                           <button
                             key={num}
                             type="button"
-                            onClick={() => setEditedData({...editedData, rating: num})}
+                            onClick={() => setEditedData((prev: PropertyFormData) => ({...prev, rating: num}))}
                             className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border-2 ${editedData.rating === num ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100' : 'bg-white border-slate-100 text-slate-300 hover:border-slate-200 hover:text-slate-500'}`}
                           >
                             {num}
