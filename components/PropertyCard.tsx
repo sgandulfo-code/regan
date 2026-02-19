@@ -2,7 +2,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2 } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -58,35 +58,38 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-
-        <div className="absolute bottom-4 left-4 right-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-          <p className="text-white text-xs font-bold truncate flex items-center gap-1">
-             {ICONS.MapPin} {property.address}
-          </p>
-        </div>
       </div>
 
       <div className="p-6">
-        <div className="flex justify-between items-start mb-4">
+        <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-lg text-slate-800 truncate mb-1" title={property.title}>
               {property.title}
             </h3>
-            <div className="flex items-center gap-3">
-              <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-                ${Math.round(property.price / property.sqft).toLocaleString()}/m²
-              </p>
-              {property.fees && property.fees > 0 && (
-                <div className="flex items-center gap-1 text-[10px] text-amber-600 font-black uppercase tracking-widest">
-                  <ShieldCheck className="w-3 h-3" />
-                  ${property.fees} expensas
-                </div>
-              )}
-            </div>
           </div>
           <a href={property.url} target="_blank" rel="noopener noreferrer" className="p-2 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors">
             {ICONS.ExternalLink}
           </a>
+        </div>
+
+        {/* Dirección visible permanentemente */}
+        <div className="flex items-center gap-2 mb-4 text-slate-500">
+          <MapPin className="w-3 h-3 text-indigo-500 shrink-0" />
+          <p className="text-[10px] font-black uppercase tracking-widest truncate">
+            {property.address}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 mb-4">
+          <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+            ${Math.round(property.price / property.sqft).toLocaleString()}/m²
+          </p>
+          {property.fees && property.fees > 0 && (
+            <div className="flex items-center gap-1 text-[10px] text-amber-600 font-black uppercase tracking-widest">
+              <ShieldCheck className="w-3 h-3" />
+              ${property.fees} expensas
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-2 mb-6">
