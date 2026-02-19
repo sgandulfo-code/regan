@@ -23,8 +23,8 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<GeocodedProperty | null>(null);
 
-  // Icono Azul (Indigo-600) con validación de escalado
-  const createBlueIcon = (isSelected: boolean) => L.divIcon({
+  // Icono con número correlativo
+  const createBlueIcon = (isSelected: boolean, index: number) => L.divIcon({
     className: 'custom-div-icon',
     html: `
       <div class="relative flex items-center justify-center" style="width: 32px; height: 40px;">
@@ -32,7 +32,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
         <div class="relative w-8 h-10 flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 -translate-y-2' : ''}">
           <svg viewBox="0 0 24 24" class="w-full h-full drop-shadow-xl" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 21.7C17.3 17.1 20 13.1 20 9.7C20 5.2 16.4 1.6 12 1.6C7.6 1.6 4 5.2 4 9.7C4 13.1 6.7 17.1 12 21.7Z" fill="#4f46e5" stroke="white" stroke-width="2"/>
-            <circle cx="12" cy="9.5" r="3" fill="white"/>
+            <text x="12" y="11" fill="white" font-size="8" font-weight="900" text-anchor="middle" font-family="Inter, sans-serif">${index + 1}</text>
           </svg>
         </div>
       </div>
@@ -62,7 +62,6 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
           
           if (data.features && data.features.length > 0) {
             const [lng, lat] = data.features[0].geometry.coordinates;
-            // Validar que las coordenadas sean números finitos
             if (Number.isFinite(lat) && Number.isFinite(lng)) {
               return { ...p, lat, lng };
             }
@@ -114,12 +113,12 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     markersLayerRef.current.clearLayers();
     const validMarkers: L.Marker[] = [];
 
-    geocodedProperties.forEach(p => {
+    geocodedProperties.forEach((p, index) => {
       if (p.geocodeFailed || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return;
 
       const isSelected = selectedProperty?.id === p.id;
       const marker = L.marker([p.lat, p.lng], {
-        icon: createBlueIcon(isSelected)
+        icon: createBlueIcon(isSelected, index)
       });
 
       marker.on('click', () => {
@@ -167,7 +166,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
-          {geocodedProperties.map(p => (
+          {geocodedProperties.map((p, index) => (
             <button
               key={p.id}
               disabled={p.geocodeFailed}
@@ -181,11 +180,16 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
               }`}
             >
               <div className="flex justify-between items-start mb-3">
-                <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${
-                  selectedProperty?.id === p.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-500'
-                }`}>
-                  ${p.price.toLocaleString()}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 bg-indigo-600 text-white rounded-md flex items-center justify-center text-[9px] font-black">
+                    {index + 1}
+                  </span>
+                  <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${
+                    selectedProperty?.id === p.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-500'
+                  }`}>
+                    ${p.price.toLocaleString()}
+                  </span>
+                </div>
                 {p.geocodeFailed ? (
                   <AlertTriangle className="w-4 h-4 text-rose-500" />
                 ) : (

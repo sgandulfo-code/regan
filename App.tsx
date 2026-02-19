@@ -562,10 +562,11 @@ const App: React.FC = () => {
               <>
                 {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-                    {displayProperties.map(p => (
+                    {displayProperties.map((p, index) => (
                       <PropertyCard 
                         key={p.id} 
                         property={p} 
+                        index={index}
                         onSelect={setSelectedProperty} 
                         onStatusChange={(id, s) => handleUpdateStatus(id, s)} 
                         onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}

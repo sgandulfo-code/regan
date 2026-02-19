@@ -6,6 +6,7 @@ import { Layers, ShieldCheck, Pencil, Trash2, MapPin } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
+  index: number;
   onSelect: (p: Property) => void;
   onStatusChange: (id: string, status: PropertyStatus) => void;
   onEdit: (p: Property) => void;
@@ -13,7 +14,7 @@ interface PropertyCardProps {
   isEditable?: boolean;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatusChange, onEdit, onDelete, isEditable = true }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, onStatusChange, onEdit, onDelete, isEditable = true }) => {
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -27,14 +28,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onSelect, onStatu
   const renoTotal = property.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0);
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+    <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative">
       <div className="relative h-52 overflow-hidden">
+        {/* Badge numérico correlativo */}
+        <div className="absolute top-4 left-4 z-10">
+          <div className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-xl border border-white/20">
+            {(index + 1).toString().padStart(2, '0')}
+          </div>
+        </div>
+
         <img 
           src={property.images[0]} 
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute top-4 left-4 flex gap-2">
+        <div className="absolute top-4 left-14 flex gap-2">
           <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
             {property.status}
           </span>
