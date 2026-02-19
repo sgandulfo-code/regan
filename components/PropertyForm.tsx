@@ -1,9 +1,8 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Sparkles, 
   MapPin, 
-  Euro, 
   Home, 
   ShieldCheck, 
   CheckCircle2, 
@@ -23,13 +22,13 @@ import {
   Car,
   Clock,
   Building,
-  Maximize,
   Save,
   Binary,
-  Hash,
   DollarSign,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  X,
+  Search
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus } from '../types';
@@ -92,8 +91,8 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
   };
 
   return (
-    <div className="space-y-1">
-      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+    <div className="space-y-1 group">
+      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1 group-focus-within:text-indigo-500 transition-colors">
         {Icon && <Icon className="w-2.5 h-2.5" />} {label}
       </label>
       <div className="relative">
@@ -103,17 +102,17 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
           inputMode={isNumeric ? "decimal" : "text"}
           value={localValue}
           onChange={handleInputChange}
-          className={`w-full p-2.5 ${prefix ? 'pl-7' : 'pl-3'} ${error ? 'border-rose-300 bg-rose-50' : success ? 'border-emerald-300 bg-emerald-50' : 'bg-slate-50 border-slate-200'} border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
+          className={`w-full p-3 ${prefix ? 'pl-7' : 'pl-4'} ${error ? 'border-rose-300 bg-rose-50/50' : success ? 'border-emerald-300 bg-emerald-50/50' : 'bg-slate-50 border-slate-200'} border-2 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all`}
           placeholder={placeholder || (isNumeric ? "0" : "")}
         />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {loading && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
-          {success && <CheckCircle className="w-3 h-3 text-emerald-500" />}
-          {error && <AlertTriangle className="w-3 h-3 text-rose-500" />}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+          {loading && <Loader2 className="w-3.5 h-3.5 text-indigo-500 animate-spin" />}
+          {success && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+          {error && <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />}
         </div>
       </div>
-      {error && <p className="text-[8px] font-bold text-rose-500 uppercase ml-1 tracking-tighter">{error}</p>}
-      {success && <p className="text-[8px] font-bold text-emerald-600 uppercase ml-1 tracking-tighter">Verified: {success}</p>}
+      {error && <p className="text-[8px] font-black text-rose-500 uppercase ml-1 tracking-tighter animate-in fade-in slide-in-from-left-1">{error}</p>}
+      {success && <p className="text-[8px] font-black text-emerald-600 uppercase ml-1 tracking-tighter animate-in fade-in slide-in-from-left-1">Verified: {success}</p>}
     </div>
   );
 };
@@ -134,14 +133,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const [addressStatus, setAddressStatus] = useState<ValidationStatus>('idle');
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
+  // Fix: Replaced NodeJS.Timeout with ReturnType<typeof setTimeout> to resolve build error in browser environments.
+  const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
-  });
-
-  // Validador de dirección exacta
-  const validateAddress = useCallback(async (address: string) => {
-    if (!address || address.length < 5) {
+  // Validador de dirección mejorado
+  const performAddressValidation = useCallback(async (address: string) => {
+    if (!address || address.trim().length < 4) {
       setAddressStatus('idle');
       setResolvedAddress(null);
       return;
@@ -149,34 +146,58 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
     setAddressStatus('validating');
     try {
+      // Usamos limit=3 para buscar la mejor coincidencia
       const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
       const data = await response.json();
       
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];
-        const { name, street, city, country } = feature.properties;
-        const displayName = [name || street, city, country].filter(Boolean).join(', ');
-        setAddressStatus('valid');
-        setResolvedAddress(displayName);
+        const props = feature.properties;
+        
+        // Construir un nombre de visualización rico para confirmar al usuario
+        const parts = [
+          props.name || props.street,
+          props.housenumber,
+          props.district || props.city,
+          props.state || props.country
+        ].filter(Boolean);
+        
+        const displayName = parts.join(', ');
+        
+        if (displayName.length > 3) {
+          setAddressStatus('valid');
+          setResolvedAddress(displayName);
+        } else {
+          setAddressStatus('invalid');
+          setResolvedAddress(null);
+        }
       } else {
         setAddressStatus('invalid');
         setResolvedAddress(null);
       }
     } catch (err) {
+      console.error("Geocoding validation error:", err);
       setAddressStatus('invalid');
-      setResolvedAddress(null);
     }
   }, []);
 
-  // Debounce para validación de dirección
+  // Efecto para debounce de validación
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (editedData.exactAddress) {
-        validateAddress(editedData.exactAddress);
-      }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [editedData.exactAddress, validateAddress]);
+    if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    
+    if (editedData.exactAddress) {
+      validationTimerRef.current = setTimeout(() => {
+        performAddressValidation(editedData.exactAddress);
+      }, 1000); // 1 segundo de espera tras dejar de escribir
+    } else {
+      setAddressStatus('idle');
+      setResolvedAddress(null);
+    }
+
+    return () => {
+      if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
+    };
+  }, [editedData.exactAddress, performAddressValidation]);
 
   useEffect(() => {
     if (propertyToEdit) {
@@ -221,7 +242,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         price: analysisResult.price || 0,
         fees: analysisResult.fees || 0,
         location: analysisResult.location || '',
-        exactAddress: analysisResult.exactAddress || '',
+        exactAddress: analysisResult.exactAddress || analysisResult.location || '',
         environments: analysisResult.environments || 0,
         rooms: analysisResult.rooms || 0,
         bathrooms: analysisResult.bathrooms || 0,
@@ -288,14 +309,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const handleConfirm = async () => {
-    // Validación final antes de guardar
+    // Si la validación está en curso, esperamos o avisamos
+    if (addressStatus === 'validating') {
+      alert("Esperando validación de dirección...");
+      return;
+    }
+
     if (!editedData.exactAddress) {
       alert("Por favor, ingresa una dirección exacta para geolocalizar el activo.");
       return;
     }
 
     if (addressStatus === 'invalid') {
-      if (!window.confirm("La dirección exacta no parece ser válida para el mapa. ¿Deseas guardar de todas formas? (Es posible que no aparezca el pin)")) {
+      if (!window.confirm("La dirección ingresada no se pudo validar. Esto impedirá que aparezca en el mapa. ¿Deseas guardar el activo de todas formas?")) {
         return;
       }
     }
@@ -358,54 +384,76 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   if (step === 'inbox') {
     return (
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-10">
-        <section className="bg-white rounded-[3rem] p-10 shadow-xl border border-slate-100">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-              <LinkIcon className="w-7 h-7" />
+        <section className="bg-white rounded-[3.5rem] p-12 shadow-2xl border border-slate-100 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-10 opacity-5">
+            <LinkIcon className="w-40 h-40" />
+          </div>
+          <div className="flex items-center gap-6 mb-10">
+            <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-2xl shadow-indigo-200">
+              <LinkIcon className="w-8 h-8" />
             </div>
             <div>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Lead Collector</h2>
-              <p className="text-slate-500 font-medium">Add links from any property portal to your queue.</p>
+              <h2 className="text-4xl font-black text-slate-900 tracking-tight">Lead Collector</h2>
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Multi-portal ingestion system</p>
             </div>
           </div>
           <div className="relative">
             <textarea
-              rows={3}
+              rows={4}
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Paste listing URLs here..."
-              className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg font-medium placeholder:text-slate-300 resize-none"
+              placeholder="Paste listing URLs here (Zonaprop, Argenprop, etc)..."
+              className="w-full p-8 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] outline-none focus:border-indigo-500 focus:bg-white transition-all text-lg font-bold placeholder:text-slate-300 resize-none shadow-inner"
             />
             <button 
               onClick={handleAddLinks}
               disabled={!urlInput.trim() || isSyncingInbox}
-              className="absolute bottom-6 right-6 bg-indigo-600 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-indigo-700 disabled:bg-slate-300 transition-all flex items-center gap-2"
+              className="absolute bottom-6 right-6 bg-slate-900 text-white px-10 py-4 rounded-[1.8rem] font-black text-[10px] uppercase tracking-widest shadow-2xl hover:bg-indigo-600 disabled:bg-slate-200 transition-all flex items-center gap-3 active:scale-95"
             >
               {isSyncingInbox ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              Add to Inbox
+              Capture Leads
             </button>
           </div>
         </section>
-        <section className="space-y-6">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 px-4">
-            <Inbox className="w-4 h-4" /> Pending Queue ({pendingLinks.length})
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <section className="space-y-8">
+          <div className="flex items-center justify-between px-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+              <Inbox className="w-4 h-4" /> Pending Verification ({pendingLinks.length})
+            </h3>
+            {isSyncingInbox && <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {pendingLinks.map(link => (
-              <div key={link.id} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col">
-                <div className="flex justify-between items-start mb-4">
+              <div key={link.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl hover:shadow-2xl transition-all flex flex-col group relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-indigo-500 transition-colors"></div>
+                <div className="flex justify-between items-start mb-6">
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-black text-indigo-500 uppercase truncate mb-1">{new URL(link.url).hostname.replace('www.', '')}</p>
-                    <p className="text-xs text-slate-400 truncate font-medium">{link.url}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-lg bg-indigo-50 flex items-center justify-center">
+                        <Monitor className="w-3 h-3 text-indigo-600" />
+                      </div>
+                      <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest">
+                        {new URL(link.url).hostname.replace('www.', '')}
+                      </p>
+                    </div>
+                    <p className="text-xs text-slate-400 truncate font-bold uppercase tracking-tight">{link.url}</p>
                   </div>
-                  <button onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)} className="p-2 text-slate-300 hover:text-rose-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"><Trash2 className="w-4 h-4" /></button>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-slate-50">
-                  <button onClick={() => startProcessing(link, 'ai')} className="bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-800 transition-all shadow-lg"><Cpu className="w-3 h-3" /> Neural AI</button>
-                  <button onClick={() => startProcessing(link, 'manual')} className="bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all"><Keyboard className="w-3 h-3" /> Standard</button>
+                <div className="grid grid-cols-2 gap-4 mt-auto pt-6 border-t border-slate-50">
+                  <button onClick={() => startProcessing(link, 'ai')} className="bg-slate-900 text-white py-4 rounded-[1.5rem] text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-xl shadow-slate-200"><Cpu className="w-3.5 h-3.5" /> Neural</button>
+                  <button onClick={() => startProcessing(link, 'manual')} className="bg-slate-50 text-slate-500 py-4 rounded-[1.5rem] text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-100 transition-all border border-slate-100"><Keyboard className="w-3.5 h-3.5" /> Manual</button>
                 </div>
               </div>
             ))}
+            {pendingLinks.length === 0 && !isSyncingInbox && (
+              <div className="col-span-full py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100 text-center">
+                <Search className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No leads in queue. Paste some URLs above.</p>
+              </div>
+            )}
           </div>
         </section>
       </div>
@@ -414,111 +462,140 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   return (
     <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4">
-      <div className="flex items-center justify-between bg-white px-8 py-4 rounded-[2.5rem] border border-slate-200 shadow-sm">
-        <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors">
-          <ArrowRight className="w-4 h-4 rotate-180" /> {propertyToEdit ? 'Cancel Edit' : 'Back to Inbox'}
+      <div className="flex items-center justify-between bg-white px-8 py-5 rounded-[2.5rem] border border-slate-200 shadow-sm sticky top-4 z-[100] backdrop-blur-md bg-white/90">
+        <button onClick={resetProcessing} className="text-slate-400 hover:text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-3 transition-all active:scale-95">
+          <ArrowRight className="w-4 h-4 rotate-180" /> Back to Collector
         </button>
-        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${mode === 'ai' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-100 text-slate-500'}`}>
-          {propertyToEdit ? 'Editing Asset' : mode === 'ai' ? 'Neural Verification' : 'Standard Audit'}
+        <div className="flex items-center gap-6">
+          <div className={`px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${mode === 'ai' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+            {mode === 'ai' && <Sparkles className="w-3 h-3" />}
+            {propertyToEdit ? 'Asset Editor' : mode === 'ai' ? 'Neural Audit' : 'Standard Ingestion'}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
         <div className="xl:col-span-6">
-          <div className="bg-white rounded-[3.5rem] border border-slate-200 p-10 shadow-2xl space-y-10 h-full flex flex-col">
-            <div>
-              <h3 className="text-3xl font-black text-slate-800 tracking-tight">Technical Audit</h3>
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-1">Refine asset specifications</p>
+          <div className="bg-white rounded-[4rem] border border-slate-200 p-12 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] space-y-12 h-full flex flex-col">
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-4xl font-black text-slate-900 tracking-tight">Asset Audit</h3>
+                <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest mt-2 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+                  Verifying technical dimensions
+                </p>
+              </div>
+              <div className="bg-indigo-50 text-indigo-600 p-4 rounded-3xl">
+                <Binary className="w-6 h-6" />
+              </div>
             </div>
             
-            <div className="flex-1 space-y-10 overflow-y-auto max-h-[650px] pr-4 custom-scrollbar">
+            <div className="flex-1 space-y-10 overflow-y-auto max-h-[700px] pr-6 custom-scrollbar">
               {isAnalyzing ? (
-                <div className="py-20 text-center space-y-4">
-                  <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mx-auto" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Neural AI processing...</p>
+                <div className="py-32 text-center space-y-6">
+                  <div className="relative w-16 h-16 mx-auto">
+                    <div className="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
+                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-black text-slate-900 uppercase tracking-widest animate-pulse">Running Neural analysis</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Cross-referencing portal data...</p>
+                  </div>
                 </div>
               ) : (
                 <>
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">1. Base Information</h4>
-                    <FormField label="Property Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Luxury Penthouse" />
-                    <FormField label="Image URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData({...editedData, imageUrl: v})} icon={ImageIcon} placeholder="https://example.com/image.jpg" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField label="Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={DollarSign} />
-                      <FormField label="Monthly Fees" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
+                  <div className="grid grid-cols-1 gap-8">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Core Identity
+                    </h4>
+                    <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData({...editedData, title: v})} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      <FormField label="Acquisition Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData({...editedData, price: v})} icon={DollarSign} />
+                      <FormField label="Monthly Expensas" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData({...editedData, fees: v})} icon={ShieldCheck} />
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">2. Geolocation</h4>
-                    <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Geo-Intelligence
+                    </h4>
+                    <div className="grid grid-cols-1 gap-6">
                       <FormField 
-                        label="Display Address" 
-                        type="text" 
-                        value={editedData.location} 
-                        onChange={(v:any) => setEditedData({...editedData, location: v})} 
-                        icon={MapPin} 
-                        placeholder="e.g. Barrio Norte"
-                      />
-                      <FormField 
-                        label="Exact Address (GPS)" 
+                        label="Exact Map Address (Geocoding)" 
                         type="text" 
                         value={editedData.exactAddress} 
                         onChange={(v:any) => setEditedData({...editedData, exactAddress: v})} 
                         icon={Navigation} 
-                        placeholder="Calle 123, Ciudad"
+                        placeholder="Calle, Altura, Localidad"
                         loading={addressStatus === 'validating'}
                         success={resolvedAddress}
-                        error={addressStatus === 'invalid' ? "Ubicación no encontrada" : null}
+                        error={addressStatus === 'invalid' ? "Address could not be mapped" : null}
+                      />
+                      <FormField 
+                        label="Commercial Display Location" 
+                        type="text" 
+                        value={editedData.location} 
+                        onChange={(v:any) => setEditedData({...editedData, location: v})} 
+                        icon={MapPin} 
+                        placeholder="e.g. Palermo Hollywood"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">3. Internal Layout</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Structural Matrix
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                       <FormField label="Ambientes" value={editedData.environments} onChange={(v:any) => setEditedData({...editedData, environments: v})} icon={Layers} />
-                      <FormField label="Dormitorios" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Binary} />
-                      <FormField label="Baños" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Binary} />
-                      <FormField label="Toilets" value={editedData.toilets} onChange={(v:any) => setEditedData({...editedData, toilets: v})} icon={Binary} />
+                      <FormField label="Cuartos" value={editedData.rooms} onChange={(v:any) => setEditedData({...editedData, rooms: v})} icon={Binary} />
+                      <FormField label="Baños Full" value={editedData.bathrooms} onChange={(v:any) => setEditedData({...editedData, bathrooms: v})} icon={Binary} />
+                      <FormField label="Toilettes" value={editedData.toilets} onChange={(v:any) => setEditedData({...editedData, toilets: v})} icon={Binary} />
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">4. Surface & Tech Specs</h4>
-                    <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Surface Metrics
+                    </h4>
+                    <div className="grid grid-cols-3 gap-6">
                       <FormField label="Total m²" value={editedData.sqft} onChange={(v:any) => setEditedData({...editedData, sqft: v})} icon={Ruler} />
                       <FormField label="Cubiertos m²" value={editedData.coveredSqft} onChange={(v:any) => setEditedData({...editedData, coveredSqft: v})} icon={Ruler} />
-                      <FormField label="Descubiertos m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData({...editedData, uncoveredSqft: v})} icon={Ruler} />
+                      <FormField label="Libres m²" value={editedData.uncoveredSqft} onChange={(v:any) => setEditedData({...editedData, uncoveredSqft: v})} icon={Ruler} />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-6">
                       <FormField label="Cocheras" value={editedData.parking} onChange={(v:any) => setEditedData({...editedData, parking: v})} icon={Car} />
-                      <FormField label="Antigüedad" value={editedData.age} onChange={(v:any) => setEditedData({...editedData, age: v})} icon={Clock} />
-                      <FormField label="Piso / Planta" type="text" value={editedData.floor} onChange={(v:any) => setEditedData({...editedData, floor: v})} icon={Building} />
+                      <FormField label="Años Ant." value={editedData.age} onChange={(v:any) => setEditedData({...editedData, age: v})} icon={Clock} />
+                      <FormField label="Piso" type="text" value={editedData.floor} onChange={(v:any) => setEditedData({...editedData, floor: v})} icon={Building} />
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] border-b pb-2">5. Strategic Context</h4>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Analysis & Personal Notes</label>
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Strategy & Value
+                    </h4>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <ArrowRight className="w-2 h-2" /> Purchase Hypothesis
+                      </label>
                       <textarea 
-                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                        rows={4} 
-                        placeholder="Why this property? Any specific details to remember..."
+                        className="w-full p-6 bg-slate-50 border-2 border-slate-100 rounded-[2rem] text-xs font-bold text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none placeholder:text-slate-300"
+                        rows={5} 
+                        placeholder="Define the buy-case for this asset..."
                         value={editedData.notes} 
                         onChange={(e) => setEditedData({...editedData, notes: e.target.value})}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Rating (1-5)</label>
-                      <div className="flex gap-2">
+                    <div className="space-y-4">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Grade (AI Assisted)</label>
+                      <div className="flex gap-3">
                         {[1, 2, 3, 4, 5].map((num) => (
                           <button
                             key={num}
                             type="button"
                             onClick={() => setEditedData({...editedData, rating: num})}
-                            className={`flex-1 py-2 rounded-lg font-black text-xs transition-all ${editedData.rating === num ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                            className={`flex-1 py-4 rounded-2xl font-black text-xs transition-all border-2 ${editedData.rating === num ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100' : 'bg-white border-slate-100 text-slate-300 hover:border-slate-200 hover:text-slate-500'}`}
                           >
                             {num}
                           </button>
@@ -530,33 +607,73 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
               )}
             </div>
             {!isAnalyzing && (
-              <div className="flex gap-4 pt-6 border-t">
+              <div className="flex gap-6 pt-10 border-t border-slate-50">
                 <button 
                   onClick={handleConfirm} 
-                  disabled={addressStatus === 'validating' || !editedData.exactAddress}
-                  className="flex-1 bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg flex items-center justify-center gap-3 shadow-2xl hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={addressStatus === 'validating'}
+                  className="flex-1 bg-indigo-600 text-white py-6 rounded-[2.2rem] font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-4 shadow-2xl shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
                 >
-                  {propertyToEdit ? <Save className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
-                  {propertyToEdit ? 'UPDATE ASSET' : 'SAVE TO PORTFOLIO'}
+                  {addressStatus === 'validating' ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      {propertyToEdit ? <Save className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                      {propertyToEdit ? 'Push Updates' : 'Commit to Portfolio'}
+                    </>
+                  )}
                 </button>
               </div>
             )}
           </div>
         </div>
+        
         <div className="xl:col-span-6">
-          <div className="bg-slate-900 rounded-[3.5rem] border border-slate-800 shadow-2xl h-[850px] flex flex-col overflow-hidden relative">
-            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/5 backdrop-blur-md z-20">
-              <div className="flex gap-2 bg-slate-800/50 p-1 rounded-2xl">
-                <button onClick={() => setActiveRefTab('live')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><Monitor className="w-3 h-3 inline mr-2" /> Live Portal</button>
-                <button onClick={() => setActiveRefTab('snapshot')} className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}><ImageIcon className="w-3 h-3 inline mr-2" /> AI Snapshot</button>
+          <div className="bg-slate-900 rounded-[4rem] border border-slate-800 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)] h-[850px] flex flex-col overflow-hidden relative group">
+            <div className="p-6 border-b border-white/5 flex items-center justify-between bg-slate-900/80 backdrop-blur-2xl z-20">
+              <div className="flex gap-3 bg-white/5 p-1.5 rounded-[1.8rem]">
+                <button onClick={() => setActiveRefTab('live')} className={`px-6 py-3 rounded-[1.3rem] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeRefTab === 'live' ? 'bg-indigo-500 text-white shadow-xl' : 'text-slate-500 hover:text-white'}`}>
+                  <Monitor className="w-3.5 h-3.5" /> Source Portal
+                </button>
+                <button onClick={() => setActiveRefTab('snapshot')} className={`px-6 py-3 rounded-[1.3rem] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${activeRefTab === 'snapshot' ? 'bg-indigo-500 text-white shadow-xl' : 'text-slate-500 hover:text-white'}`}>
+                  <ImageIcon className="w-3.5 h-3.5" /> Asset Media
+                </button>
               </div>
+              {activeRefTab === 'live' && (
+                <div className="flex items-center gap-2 text-indigo-400 text-[9px] font-black uppercase tracking-widest animate-pulse">
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-400"></div>
+                  Real-time synchronization
+                </div>
+              )}
             </div>
             <div className="flex-1 bg-white relative">
               {activeRefTab === 'live' ? (
-                <iframe src={getPreviewUrl()} className="w-full h-full border-none" title="Portal View" />
+                <div className="w-full h-full relative">
+                   <iframe src={getPreviewUrl()} className="w-full h-full border-none" title="Lead Source Visualization" />
+                </div>
               ) : (
-                <div className="w-full h-full flex items-center justify-center p-8 bg-slate-100">
-                  {snapshotLoading ? <Loader2 className="w-8 h-8 animate-spin text-indigo-500" /> : <img src={editedData.imageUrl || snapshotUrl || ''} className="max-w-full h-auto shadow-2xl rounded-lg" alt="Preview" />}
+                <div className="w-full h-full flex items-center justify-center p-12 bg-slate-50 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))]"></div>
+                  {snapshotLoading ? (
+                    <div className="flex flex-col items-center gap-4 relative z-10">
+                      <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generating preview...</p>
+                    </div>
+                  ) : (
+                    <div className="relative z-10">
+                      <img 
+                        src={editedData.imageUrl || snapshotUrl || ''} 
+                        className="max-w-full h-auto shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] rounded-[2.5rem] border-4 border-white transition-all duration-700 hover:scale-[1.02]" 
+                        alt="Neural Asset Preview" 
+                      />
+                      <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-[2rem] shadow-2xl border border-slate-100 flex items-center gap-4 animate-in zoom-in duration-500 delay-300">
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-black">AI</div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">Image Verified</p>
+                          <p className="text-[8px] font-bold text-slate-400 uppercase">External Source</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
