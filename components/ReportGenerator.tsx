@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2, ExternalLink } from 'lucide-react';
+import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2, ExternalLink, Bed, Bath, Car, Clock, Layers, DollarSign } from 'lucide-react';
 import { Property, SearchFolder } from '../types';
 import L from 'leaflet';
 
@@ -212,75 +212,128 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </section>
 
           <section className="space-y-10 pt-10 print:break-inside-auto">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-4">Detalles Técnicos Individuales</h3>
+            <div className="flex items-center gap-3">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest border-b pb-4 flex-1">Detalles Técnicos Individuales</h3>
+            </div>
             <div className="grid grid-cols-2 gap-10 print:grid-cols-1 print:gap-8">
-              {properties.map((p, idx) => (
-                <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
-                    <span className="text-6xl font-black text-slate-900">{(idx + 1).toString().padStart(2, '0')}</span>
-                  </div>
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-3">
-                       <span className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
-                        {idx + 1}
-                      </span>
-                      <h4 className="font-black text-slate-900 text-lg leading-tight flex-1">{p.title}</h4>
+              {properties.map((p, idx) => {
+                const pricePerSqft = Math.round(p.price / p.sqft);
+                return (
+                  <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-2xl">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 print:opacity-5">
+                      <span className="text-6xl font-black text-slate-900">{(idx + 1).toString().padStart(2, '0')}</span>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-4 flex-1">
-                    <div className="flex items-start gap-3">
-                      <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
-                      <p className="text-xs font-bold text-slate-600 uppercase tracking-tight leading-relaxed">
-                        {p.address}
-                      </p>
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex items-center gap-3">
+                         <span className="bg-slate-900 text-white w-8 h-8 rounded-xl flex items-center justify-center font-black text-xs shadow-lg">
+                          {idx + 1}
+                        </span>
+                        <h4 className="font-black text-slate-900 text-lg leading-tight flex-1">{p.title}</h4>
+                      </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Compra</p>
-                        <p className="font-black text-slate-900">${p.price.toLocaleString()}</p>
+                    <div className="space-y-4 flex-1">
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-tight leading-relaxed">
+                          {p.address}
+                        </p>
                       </div>
-                      <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Métricas</p>
-                        <p className="font-black text-slate-900">{p.sqft}m² | {p.rooms}Hab</p>
-                      </div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-2xl border border-slate-100 print:border-slate-200">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Análisis de la Oportunidad</p>
-                      <p className="text-xs text-slate-600 leading-relaxed italic">
-                        {p.notes || 'Sin notas analíticas adicionales para este activo.'}
-                      </p>
-                    </div>
-
-                    {p.renovationCosts.length > 0 && (
-                      <div className="pt-4 border-t border-slate-100 print:border-slate-200">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimación de Reformas</p>
-                        <div className="space-y-1">
-                          {p.renovationCosts.map(r => (
-                            <div key={r.id} className="flex justify-between text-[10px]">
-                              <span className="text-slate-500 font-medium">{r.category}</span>
-                              <span className="font-bold text-slate-900">${r.estimatedCost.toLocaleString()}</span>
-                            </div>
-                          ))}
+                      
+                      {/* Grid de Métricas Principales */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-2xl border border-slate-100 print:border-slate-200">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Compra</p>
+                          <p className="font-black text-slate-900 text-lg">${p.price.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-indigo-600 p-4 rounded-2xl border border-indigo-500 shadow-lg shadow-indigo-100">
+                          <p className="text-[9px] font-black text-white/60 uppercase tracking-widest mb-1">Valor m²</p>
+                          <p className="font-black text-white text-lg">${pricePerSqft.toLocaleString()}/m²</p>
                         </div>
                       </div>
-                    )}
-                  </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-100 print:border-slate-200">
-                    <a 
-                      href={p.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline print:text-indigo-800"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" /> Ver listado original
-                    </a>
+                      {/* Grid de Especificaciones Técnicas */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Bed className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Habitaciones</p>
+                          <p className="font-bold text-slate-800 text-xs">{p.rooms}</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Bath className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Baños / Toil.</p>
+                          <p className="font-bold text-slate-800 text-xs">{p.bathrooms}{p.toilets ? ` + ${p.toilets}` : ''}</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Car className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Cocheras</p>
+                          <p className="font-bold text-slate-800 text-xs">{p.parking || 0}</p>
+                        </div>
+                      </div>
+
+                      {/* Grid de Superficies y Ubicación */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Ruler className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Superficie</p>
+                          <p className="font-bold text-slate-800 text-[10px] leading-tight">{p.sqft}m² total</p>
+                          <p className="text-[7px] text-slate-400 uppercase">{p.coveredSqft || p.sqft} cub.</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Clock className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Antigüedad</p>
+                          <p className="font-bold text-slate-800 text-xs">{p.age ? `${p.age} años` : 'A estrenar'}</p>
+                        </div>
+                        <div className="bg-white p-3 rounded-xl border border-slate-100 flex flex-col items-center text-center">
+                          <Building className="w-3.5 h-3.5 text-indigo-600 mb-1" />
+                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Piso / Ubic.</p>
+                          <p className="font-bold text-slate-800 text-xs truncate w-full px-1">{p.floor || 'N/A'}</p>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-5 rounded-2xl border border-slate-100 print:border-slate-200">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                          <FileText className="w-2.5 h-2.5" /> Análisis de la Oportunidad
+                        </p>
+                        <p className="text-xs text-slate-600 leading-relaxed italic">
+                          {p.notes || 'Sin notas analíticas adicionales para este activo.'}
+                        </p>
+                      </div>
+
+                      {p.renovationCosts.length > 0 && (
+                        <div className="pt-4 border-t border-slate-100 print:border-slate-200">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Estimación de Reformas</p>
+                          <div className="space-y-1 bg-slate-100/50 p-3 rounded-xl border border-slate-200/50">
+                            {p.renovationCosts.map(r => (
+                              <div key={r.id} className="flex justify-between text-[10px]">
+                                <span className="text-slate-500 font-medium">{r.category}</span>
+                                <span className="font-bold text-slate-900">${r.estimatedCost.toLocaleString()}</span>
+                              </div>
+                            ))}
+                            <div className="flex justify-between text-[10px] pt-1 mt-1 border-t border-slate-200">
+                              <span className="font-black text-slate-500 uppercase">Total Reformas</span>
+                              <span className="font-black text-indigo-600">${p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-100 print:border-slate-200 flex justify-between items-center">
+                      <a 
+                        href={p.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline print:text-indigo-800"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" /> Ver listado original
+                      </a>
+                      <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Lead Ref: {p.id.substring(0, 8)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 
