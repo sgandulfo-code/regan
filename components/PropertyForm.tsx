@@ -139,7 +139,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
   });
 
-  // Validador de dirección mejorado
   const performAddressValidation = useCallback(async (address: string) => {
     if (!address || address.trim().length < 4) {
       setAddressStatus('idle');
@@ -182,7 +181,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     }
   }, []);
 
-  // Efecto para debounce de validación
   useEffect(() => {
     if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
     
@@ -510,6 +508,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     </h4>
                     <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
                     
+                    {/* Campo de URL de Imagen Restaurado */}
+                    <FormField label="Visual Media URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, imageUrl: v}))} icon={ImageIcon} placeholder="https://example.com/property-photo.jpg" />
+
                     <div className="grid grid-cols-2 gap-6">
                       <FormField label="Acquisition Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, price: v}))} icon={DollarSign} />
                       <FormField label="Monthly Expensas" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, fees: v}))} icon={ShieldCheck} />
