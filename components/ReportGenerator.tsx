@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2 } from 'lucide-react';
+import { X, Printer, MapPin, Building, Ruler, Euro, Shield, Download, FileText, ChevronLeft, Map as MapIcon, Table, Loader2, ExternalLink } from 'lucide-react';
 import { Property, SearchFolder } from '../types';
 import L from 'leaflet';
 
@@ -26,7 +26,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
     window.print();
   };
 
-  // Función para crear el icono numerado (igual que en PropertyMapView)
   const createReportIcon = (index: number) => L.divIcon({
     className: 'custom-div-icon',
     html: `
@@ -44,7 +43,6 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Inicializar mapa
     const map = L.map(mapContainerRef.current, {
       zoomControl: false,
       attributionControl: false,
@@ -182,8 +180,13 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         </span>
                       </td>
                       <td className="p-5">
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{p.title}</p>
-                        <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium truncate max-w-[150px]">{p.address}</p>
+                        <a href={p.url} target="_blank" rel="noopener noreferrer" className="font-bold text-indigo-600 text-sm leading-tight hover:underline flex items-center gap-1 group/link">
+                          {p.title}
+                          <ExternalLink className="w-3 h-3 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                        </a>
+                        <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium leading-relaxed">
+                          {p.address}
+                        </p>
                       </td>
                       <td className="p-5">
                         <span className="font-black text-slate-900 text-sm">${p.price.toLocaleString()}</span>
@@ -212,7 +215,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-4">Detalles Técnicos Individuales</h3>
             <div className="grid grid-cols-2 gap-10">
               {properties.map((p, idx) => (
-                <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden">
+                <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/30 relative overflow-hidden flex flex-col">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
                     <span className="text-6xl font-black text-slate-900">{(idx + 1).toString().padStart(2, '0')}</span>
                   </div>
@@ -225,10 +228,12 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                     </div>
                   </div>
                   
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-4 h-4 text-indigo-600" />
-                      <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">{p.address}</p>
+                  <div className="space-y-4 flex-1">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 shrink-0" />
+                      <p className="text-xs font-bold text-slate-600 uppercase tracking-tight leading-relaxed">
+                        {p.address}
+                      </p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -262,6 +267,17 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-slate-100">
+                    <a 
+                      href={p.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-2 hover:underline"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" /> Ver listado original
+                    </a>
                   </div>
                 </div>
               ))}
@@ -327,6 +343,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           }
           section {
             page-break-inside: avoid;
+          }
+          a {
+            text-decoration: none !important;
+            color: #4f46e5 !important;
           }
         }
       `}</style>
