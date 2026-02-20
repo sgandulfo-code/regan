@@ -2,7 +2,7 @@
 import React from 'react';
 import { ICONS } from '../constants';
 import { UserRole, SearchFolder } from '../types';
-import { Plus, LogOut, Cloud, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Plus, LogOut, Cloud, Loader2, Pencil, Trash2, Compass, Briefcase, BookOpen, Calendar, Calculator, Heart, FolderOpen, FileText } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -29,12 +29,32 @@ const Sidebar: React.FC<SidebarProps> = ({
   onEditFolder,
   onDeleteFolder
 }) => {
-  const menuItems = [
-    { id: 'dashboard', label: 'My Searches', icon: ICONS.Folder },
-    { id: 'search', label: 'Smart Search', icon: ICONS.Plus, hidden: userRole !== UserRole.BUYER },
-    { id: 'properties', label: 'All Properties', icon: ICONS.Heart },
-    { id: 'calendar', label: 'Global Visits', icon: ICONS.Calendar },
-    { id: 'calculator', label: 'Estimates', icon: ICONS.Calculator },
+  
+  const sections = [
+    {
+      label: 'Discovery',
+      icon: <Compass className="w-3 h-3" />,
+      items: [
+        { id: 'dashboard', label: 'Mis Búsquedas', icon: <FolderOpen className="w-4 h-4" /> },
+        { id: 'search', label: 'Lead Collector', icon: <Plus className="w-4 h-4" />, hidden: userRole !== UserRole.BUYER },
+        { id: 'properties', label: 'Propiedades', icon: <Heart className="w-4 h-4" /> },
+      ]
+    },
+    {
+      label: 'Operations',
+      icon: <Briefcase className="w-3 h-3" />,
+      items: [
+        { id: 'visits', label: 'Agenda de Visitas', icon: <Calendar className="w-4 h-4" /> },
+        { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-4 h-4" /> },
+      ]
+    },
+    {
+      label: 'Knowledge',
+      icon: <BookOpen className="w-3 h-3" />,
+      items: [
+        { id: 'documents', label: 'Bóveda de Docs', icon: <FileText className="w-4 h-4" /> },
+      ]
+    }
   ];
 
   return (
@@ -49,31 +69,39 @@ const Sidebar: React.FC<SidebarProps> = ({
         {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin hidden md:block" />}
       </div>
 
-      <nav className="flex-1 mt-4 px-3 space-y-1 overflow-y-auto">
-        <p className="hidden md:block px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-4">Main Menu</p>
-        {menuItems.filter(i => !i.hidden).map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              setActiveTab(item.id);
-              if (item.id === 'dashboard') setActiveFolderId(null);
-            }}
-            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
-              activeTab === item.id 
-                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-            }`}
-          >
-            <span className={activeTab === item.id ? 'text-indigo-600 scale-110 transition-transform' : ''}>
-              {item.icon}
-            </span>
-            <span className="hidden md:block">{item.label}</span>
-          </button>
+      <nav className="flex-1 mt-4 px-3 space-y-8 overflow-y-auto custom-scrollbar">
+        {sections.map((section) => (
+          <div key={section.label}>
+            <p className="hidden md:flex items-center gap-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+              {section.icon} {section.label}
+            </p>
+            <div className="space-y-1">
+              {section.items.filter(i => !i.hidden).map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    if (item.id === 'dashboard') setActiveFolderId(null);
+                  }}
+                  className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+                    activeTab === item.id 
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                  }`}
+                >
+                  <span className={activeTab === item.id ? 'text-indigo-600 scale-110 transition-transform' : ''}>
+                    {item.icon}
+                  </span>
+                  <span className="hidden md:block text-sm">{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         ))}
 
-        <div className="hidden md:block mt-8">
-          <div className="px-3 flex items-center justify-between mb-2">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Searches</p>
+        <div className="hidden md:block pt-4">
+          <div className="px-3 flex items-center justify-between mb-3">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tesis Activas</p>
           </div>
           <div className="space-y-1">
             {folders.map(folder => (
@@ -113,21 +141,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="p-4 border-t border-slate-100 hidden md:block space-y-4">
-        <div className="bg-slate-900 border-slate-800 rounded-2xl p-4 shadow-sm border flex items-center justify-between">
-          <div>
-            <p className="text-[10px] uppercase font-bold tracking-widest mb-1 text-slate-500">Database</p>
-            <p className="font-bold text-white text-xs flex items-center gap-2">
-              <Cloud className="w-3 h-3" /> Supabase
-            </p>
-          </div>
-        </div>
-        
         <button 
           onClick={onLogout}
           className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-bold text-sm"
         >
           <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
+          <span>Cerrar Sesión</span>
         </button>
       </div>
     </aside>

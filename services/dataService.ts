@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, Visit, PropertyDocument, DocCategory } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -113,7 +113,37 @@ export const dataService = {
     let query = supabase.from('properties').select('*, renovations(*)').eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
     const { data, error } = await query;
-    return data || [];
+    return (data || []).map((p: any) => ({
+      id: p.id,
+      folderId: p.folder_id,
+      title: p.title,
+      url: p.url,
+      address: p.address,
+      exactAddress: p.exact_address,
+      price: Number(p.price),
+      fees: Number(p.fees),
+      environments: p.environments,
+      rooms: p.rooms,
+      bathrooms: p.bathrooms,
+      toilets: p.toilets,
+      parking: p.parking,
+      sqft: Number(p.sqft),
+      coveredSqft: Number(p.covered_sqft),
+      uncoveredSqft: Number(p.uncovered_sqft),
+      age: p.age,
+      floor: p.floor,
+      status: p.status as any,
+      rating: p.rating,
+      notes: p.notes,
+      images: p.images || [],
+      renovationCosts: (p.renovations || []).map((r: any) => ({
+        id: r.id,
+        category: r.category,
+        description: r.description,
+        estimatedCost: Number(r.estimated_cost)
+      })),
+      createdAt: p.created_at
+    }));
   },
 
   async createProperty(property: Partial<Property>, userId: string) {
@@ -183,6 +213,105 @@ export const dataService = {
 
   async updatePropertyStatus(id: string, status: string) {
     await supabase.from('properties').update({ status }).eq('id', id);
+  },
+
+  // Visits
+  async getVisits(userId: string) {
+    const { data, error } = await supabase
+      .from('visits')
+      .select('*')
+      .eq('user_id', userId)
+      .order('visit_date', { ascending: true });
+    
+    return (data || []).map(v => ({
+      id: v.id,
+      propertyId: v.property_id,
+      folderId: v.folder_id,
+      date: v.visit_date,
+      time: v.visit_time,
+      contactName: v.contact_name,
+      contactPhone: v.contact_phone,
+      checklist: v.checklist,
+      notes: v.notes,
+      status: v.status
+    })) as Visit[];
+  },
+
+  async createVisit(visit: Omit<Visit, 'id'>, userId: string) {
+    const { data, error } = await supabase
+      .from('visits')
+      .insert([{
+        user_id: userId,
+        property_id: visit.propertyId,
+        folder_id: visit.folderId,
+        visit_date: visit.date,
+        visit_time: visit.time,
+        contact_name: visit.contactName,
+        contact_phone: visit.contactPhone,
+        checklist: visit.checklist,
+        notes: visit.notes,
+        status: visit.status
+      }])
+      .select()
+      .single();
+    return data;
+  },
+
+  async updateVisit(id: string, visit: Partial<Visit>) {
+    const { data, error } = await supabase
+      .from('visits')
+      .update({
+        status: visit.status,
+        checklist: visit.checklist,
+        notes: visit.notes,
+        visit_date: visit.date,
+        visit_time: visit.time
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return data;
+  },
+
+  // Documents
+  async getDocuments(userId: string) {
+    const { data, error } = await supabase
+      .from('property_documents')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    return (data || []).map(d => ({
+      id: d.id,
+      propertyId: d.property_id,
+      folderId: d.folder_id,
+      name: d.name,
+      category: d.category as DocCategory,
+      fileUrl: d.file_url,
+      fileType: d.file_type,
+      createdAt: d.created_at
+    })) as PropertyDocument[];
+  },
+
+  async createDocument(doc: Omit<PropertyDocument, 'id' | 'createdAt'>, userId: string) {
+    const { data, error } = await supabase
+      .from('property_documents')
+      .insert([{
+        user_id: userId,
+        property_id: doc.propertyId,
+        folder_id: doc.folderId,
+        name: doc.name,
+        category: doc.category,
+        file_url: doc.fileUrl,
+        file_type: doc.fileType
+      }])
+      .select()
+      .single();
+    return data;
+  },
+
+  async deleteDocument(id: string) {
+    await supabase.from('property_documents').delete().eq('id', id);
   },
 
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {

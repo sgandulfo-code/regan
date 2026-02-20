@@ -19,6 +19,13 @@ export enum TransactionType {
   ALQUILER = 'Alquiler'
 }
 
+export enum DocCategory {
+  LEGAL = 'Legal',
+  TECHNICAL = 'Técnico',
+  FINANCIAL = 'Financiero',
+  OTHER = 'Otro'
+}
+
 // UserRole enum defining permissions and views within the application
 export enum UserRole {
   BUYER = 'Buyer',
@@ -48,7 +55,7 @@ export interface RenovationItem {
 
 export interface Property {
   id: string;
-  folderId: string; // Relación con la carpeta de búsqueda
+  folderId: string; 
   title: string;
   url: string;
   address: string;
@@ -76,11 +83,25 @@ export interface Property {
 export interface Visit {
   id: string;
   propertyId: string;
+  folderId: string;
   date: string;
   time: string;
   contactName: string;
   contactPhone: string;
+  checklist: { task: string; completed: boolean }[];
   notes: string;
+  status: 'Scheduled' | 'Completed' | 'Cancelled';
+}
+
+export interface PropertyDocument {
+  id: string;
+  propertyId?: string; // Optional if it's folder-level
+  folderId: string;
+  name: string;
+  category: DocCategory;
+  fileUrl: string;
+  fileType: string;
+  createdAt: string;
 }
 
 export interface ChatMessage {
