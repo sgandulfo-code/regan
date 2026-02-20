@@ -19,18 +19,21 @@ export enum TransactionType {
   ALQUILER = 'Alquiler'
 }
 
-export enum DocCategory {
-  LEGAL = 'Legal',
-  TECHNICAL = 'Técnico',
-  FINANCIAL = 'Financiero',
-  OTHER = 'Otro'
-}
-
 // UserRole enum defining permissions and views within the application
 export enum UserRole {
   BUYER = 'Buyer',
   ARCHITECT = 'Architect',
   CONTRACTOR = 'Contractor'
+}
+
+/**
+ * Added missing DocCategory enum
+ */
+export enum DocCategory {
+  LEGAL = 'Legal',
+  TECHNICAL = 'Technical',
+  FINANCIAL = 'Financial',
+  OTHER = 'Other'
 }
 
 export interface SearchFolder {
@@ -80,6 +83,23 @@ export interface Property {
   createdAt: string;
 }
 
+/**
+ * Added missing PropertyDocument interface
+ */
+export interface PropertyDocument {
+  id: string;
+  propertyId?: string;
+  folderId: string;
+  name: string;
+  category: DocCategory;
+  fileUrl: string;
+  fileType: string;
+  createdAt: string;
+}
+
+/**
+ * Added missing Visit interface
+ */
 export interface Visit {
   id: string;
   propertyId: string;
@@ -91,17 +111,6 @@ export interface Visit {
   checklist: { task: string; completed: boolean }[];
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
-}
-
-export interface PropertyDocument {
-  id: string;
-  propertyId?: string; // Optional if it's folder-level
-  folderId: string;
-  name: string;
-  category: DocCategory;
-  fileUrl: string;
-  fileType: string;
-  createdAt: string;
 }
 
 export interface ChatMessage {

@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { ICONS } from '../constants';
 import { UserRole, SearchFolder } from '../types';
-import { Plus, LogOut, Cloud, Loader2, Pencil, Trash2, Compass, Briefcase, BookOpen, Calendar, Calculator, Heart, FolderOpen, FileText } from 'lucide-react';
+import { Plus, LogOut, Loader2, Pencil, Trash2, Heart, FolderOpen, Calculator } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -30,31 +29,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   onDeleteFolder
 }) => {
   
-  const sections = [
-    {
-      label: 'Discovery',
-      icon: <Compass className="w-3 h-3" />,
-      items: [
-        { id: 'dashboard', label: 'Mis Búsquedas', icon: <FolderOpen className="w-4 h-4" /> },
-        { id: 'search', label: 'Lead Collector', icon: <Plus className="w-4 h-4" />, hidden: userRole !== UserRole.BUYER },
-        { id: 'properties', label: 'Propiedades', icon: <Heart className="w-4 h-4" /> },
-      ]
-    },
-    {
-      label: 'Operations',
-      icon: <Briefcase className="w-3 h-3" />,
-      items: [
-        { id: 'visits', label: 'Agenda de Visitas', icon: <Calendar className="w-4 h-4" /> },
-        { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-4 h-4" /> },
-      ]
-    },
-    {
-      label: 'Knowledge',
-      icon: <BookOpen className="w-3 h-3" />,
-      items: [
-        { id: 'documents', label: 'Bóveda de Docs', icon: <FileText className="w-4 h-4" /> },
-      ]
-    }
+  const menuItems = [
+    { id: 'dashboard', label: 'Mis Búsquedas', icon: <FolderOpen className="w-5 h-5" /> },
+    { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER },
+    { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
+    { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
   ];
 
   return (
@@ -69,40 +48,29 @@ const Sidebar: React.FC<SidebarProps> = ({
         {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin hidden md:block" />}
       </div>
 
-      <nav className="flex-1 mt-4 px-3 space-y-8 overflow-y-auto custom-scrollbar">
-        {sections.map((section) => (
-          <div key={section.label}>
-            <p className="hidden md:flex items-center gap-2 px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-              {section.icon} {section.label}
-            </p>
-            <div className="space-y-1">
-              {section.items.filter(i => !i.hidden).map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    if (item.id === 'dashboard') setActiveFolderId(null);
-                  }}
-                  className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
-                    activeTab === item.id 
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm' 
-                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                  }`}
-                >
-                  <span className={activeTab === item.id ? 'text-indigo-600 scale-110 transition-transform' : ''}>
-                    {item.icon}
-                  </span>
-                  <span className="hidden md:block text-sm">{item.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+      <nav className="flex-1 mt-4 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+        {menuItems.filter(i => !i.hidden).map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              setActiveTab(item.id);
+              if (item.id === 'dashboard') setActiveFolderId(null);
+            }}
+            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all ${
+              activeTab === item.id 
+                ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-sm' 
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+            }`}
+          >
+            <span className={activeTab === item.id ? 'text-indigo-600 scale-110' : ''}>
+              {item.icon}
+            </span>
+            <span className="hidden md:block text-sm">{item.label}</span>
+          </button>
         ))}
 
-        <div className="hidden md:block pt-4">
-          <div className="px-3 flex items-center justify-between mb-3">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tesis Activas</p>
-          </div>
+        <div className="hidden md:block pt-8">
+          <p className="px-3 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Tesis Activas</p>
           <div className="space-y-1">
             {folders.map(folder => (
               <div key={folder.id} className="group relative">

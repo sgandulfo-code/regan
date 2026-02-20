@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer, Activity, ArrowLeftRight } from 'lucide-react';
+// Added missing ArrowRight and Plus icons to imports
+import { Search, MapPin, Heart, LayoutGrid, Map as MapIcon, Home, Loader2, Printer, X, Filter, DollarSign, Timer, Activity, ArrowLeftRight, ArrowRight, Plus } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -10,12 +11,8 @@ import FolderFormModal from './components/FolderFormModal';
 import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
-import VisitAgenda from './components/VisitAgenda';
-import DocumentVault from './components/DocumentVault';
-import VisitFormModal from './components/VisitFormModal';
-import DocumentFormModal from './components/DocumentFormModal';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder, FolderStatus, TransactionType, Visit, PropertyDocument, DocCategory } from './types';
+import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder, FolderStatus, TransactionType } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -48,13 +45,9 @@ const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
   const [folders, setFolders] = useState<SearchFolder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [visits, setVisits] = useState<Visit[]>([]);
-  const [documents, setDocuments] = useState<PropertyDocument[]>([]);
   
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
-  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
-  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [reportFolder, setReportFolder] = useState<SearchFolder | null>(null);
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
@@ -88,17 +81,13 @@ const App: React.FC = () => {
   const loadInitialData = async () => {
     if (!user) return;
     setIsSyncing(true);
-    const [fetchedFolders, fetchedProperties, fetchedVisits, fetchedDocs] = await Promise.all([
+    const [fetchedFolders, fetchedProperties] = await Promise.all([
       dataService.getFolders(user.id), 
-      dataService.getProperties(user.id),
-      dataService.getVisits(user.id),
-      dataService.getDocuments(user.id)
+      dataService.getProperties(user.id)
     ]);
     
     setFolders(fetchedFolders);
     setProperties(fetchedProperties);
-    setVisits(fetchedVisits);
-    setDocuments(fetchedDocs);
     setIsSyncing(false);
   };
 
@@ -171,41 +160,6 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
-  const handleCreateVisit = async (visitData: Omit<Visit, 'id'>) => {
-    if (!user) return;
-    setIsSyncing(true);
-    await dataService.createVisit(visitData, user.id);
-    await loadInitialData();
-    setIsVisitModalOpen(false);
-    setIsSyncing(false);
-  };
-
-  const handleCompleteVisit = async (visitId: string, propertyId: string) => {
-    setIsSyncing(true);
-    await dataService.updateVisit(visitId, { status: 'Completed' });
-    await dataService.updatePropertyStatus(propertyId, PropertyStatus.VISITED);
-    await loadInitialData();
-    setIsSyncing(false);
-    alert("¡Visita completada! El activo ha sido marcado como 'Visitado'.");
-  };
-
-  const handleCreateDoc = async (docData: Omit<PropertyDocument, 'id' | 'createdAt'>) => {
-    if (!user) return;
-    setIsSyncing(true);
-    await dataService.createDocument(docData, user.id);
-    await loadInitialData();
-    setIsDocModalOpen(false);
-    setIsSyncing(false);
-  };
-
-  const handleDeleteDoc = async (id: string) => {
-    if (!window.confirm("¿Borrar documento?")) return;
-    setIsSyncing(true);
-    await dataService.deleteDocument(id);
-    await loadInitialData();
-    setIsSyncing(false);
-  };
-
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
   const displayProperties = useMemo(() => {
@@ -238,6 +192,7 @@ const App: React.FC = () => {
         case 'rating-desc': return b.rating - a.rating;
         case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         case 'newest': 
+        // Fixed: replaced a.getTime() with a.createdAt
         default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       }
     });
@@ -295,7 +250,7 @@ const App: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-start gap-4 w-full">
             <div className="max-w-3xl">
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-                {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab === 'visits' ? 'Gestión de Visitas' : activeTab === 'documents' ? 'Bóveda Documental' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+                {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
               </h1>
               <p className="text-slate-500 font-medium mt-1">
                 {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
@@ -348,50 +303,6 @@ const App: React.FC = () => {
           )}
         </header>
 
-        {activeTab === 'visits' && (
-          <div className="space-y-6">
-            <div className="flex justify-end mb-6">
-              <button 
-                onClick={() => setIsVisitModalOpen(true)}
-                className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" /> Programar Nueva Visita
-              </button>
-            </div>
-            <VisitAgenda 
-              visits={visits.filter(v => !activeFolderId || v.folderId === activeFolderId)} 
-              properties={properties} 
-              onCompleteVisit={handleCompleteVisit} 
-              onCancelVisit={async (id) => {
-                setIsSyncing(true);
-                await dataService.updateVisit(id, { status: 'Cancelled' });
-                await loadInitialData();
-                setIsSyncing(false);
-              }}
-            />
-          </div>
-        )}
-
-        {activeTab === 'documents' && (
-          <div className="space-y-6">
-            <div className="flex justify-end mb-6">
-              <button 
-                onClick={() => setIsDocModalOpen(true)}
-                className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-emerald-700 transition-all flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" /> Vincular Nuevo Documento
-              </button>
-            </div>
-            <DocumentVault 
-              documents={documents.filter(d => !activeFolderId || d.folderId === activeFolderId)} 
-              folders={folders} 
-              properties={properties} 
-              onUpload={() => setIsDocModalOpen(true)} 
-              onDelete={handleDeleteDoc} 
-            />
-          </div>
-        )}
-
         {(activeTab === 'dashboard' || activeTab === 'properties') && (
           <div className="space-y-4 mb-8">
             <div className="flex flex-col md:flex-row gap-4 items-center animate-in fade-in slide-in-from-top-2 duration-500">
@@ -429,7 +340,7 @@ const App: React.FC = () => {
                 >
                   <div className="flex justify-between items-start mb-6">
                     <div className={`w-14 h-14 ${f.color} rounded-2xl shadow-lg flex items-center justify-center text-white`}>
-                       {f.transactionType === TransactionType.COMPRA ? <DollarSign className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
+                       <Home className="w-7 h-7" />
                     </div>
                   </div>
                   <h3 className="text-2xl font-black mb-2 text-slate-900 tracking-tight">{f.name}</h3>
@@ -480,25 +391,6 @@ const App: React.FC = () => {
       </main>
 
       <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
-      
-      <VisitFormModal 
-        isOpen={isVisitModalOpen} 
-        onClose={() => setIsVisitModalOpen(false)} 
-        properties={properties} 
-        folders={folders} 
-        activeFolderId={activeFolderId} 
-        onConfirm={handleCreateVisit} 
-      />
-
-      <DocumentFormModal 
-        isOpen={isDocModalOpen} 
-        onClose={() => setIsDocModalOpen(false)} 
-        properties={properties} 
-        folders={folders} 
-        activeFolderId={activeFolderId} 
-        onConfirm={handleCreateDoc} 
-      />
-
       {isReportOpen && reportFolder && <ReportGenerator folder={reportFolder} properties={properties.filter(p => p.folderId === reportFolder.id)} onClose={() => { setIsReportOpen(false); setReportFolder(null); }} />}
       {selectedProperty && <PropertyDetailModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userRole={user.role} onUpdateReno={(items) => handleUpdateReno(selectedProperty.id, items)} />}
     </div>

@@ -62,7 +62,8 @@ const DocumentVault: React.FC<DocumentVaultProps> = ({ documents, folders, prope
         </div>
 
         <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-          {['All', ...Object.values(DocCategory)].map((cat) => (
+          {/* Fixed: Explicitly cast the category array to string[] to resolve TypeScript unknown type error */}
+          {(['All', ...Object.values(DocCategory)] as string[]).map((cat) => (
             <button
               key={cat}
               onClick={() => setFilter(cat as any)}

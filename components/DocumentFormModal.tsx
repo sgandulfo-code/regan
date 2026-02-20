@@ -83,7 +83,8 @@ const DocumentFormModal: React.FC<DocumentFormModalProps> = ({ isOpen, onClose, 
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value as DocCategory })}
                 >
-                  {Object.values(DocCategory).map(cat => (
+                  {/* Fixed: Explicitly cast the category array to string[] to resolve TypeScript unknown type error */}
+                  {(Object.values(DocCategory) as string[]).map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
