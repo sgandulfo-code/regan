@@ -1,6 +1,23 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, MapPin, Heart, LayoutGrid, Map as MapIcon, Home, Plus, Filter, BarChart2, Loader2, Printer, ArrowRight } from 'lucide-react';
+import { 
+  Search, 
+  MapPin, 
+  Heart, 
+  LayoutGrid, 
+  Map as MapIcon, 
+  Home, 
+  Plus, 
+  Filter, 
+  BarChart2, 
+  Loader2, 
+  Printer, 
+  ArrowRight,
+  DollarSign,
+  ArrowLeftRight,
+  Activity,
+  Clock
+} from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -122,6 +139,14 @@ const App: React.FC = () => {
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
+  const daysElapsed = useMemo(() => {
+    if (!activeFolder?.startDate) return 0;
+    const start = new Date(activeFolder.startDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [activeFolder]);
+
   const displayProperties = useMemo(() => {
     if (!activeFolderId) return properties;
     return properties.filter(p => p.folderId === activeFolderId);
@@ -147,16 +172,64 @@ const App: React.FC = () => {
       
       <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
         <header className="mb-10 flex justify-between items-start">
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
               {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
             </h1>
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-500 font-medium max-w-2xl">
               {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
             </p>
+
+            {activeFolder && (
+              <div className="flex flex-wrap gap-3 mt-6 animate-in slide-in-from-left-2 duration-500">
+                {/* Badge Budget */}
+                <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600">
+                    <DollarSign className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Presupuesto Máx</span>
+                    <span className="text-xs font-black text-slate-700 leading-none">${activeFolder.budget?.toLocaleString() || 0}</span>
+                  </div>
+                </div>
+                
+                {/* Badge Operation */}
+                <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Operación</span>
+                    <span className="text-xs font-black text-slate-700 leading-none uppercase">{activeFolder.transactionType || 'N/A'}</span>
+                  </div>
+                </div>
+
+                {/* Badge Status */}
+                <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center text-amber-600">
+                    <Activity className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Estado Tesis</span>
+                    <span className="text-xs font-black text-slate-700 leading-none uppercase">{activeFolder.status}</span>
+                  </div>
+                </div>
+
+                {/* Badge Momentum/Days */}
+                <div className="bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-white/10 rounded-lg flex items-center justify-center text-indigo-400">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">Momentum</span>
+                    <span className="text-xs font-black text-white leading-none">{daysElapsed} Días Activa</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-4">
             {activeFolderId && activeTab === 'properties' && (
               <button 
                 onClick={() => setIsReportOpen(true)}
