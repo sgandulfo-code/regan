@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -52,6 +52,8 @@ export const dataService = {
       description: f.description,
       color: f.color,
       status: f.status as FolderStatus,
+      transactionType: f.transaction_type as TransactionType,
+      budget: Number(f.budget),
       startDate: f.start_date,
       statusUpdatedAt: f.status_updated_at,
       createdAt: f.created_at
@@ -67,6 +69,8 @@ export const dataService = {
         description: folder.description,
         color: folder.color,
         status: folder.status || FolderStatus.PENDIENTE,
+        transaction_type: folder.transactionType || TransactionType.COMPRA,
+        budget: folder.budget || 0,
         start_date: folder.startDate || new Date().toISOString(),
         status_updated_at: new Date().toISOString()
       }])
@@ -76,17 +80,17 @@ export const dataService = {
   },
 
   async updateFolder(id: string, folder: Partial<SearchFolder>) {
-    // Obtenemos el estado actual para ver si cambió
     const { data: currentFolder } = await supabase.from('folders').select('status').eq('id', id).single();
 
     const updatePayload: any = {
       name: folder.name,
       description: folder.description,
       status: folder.status,
+      transaction_type: folder.transactionType,
+      budget: folder.budget,
       start_date: folder.startDate
     };
 
-    // Si el estado cambió, actualizamos status_updated_at para el contador de días
     if (folder.status && currentFolder && folder.status !== currentFolder.status) {
       updatePayload.status_updated_at = new Date().toISOString();
     }
@@ -181,7 +185,6 @@ export const dataService = {
     await supabase.from('properties').update({ status }).eq('id', id);
   },
 
-  // Renovations
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {
     await supabase.from('renovations').delete().eq('property_id', propertyId);
     if (items.length > 0) {
@@ -196,7 +199,6 @@ export const dataService = {
     }
   },
 
-  // Link Inbox
   async getInboxLinks(userId: string, folderId: string | null) {
     let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
@@ -223,9 +225,6 @@ export const dataService = {
     await query;
   },
 
-  /**
-   * Fetch Metadata via Microlink API
-   */
   async fetchExternalMetadata(url: string) {
     const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     try {

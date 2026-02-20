@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer, Activity } from 'lucide-react';
+import { Plus, Shield, FolderPlus, Search, ArrowRight, Clock, MapPin, ChevronRight, Briefcase, Heart, FileText, LayoutGrid, Map as MapIcon, Ruler, Layers, Home, Bed, Bath, Car, History, Building2, ShieldCheck, Euro, Cloud, Check, Loader2, Trash2, Pencil, Printer, X, Filter, ChevronDown, Star, DollarSign, RefreshCw, ArrowUpDown, Calendar, Timer, Activity, ArrowLeftRight } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyForm from './components/PropertyForm';
@@ -11,7 +11,7 @@ import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder, FolderStatus } from './types';
+import { Property, PropertyStatus, UserRole, User, RenovationItem, SearchFolder, FolderStatus, TransactionType } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -263,10 +263,10 @@ const App: React.FC = () => {
         <header className="mb-10 flex flex-col md:flex-row justify-between items-start gap-4">
           <div className="max-w-3xl">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Mis Búsquedas' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+              {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
             </h1>
             <p className="text-slate-500 font-medium mt-1">
-              {activeFolder ? activeFolder.description : 'Panel central de gestión inmobiliaria inteligente'}
+              {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
             </p>
           </div>
           
@@ -466,7 +466,7 @@ const App: React.FC = () => {
         {activeTab === 'dashboard' && !activeFolderId && (
           <>
             {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4">
                 {folders.map(f => (
                   <div key={f.id} className="relative group">
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -480,67 +480,71 @@ const App: React.FC = () => {
                       <button 
                         onClick={(e) => { e.stopPropagation(); setEditingFolder(f); setIsFolderModalOpen(true); }}
                         className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-indigo-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
-                        title="Editar carpeta"
+                        title="Editar tesis"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f.id); }}
                         className="p-2 bg-white/90 backdrop-blur-md rounded-xl text-slate-500 hover:text-rose-600 shadow-xl border border-slate-100 transition-all hover:scale-110"
-                        title="Borrar carpeta"
+                        title="Archivar"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                     <button 
                       onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                      className="w-full bg-white p-8 rounded-[3rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
+                      className="w-full bg-white p-8 rounded-[4rem] border border-slate-200 hover:shadow-2xl hover:border-indigo-100 transition-all text-left relative overflow-hidden h-full flex flex-col"
                     >
                       <div className="flex justify-between items-start mb-6">
-                        <div className={`w-12 h-12 ${f.color} rounded-xl shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform`}></div>
+                        <div className={`w-14 h-14 ${f.color} rounded-2xl shadow-lg shadow-indigo-100 group-hover:scale-110 transition-transform flex items-center justify-center text-white`}>
+                           {f.transactionType === TransactionType.COMPRA ? <DollarSign className="w-7 h-7" /> : <Clock className="w-7 h-7" />}
+                        </div>
                         <div className="flex flex-col items-end gap-2">
                           <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase border flex items-center gap-1.5 ${getStatusBadgeColor(f.status)}`}>
                             <Activity className="w-3 h-3" />
                             {f.status}
                           </span>
-                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5" />
-                            {getDaysElapsed(f.statusUpdatedAt)} días en estado
+                          <span className="text-[10px] font-black text-slate-900 bg-slate-50 border border-slate-100 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5">
+                            <ArrowLeftRight className="w-3 h-3 text-indigo-500" />
+                            {f.transactionType}
                           </span>
                         </div>
                       </div>
                       
-                      <h3 className="text-xl font-black mb-2 text-slate-800 tracking-tight">{f.name}</h3>
-                      <p className="text-sm text-slate-400 font-medium mb-6 line-clamp-2 leading-relaxed flex-1 italic">
+                      <h3 className="text-2xl font-black mb-2 text-slate-900 tracking-tight">{f.name}</h3>
+                      <p className="text-sm text-slate-400 font-medium mb-8 line-clamp-2 leading-relaxed flex-1 italic">
                         {f.description || 'Sin descripción estratégica definida'}
                       </p>
 
-                      <div className="grid grid-cols-2 gap-4 mb-6 pt-6 border-t border-slate-50">
-                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/50">
-                          <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
-                            <Calendar className="w-3 h-3 text-indigo-500" /> Inicio Búsqueda
-                          </p>
-                          <p className="text-[11px] font-black text-slate-700">
-                            {new Date(f.startDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </p>
+                      <div className="grid grid-cols-2 gap-4 mb-8">
+                        <div className="bg-slate-900 p-5 rounded-[2.5rem] text-white">
+                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1.5">Presupuesto Máx.</p>
+                          <p className="text-xl font-black">${f.budget.toLocaleString()}</p>
                         </div>
-                        <div className="bg-indigo-50/30 p-4 rounded-2xl border border-indigo-100/50">
+                        <div className="bg-indigo-50/50 p-5 rounded-[2.5rem] border border-indigo-100/50">
                           <p className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
-                            <Timer className="w-3 h-3" /> Actividad Total
+                            <Timer className="w-3 h-3" /> Actividad
                           </p>
-                          <p className="text-[11px] font-black text-indigo-700">
-                            {getDaysElapsed(f.startDate)} días transcurridos
+                          <p className="text-xl font-black text-indigo-700">
+                            {getDaysElapsed(f.startDate)} <span className="text-[10px] opacity-70">Días</span>
                           </p>
                         </div>
                       </div>
 
-                      <div className="pt-5 border-t border-slate-50 flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                          {properties.filter(p => p.folderId === f.id).length} Activos registrados
-                        </span>
-                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
-                          <ArrowRight className="w-5 h-5" />
+                      <div className="pt-6 border-t border-slate-50 flex justify-between items-center">
+                        <div className="flex -space-x-3 overflow-hidden">
+                           {[...Array(Math.min(3, properties.filter(p => p.folderId === f.id).length))].map((_, i) => (
+                             <div key={i} className="inline-block h-8 w-8 rounded-full ring-4 ring-white bg-slate-200 overflow-hidden">
+                                <img src={properties.filter(p => p.folderId === f.id)[i].images[0]} className="h-full w-full object-cover" />
+                             </div>
+                           ))}
+                           <span className="flex items-center justify-center h-8 w-8 rounded-full ring-4 ring-white bg-slate-50 text-[10px] font-black text-slate-400">
+                              {properties.filter(p => p.folderId === f.id).length}
+                           </span>
+                        </div>
+                        <div className="w-12 h-12 rounded-[1.8rem] bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                          <ArrowRight className="w-6 h-6" />
                         </div>
                       </div>
                     </button>
@@ -548,12 +552,12 @@ const App: React.FC = () => {
                 ))}
                 <button 
                   onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
-                  className="border-2 border-dashed border-slate-200 rounded-[3rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[300px] group"
+                  className="border-2 border-dashed border-slate-200 rounded-[4rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[400px] group"
                 >
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-50 transition-all">
-                    <Plus className="w-8 h-8" />
+                  <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-indigo-50 transition-all">
+                    <Plus className="w-10 h-10" />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em]">Nueva Búsqueda</span>
+                  <span className="text-[12px] font-black uppercase tracking-[0.4em]">Nueva Tesis</span>
                 </button>
               </div>
             ) : (
@@ -607,7 +611,7 @@ const App: React.FC = () => {
             ) : (
               <>
                 {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-in fade-in duration-500">
                     {displayProperties.map((p, index) => (
                       <PropertyCard 
                         key={p.id} 

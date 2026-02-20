@@ -14,6 +14,11 @@ export enum FolderStatus {
   CERRADA = 'Cerrada'
 }
 
+export enum TransactionType {
+  COMPRA = 'Compra',
+  ALQUILER = 'Alquiler'
+}
+
 // UserRole enum defining permissions and views within the application
 export enum UserRole {
   BUYER = 'Buyer',
@@ -27,6 +32,8 @@ export interface SearchFolder {
   description: string;
   color: string;
   status: FolderStatus;
+  transactionType: TransactionType;
+  budget: number;
   startDate: string;
   statusUpdatedAt: string;
   createdAt: string;
