@@ -260,50 +260,105 @@ const App: React.FC = () => {
       />
       
       <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
-        <header className="mb-10 flex flex-col md:flex-row justify-between items-start gap-4">
-          <div className="max-w-3xl">
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
-            </h1>
-            <p className="text-slate-500 font-medium mt-1">
-              {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {activeFolderId && activeFolder && (
-              <button 
-                onClick={() => handleOpenReport(activeFolder)}
-                className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 hover:border-indigo-100 transition-all shadow-sm"
-              >
-                <Printer className="w-4 h-4" /> Generar Informe PDF
-              </button>
-            )}
-
-            {(activeTab === 'dashboard' || activeTab === 'properties') && (
-              <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  <LayoutGrid className="w-3 h-3" /> Grid
-                </button>
-                <button 
-                  onClick={() => setViewMode('map')}
-                  className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                >
-                  <MapIcon className="w-3 h-3" /> Map
-                </button>
-              </div>
-            )}
+        <header className="mb-10 flex flex-col gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 w-full">
+            <div className="max-w-3xl">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">
+                {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+              </h1>
+              <p className="text-slate-500 font-medium mt-1">
+                {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
+              </p>
+            </div>
             
-            <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
-                {user.name ? user.name[0] : 'U'}
+            <div className="flex items-center gap-4">
+              {activeFolderId && activeFolder && (
+                <button 
+                  onClick={() => handleOpenReport(activeFolder)}
+                  className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 hover:border-indigo-100 transition-all shadow-sm"
+                >
+                  <Printer className="w-4 h-4" /> Generar Informe PDF
+                </button>
+              )}
+
+              {(activeTab === 'dashboard' || activeTab === 'properties') && (
+                <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+                  <button 
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    <LayoutGrid className="w-3 h-3" /> Grid
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('map')}
+                    className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    <MapIcon className="w-3 h-3" /> Map
+                  </button>
+                </div>
+              )}
+              
+              <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3 shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">
+                  {user.name ? user.name[0] : 'U'}
+                </div>
+                <span className="text-sm font-bold pr-2">{user.name}</span>
               </div>
-              <span className="text-sm font-bold pr-2">{user.name}</span>
             </div>
           </div>
+
+          {activeFolder && (
+            <div className="flex flex-wrap gap-4 items-center animate-in fade-in slide-in-from-left-4 duration-500">
+              <div className="bg-slate-900 text-white px-6 py-3 rounded-3xl flex items-center gap-4 shadow-xl">
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Presupuesto</p>
+                  <p className="text-lg font-black">${activeFolder.budget.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div className="bg-white border border-slate-200 px-6 py-3 rounded-3xl flex items-center gap-4 shadow-sm">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
+                  <ArrowLeftRight className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Operación</p>
+                  <p className="text-lg font-black text-slate-800 uppercase tracking-tight">{activeFolder.transactionType}</p>
+                </div>
+              </div>
+
+              <div className={`px-6 py-3 rounded-3xl flex items-center gap-4 border shadow-sm ${getStatusBadgeColor(activeFolder.status)}`}>
+                <div className="w-10 h-10 bg-current/10 rounded-xl flex items-center justify-center">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black opacity-60 uppercase tracking-widest leading-none mb-1">Estado</p>
+                  <p className="text-lg font-black uppercase tracking-tight">{activeFolder.status}</p>
+                </div>
+              </div>
+
+              <div className="bg-indigo-50 border border-indigo-100 px-6 py-3 rounded-3xl flex items-center gap-4 shadow-sm">
+                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
+                  <Timer className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Actividad</p>
+                  <p className="text-lg font-black text-indigo-700">
+                    {getDaysElapsed(activeFolder.startDate)} <span className="text-xs opacity-70">Días</span>
+                  </p>
+                </div>
+              </div>
+              
+              <div className="ml-auto hidden xl:flex items-center gap-3 px-6 py-3 bg-slate-100 rounded-3xl text-slate-400 border border-slate-200/50">
+                <Home className="w-4 h-4" />
+                <span className="text-[10px] font-black uppercase tracking-widest">
+                  {displayProperties.length} Propiedades vinculadas
+                </span>
+              </div>
+            </div>
+          )}
         </header>
 
         {(activeTab === 'dashboard' || activeTab === 'properties') && (
