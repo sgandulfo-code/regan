@@ -1,72 +1,29 @@
 
 import React from 'react';
-import { 
-  Home, 
-  Search, 
-  Heart, 
-  Calendar, 
-  Calculator, 
-  Users, 
-  FileText, 
-  Plus, 
-  MapPin, 
-  ExternalLink,
-  MessageSquare,
-  Trash2,
-  CheckCircle,
-  MoreVertical,
-  Star,
-  FolderOpen
-} from 'lucide-react';
-// Added TransactionType to the import list from types
-import { Property, User, PropertyStatus, UserRole, SearchFolder, FolderStatus, TransactionType } from './types';
+import { Property, SearchFolder, FolderStatus, PropertyStatus, UserRole } from './types';
+import { Star, ExternalLink, Calculator } from 'lucide-react';
 
+// Added missing ICONS export
 export const ICONS = {
-  Home: <Home className="w-5 h-5" />,
-  Search: <Search className="w-5 h-5" />,
-  Heart: <Heart className="w-5 h-5" />,
-  Calendar: <Calendar className="w-5 h-5" />,
-  Calculator: <Calculator className="w-5 h-5" />,
-  Users: <Users className="w-5 h-5" />,
-  FileText: <FileText className="w-5 h-5" />,
-  Plus: <Plus className="w-5 h-5" />,
-  MapPin: <MapPin className="w-5 h-5" />,
-  ExternalLink: <ExternalLink className="w-5 h-5" />,
-  MessageSquare: <MessageSquare className="w-5 h-5" />,
-  Trash2: <Trash2 className="w-5 h-5" />,
-  CheckCircle: <CheckCircle className="w-5 h-5" />,
-  MoreVertical: <MoreVertical className="w-5 h-5" />,
-  Star: <Star className="w-5 h-5" />,
-  Folder: <FolderOpen className="w-5 h-5" />
+  Star: <Star className="w-3 h-3 text-amber-500 fill-current" />,
+  ExternalLink: <ExternalLink className="w-4 h-4" />,
+  Calculator: <Calculator className="w-4 h-4" />
 };
 
-// Fix: Added missing transactionType and budget to comply with SearchFolder interface
 export const MOCK_FOLDERS: SearchFolder[] = [
   {
     id: 'f1',
-    name: 'Madrid Investment',
-    description: 'Looking for 2-bedroom apartments near Metro',
+    name: 'Madrid Centro',
+    description: 'Inversión en apartamentos cerca del Metro',
     color: 'bg-indigo-600',
-    status: FolderStatus.ABIERTA,
-    // Added missing transactionType and budget for type compatibility
-    transactionType: TransactionType.COMPRA,
-    budget: 500000,
-    startDate: new Date().toISOString(),
-    statusUpdatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
+    status: FolderStatus.ABIERTA
   },
   {
     id: 'f2',
-    name: 'Family Home',
-    description: 'Villas or large attics with terrace in north area',
+    name: 'Vivienda Familiar',
+    description: 'Villas o áticos con terraza en zona norte',
     color: 'bg-rose-600',
-    status: FolderStatus.PENDIENTE,
-    // Added missing transactionType and budget for type compatibility
-    transactionType: TransactionType.COMPRA,
-    budget: 850000,
-    startDate: new Date().toISOString(),
-    statusUpdatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString()
+    status: FolderStatus.PENDIENTE
   }
 ];
 
@@ -74,8 +31,8 @@ export const MOCK_PROPERTIES: Property[] = [
   {
     id: '1',
     folderId: 'f1',
-    title: 'Luminous Attic in Madrid Rio',
-    url: 'https://example.com/prop1',
+    title: 'Ático Luminoso en Madrid Río',
+    url: '#',
     address: 'Paseo de la Chopera, 10, Madrid',
     price: 450000,
     environments: 4,
@@ -84,19 +41,17 @@ export const MOCK_PROPERTIES: Property[] = [
     sqft: 95,
     status: PropertyStatus.VISITED,
     rating: 4,
-    notes: 'Great views, needs bathroom updates.',
-    renovationCosts: [
-      { id: 'r1', category: 'Kitchen', description: 'Modernize appliances and cabinets', estimatedCost: 12000 },
-      { id: 'r2', category: 'Bathrooms', description: 'Full retiling and new fixtures', estimatedCost: 8000 }
-    ],
-    images: ['https://picsum.photos/seed/prop1/800/600'],
-    createdAt: new Date().toISOString()
+    notes: 'Excelentes vistas, necesita actualizar baño.',
+    renovationCosts: [],
+    images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80'],
+    lat: 40.395,
+    lng: -3.698
   },
   {
     id: '2',
     folderId: 'f1',
-    title: 'Industrial Loft near Malasaña',
-    url: 'https://example.com/prop2',
+    title: 'Loft Industrial Malasaña',
+    url: '#',
     address: 'Calle de la Palma, 45, Madrid',
     price: 525000,
     environments: 3,
@@ -105,16 +60,15 @@ export const MOCK_PROPERTIES: Property[] = [
     sqft: 110,
     status: PropertyStatus.WISHLIST,
     rating: 5,
-    notes: 'Incredible space but high community fees.',
-    renovationCosts: [
-      { id: 'r3', category: 'Flooring', description: 'Polished concrete', estimatedCost: 6500 }
-    ],
-    images: ['https://picsum.photos/seed/prop2/800/600'],
-    createdAt: new Date().toISOString()
+    notes: 'Espacio increíble, techos muy altos.',
+    renovationCosts: [],
+    images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80'],
+    lat: 40.426,
+    lng: -3.705
   }
 ];
 
-export const MOCK_USER: User = {
+export const MOCK_USER = {
   id: 'u1',
   name: 'Alejandro Buyer',
   role: UserRole.BUYER,

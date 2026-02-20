@@ -1,5 +1,4 @@
 
-// PropertyStatus enum used for tracking the lifecycle of a real estate lead
 export enum PropertyStatus {
   WISHLIST = 'Wishlist',
   CONTACTED = 'Contacted',
@@ -19,21 +18,10 @@ export enum TransactionType {
   ALQUILER = 'Alquiler'
 }
 
-// UserRole enum defining permissions and views within the application
 export enum UserRole {
   BUYER = 'Buyer',
   ARCHITECT = 'Architect',
   CONTRACTOR = 'Contractor'
-}
-
-/**
- * Added missing DocCategory enum
- */
-export enum DocCategory {
-  LEGAL = 'Legal',
-  TECHNICAL = 'Technical',
-  FINANCIAL = 'Financial',
-  OTHER = 'Other'
 }
 
 export interface SearchFolder {
@@ -42,11 +30,12 @@ export interface SearchFolder {
   description: string;
   color: string;
   status: FolderStatus;
-  transactionType: TransactionType;
-  budget: number;
-  startDate: string;
-  statusUpdatedAt: string;
-  createdAt: string;
+  // Added missing fields for SearchFolder
+  transactionType?: TransactionType;
+  budget?: number;
+  startDate?: string;
+  statusUpdatedAt?: string;
+  createdAt?: string;
 }
 
 export interface RenovationItem {
@@ -58,48 +47,47 @@ export interface RenovationItem {
 
 export interface Property {
   id: string;
-  folderId: string; 
+  folderId: string;
   title: string;
   url: string;
   address: string;
-  exactAddress?: string;
   price: number;
-  fees?: number; 
-  environments: number; 
-  rooms: number; 
+  environments: number;
+  rooms: number;
   bathrooms: number;
-  toilets?: number; 
-  parking?: number; 
-  sqft: number; 
-  coveredSqft?: number; 
-  uncoveredSqft?: number; 
-  age?: number; 
-  floor?: string; 
+  sqft: number;
   status: PropertyStatus;
   rating: number;
   notes: string;
   renovationCosts: RenovationItem[];
   images: string[];
-  createdAt: string;
+  lat?: number;
+  lng?: number;
+  // Added missing fields for Property
+  exactAddress?: string;
+  fees?: number;
+  toilets?: number;
+  parking?: number;
+  coveredSqft?: number;
+  uncoveredSqft?: number;
+  age?: number;
+  floor?: string;
+  createdAt?: string;
 }
 
-/**
- * Added missing PropertyDocument interface
- */
-export interface PropertyDocument {
+export interface User {
   id: string;
-  propertyId?: string;
-  folderId: string;
   name: string;
-  category: DocCategory;
-  fileUrl: string;
-  fileType: string;
-  createdAt: string;
+  role: UserRole;
+  email: string;
 }
 
-/**
- * Added missing Visit interface
- */
+// Added Visit related types
+export interface VisitTask {
+  task: string;
+  completed: boolean;
+}
+
 export interface Visit {
   id: string;
   propertyId: string;
@@ -108,24 +96,26 @@ export interface Visit {
   time: string;
   contactName: string;
   contactPhone: string;
-  checklist: { task: string; completed: boolean }[];
+  checklist: VisitTask[];
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
 }
 
-export interface ChatMessage {
-  id: string;
-  propertyId: string;
-  senderId: string;
-  senderName: string;
-  role: UserRole;
-  text: string;
-  timestamp: string;
+// Added Document related types
+export enum DocCategory {
+  LEGAL = 'Legal',
+  TECHNICAL = 'Technical',
+  FINANCIAL = 'Financial',
+  OTHER = 'Other'
 }
 
-export interface User {
+export interface PropertyDocument {
   id: string;
+  propertyId: string;
+  folderId: string;
   name: string;
-  role: UserRole;
-  email: string;
+  category: DocCategory;
+  fileUrl: string;
+  fileType: string;
+  createdAt: string;
 }
