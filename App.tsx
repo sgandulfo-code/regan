@@ -1,53 +1,134 @@
 
-import React, { useState, useMemo } from 'react';
-import { Search, MapPin, Heart, LayoutGrid, Map as MapIcon, Home, Plus, Filter, BarChart2 } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, MapPin, Heart, LayoutGrid, Map as MapIcon, Home, Plus, Filter, BarChart2, Loader2, Printer, ArrowRight } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
+import PropertyForm from './components/PropertyForm';
+import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
+import FolderFormModal from './components/FolderFormModal';
 import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
+import ReportGenerator from './components/ReportGenerator';
+import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem } from './types';
-import { MOCK_PROPERTIES, MOCK_FOLDERS, MOCK_USER } from './constants';
+import { dataService } from './services/dataService';
+import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
-  const [properties, setProperties] = useState<Property[]>(MOCK_PROPERTIES);
+  const [folders, setFolders] = useState<SearchFolder[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isSyncing, setIsSyncing] = useState(true);
+  
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
+  const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
-  const folders = MOCK_FOLDERS;
-  const user = MOCK_USER;
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) syncUserProfile(session.user.id);
+      else setIsSyncing(false);
+    });
 
-  const handleUpdateStatus = (id: string, status: PropertyStatus) => {
-    setProperties(prev => prev.map(p => p.id === id ? { ...p, status } : p));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) syncUserProfile(session.user.id);
+      else { setUser(null); setIsSyncing(false); }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const syncUserProfile = async (userId: string) => {
+    const profile = await dataService.getProfile(userId);
+    if (profile) setUser(profile);
+    setIsSyncing(false);
   };
 
-  // Added missing handlers for PropertyCard actions
-  const handleDeleteProperty = (id: string) => {
-    setProperties(prev => prev.filter(p => p.id !== id));
+  useEffect(() => { if (user) loadData(); }, [user]);
+
+  const loadData = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    const [f, p] = await Promise.all([
+      dataService.getFolders(user.id),
+      dataService.getProperties(user.id)
+    ]);
+    setFolders(f);
+    setProperties(p);
+    setIsSyncing(false);
   };
 
-  const handleEditProperty = (p: Property) => {
-    setSelectedProperty(p);
+  const handleUpdateStatus = async (id: string, status: PropertyStatus) => {
+    setIsSyncing(true);
+    await dataService.updatePropertyStatus(id, status);
+    await loadData();
+    setIsSyncing(false);
   };
 
-  // Added missing handler for Renovation updates in PropertyDetailModal
-  const handleUpdateReno = (items: RenovationItem[]) => {
-    if (!selectedProperty) return;
-    setProperties(prev => prev.map(p => p.id === selectedProperty.id ? { ...p, renovationCosts: items } : p));
-    setSelectedProperty(prev => prev ? { ...prev, renovationCosts: items } : null);
+  const handleAddProperty = async (prop: Property) => {
+    if (!user) return;
+    setIsSyncing(true);
+    if (propertyToEdit) {
+      await dataService.updateProperty(prop.id, prop);
+    } else {
+      const folderId = activeFolderId || folders[0]?.id;
+      if (!folderId) { alert("Crea una carpeta primero"); return; }
+      await dataService.createProperty({ ...prop, folderId }, user.id);
+    }
+    await loadData();
+    setPropertyToEdit(null);
+    setActiveTab('properties');
+    setIsSyncing(false);
   };
 
-  const activeFolder = useMemo(() => 
-    folders.find(f => f.id === activeFolderId), 
-    [activeFolderId]
-  );
+  const handleDeleteProperty = async (id: string) => {
+    if (!window.confirm("¿Borrar activo?")) return;
+    setIsSyncing(true);
+    await dataService.deleteProperty(id);
+    await loadData();
+    setIsSyncing(false);
+  };
+
+  const handleFolderConfirm = async (data: any) => {
+    if (!user) return;
+    setIsSyncing(true);
+    if (editingFolder) {
+      await dataService.updateFolder(editingFolder.id, data);
+    } else {
+      const colors = ['bg-indigo-600', 'bg-rose-600', 'bg-amber-600', 'bg-emerald-600'];
+      await dataService.createFolder({ ...data, color: colors[folders.length % colors.length] }, user.id);
+    }
+    await loadData();
+    setIsFolderModalOpen(false);
+    setEditingFolder(null);
+    setIsSyncing(false);
+  };
+
+  const handleUpdateReno = async (items: RenovationItem[]) => {
+    if (!selectedProperty || !user) return;
+    setIsSyncing(true);
+    await dataService.updateRenovations(selectedProperty.id, items, user.id);
+    await loadData();
+    const updated = properties.find(p => p.id === selectedProperty.id);
+    if (updated) setSelectedProperty(updated);
+    setIsSyncing(false);
+  };
+
+  const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
   const displayProperties = useMemo(() => {
     if (!activeFolderId) return properties;
     return properties.filter(p => p.folderId === activeFolderId);
   }, [properties, activeFolderId]);
+
+  if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
+  if (!user) return <Auth />;
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -57,38 +138,41 @@ const App: React.FC = () => {
         userRole={user.role} 
         folders={folders} 
         activeFolderId={activeFolderId} 
-        setActiveFolderId={setActiveFolderId} 
+        setActiveFolderId={setActiveFolderId}
+        onLogout={() => supabase.auth.signOut()}
+        isSyncing={isSyncing}
+        onEditFolder={(f) => { setEditingFolder(f); setIsFolderModalOpen(true); }}
+        onDeleteFolder={(id) => dataService.deleteFolder(id).then(loadData)}
       />
       
-      <main className="flex-1 p-10 overflow-y-auto">
+      <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
         <header className="mb-10 flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              {activeFolder ? activeFolder.name : 'Dashboard Estratégico'}
+              {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
             </h1>
             <p className="text-slate-500 font-medium">
-              {activeFolder ? activeFolder.description : 'PropBrain | Gestión inteligente de activos inmobiliarios'}
+              {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
             </p>
           </div>
           
           <div className="flex items-center gap-4">
+            {activeFolderId && activeTab === 'properties' && (
+              <button 
+                onClick={() => setIsReportOpen(true)}
+                className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
+              >
+                <Printer className="w-4 h-4" /> Informe PDF
+              </button>
+            )}
+
             <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-              <button 
-                onClick={() => setViewMode('grid')} 
-                className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}
-              >
-                <LayoutGrid className="w-3 h-3" /> Grid
-              </button>
-              <button 
-                onClick={() => setViewMode('map')} 
-                className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}
-              >
-                <MapIcon className="w-3 h-3" /> Map
-              </button>
+              <button onClick={() => setViewMode('grid')} className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><LayoutGrid className="w-3 h-3" /> Grid</button>
+              <button onClick={() => setViewMode('map')} className={`p-2 px-4 rounded-xl flex items-center gap-2 text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><MapIcon className="w-3 h-3" /> Map</button>
             </div>
             
             <div className="bg-white p-2 rounded-2xl shadow-sm border flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">U</div>
+              <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-black text-xs">{user.name[0]}</div>
               <span className="text-sm font-bold pr-2">{user.name}</span>
             </div>
           </div>
@@ -99,24 +183,38 @@ const App: React.FC = () => {
             {folders.map(f => (
               <button 
                 key={f.id}
-                onClick={() => setActiveFolderId(f.id)} 
-                className="bg-white p-8 rounded-[3rem] border border-slate-200 hover:shadow-2xl hover:border-indigo-100 transition-all text-left group"
+                onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
+                className="bg-white p-8 rounded-[3.5rem] border border-slate-200 hover:shadow-2xl hover:border-indigo-100 transition-all text-left group h-full flex flex-col"
               >
                 <div className={`w-14 h-14 ${f.color} rounded-2xl shadow-lg flex items-center justify-center text-white mb-6`}>
                   <Home className="w-7 h-7" />
                 </div>
                 <h3 className="text-2xl font-black mb-2 text-slate-900 tracking-tight">{f.name}</h3>
-                <p className="text-sm text-slate-400 font-medium mb-8 italic">{f.description}</p>
-                <div className="flex justify-between items-center pt-6 border-t border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <p className="text-sm text-slate-400 font-medium mb-8 italic line-clamp-2">{f.description}</p>
+                <div className="mt-auto flex justify-between items-center pt-6 border-t border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                   <span>{properties.filter(p => p.folderId === f.id).length} Activos</span>
-                  <Plus className="w-4 h-4 group-hover:text-indigo-600" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all"><ArrowRight className="w-5 h-5" /></div>
                 </div>
               </button>
             ))}
+            <button onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} className="border-2 border-dashed border-slate-200 rounded-[3.5rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[300px]">
+              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4"><Plus className="w-8 h-8" /></div>
+              <span className="text-[10px] font-black uppercase tracking-widest">Nueva Tesis</span>
+            </button>
           </div>
         )}
 
-        {activeTab === 'properties' || activeFolderId ? (
+        {activeTab === 'search' && (
+          <PropertyForm 
+            onAdd={handleAddProperty} 
+            userId={user.id} 
+            activeFolderId={activeFolderId} 
+            propertyToEdit={propertyToEdit}
+            onCancelEdit={() => { setPropertyToEdit(null); setActiveTab('properties'); }}
+          />
+        )}
+
+        {activeTab === 'properties' && (
           viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {displayProperties.map((p, idx) => (
@@ -126,7 +224,7 @@ const App: React.FC = () => {
                   index={idx} 
                   onSelect={setSelectedProperty} 
                   onStatusChange={handleUpdateStatus}
-                  onEdit={handleEditProperty}
+                  onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
                   onDelete={handleDeleteProperty}
                 />
               ))}
@@ -134,21 +232,22 @@ const App: React.FC = () => {
           ) : (
             <PropertyMapView properties={displayProperties} onSelectProperty={setSelectedProperty} />
           )
-        ) : null}
-
-        {activeTab === 'comparison' && (
-          <ComparisonTool properties={properties} />
         )}
+
+        {activeTab === 'calculator' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+             {displayProperties.slice(0, 4).map(p => (
+               <RenovationCalculator key={p.id} property={p} userRole={user.role} onUpdate={(items) => handleUpdateReno(items)} />
+             ))}
+          </div>
+        )}
+
+        {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
       </main>
 
-      {selectedProperty && (
-        <PropertyDetailModal 
-          property={selectedProperty} 
-          onClose={() => setSelectedProperty(null)} 
-          userRole={user.role} 
-          onUpdateReno={handleUpdateReno}
-        />
-      )}
+      <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
+      {selectedProperty && <PropertyDetailModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userRole={user.role} onUpdateReno={handleUpdateReno} />}
+      {isReportOpen && activeFolder && <ReportGenerator folder={activeFolder} properties={displayProperties} onClose={() => setIsReportOpen(false)} />}
     </div>
   );
 };

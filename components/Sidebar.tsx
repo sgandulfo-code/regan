@@ -1,44 +1,55 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Search, Heart, BarChart2, FolderOpen, LogOut } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2 } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  userRole: UserRole;
+  userRole?: UserRole;
   folders: SearchFolder[];
   activeFolderId: string | null;
   setActiveFolderId: (id: string | null) => void;
+  onLogout?: () => void;
+  isSyncing?: boolean;
+  onEditFolder?: (folder: SearchFolder) => void;
+  onDeleteFolder?: (id: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
   activeTab, 
   setActiveTab, 
+  userRole = UserRole.BUYER,
   folders,
   activeFolderId,
-  setActiveFolderId
+  setActiveFolderId,
+  onLogout,
+  isSyncing,
+  onEditFolder,
+  onDeleteFolder
 }) => {
   
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+    { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
-    { id: 'comparison', label: 'Comparativa', icon: <BarChart2 className="w-5 h-5" /> },
+    { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 h-screen sticky top-0 flex flex-col">
-      <div className="p-8">
+    <aside className="w-64 bg-white border-r border-slate-200 h-screen sticky top-0 flex flex-col z-30">
+      <div className="p-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">
             PB
           </div>
           <span className="font-bold text-xl text-slate-800 tracking-tight">PropBrain</span>
         </div>
+        {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
       </div>
 
-      <nav className="flex-1 px-4 space-y-2">
-        {menuItems.map((item) => (
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+        {menuItems.filter(i => !i.hidden).map((item) => (
           <button
             key={item.id}
             onClick={() => {
@@ -57,32 +68,47 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
 
         <div className="pt-8">
-          <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Tesis de Búsqueda</p>
+          <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Tesis Activas</p>
           <div className="space-y-1">
             {folders.map(folder => (
-              <button
-                key={folder.id}
-                onClick={() => setActiveFolderId(folder.id)}
-                className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
-                  activeFolderId === folder.id 
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
-                <span className="truncate">{folder.name}</span>
-              </button>
+              <div key={folder.id} className="group relative">
+                <button
+                  onClick={() => {
+                    setActiveFolderId(folder.id);
+                    setActiveTab('properties');
+                  }}
+                  className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                    activeFolderId === folder.id 
+                      ? 'bg-indigo-600 text-white shadow-md' 
+                      : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
+                  <span className="truncate pr-8">{folder.name}</span>
+                </button>
+                {onEditFolder && onDeleteFolder && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className="p-1 text-slate-400 hover:text-indigo-600"><Pencil className="w-3 h-3" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className="p-1 text-slate-400 hover:text-rose-600"><Trash2 className="w-3 h-3" /></button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
       </nav>
 
-      <div className="p-6 border-t border-slate-50">
-        <button className="w-full flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-bold text-sm">
-          <LogOut className="w-4 h-4" />
-          <span>Salir</span>
-        </button>
-      </div>
+      {onLogout && (
+        <div className="p-6 border-t border-slate-50">
+          <button 
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-bold text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      )}
     </aside>
   );
 };

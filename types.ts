@@ -24,13 +24,20 @@ export enum UserRole {
   CONTRACTOR = 'Contractor'
 }
 
+// Added missing DocCategory enum for document classification
+export enum DocCategory {
+  LEGAL = 'Legal',
+  TECHNICAL = 'Technical',
+  FINANCIAL = 'Financial',
+  OTHER = 'Other'
+}
+
 export interface SearchFolder {
   id: string;
   name: string;
   description: string;
   color: string;
   status: FolderStatus;
-  // Added missing fields for SearchFolder
   transactionType?: TransactionType;
   budget?: number;
   startDate?: string;
@@ -51,11 +58,19 @@ export interface Property {
   title: string;
   url: string;
   address: string;
+  exactAddress?: string;
   price: number;
+  fees?: number;
   environments: number;
   rooms: number;
   bathrooms: number;
+  toilets?: number;
+  parking?: number;
   sqft: number;
+  coveredSqft?: number;
+  uncoveredSqft?: number;
+  age?: number;
+  floor?: string;
   status: PropertyStatus;
   rating: number;
   notes: string;
@@ -63,15 +78,6 @@ export interface Property {
   images: string[];
   lat?: number;
   lng?: number;
-  // Added missing fields for Property
-  exactAddress?: string;
-  fees?: number;
-  toilets?: number;
-  parking?: number;
-  coveredSqft?: number;
-  uncoveredSqft?: number;
-  age?: number;
-  floor?: string;
   createdAt?: string;
 }
 
@@ -82,8 +88,20 @@ export interface User {
   email: string;
 }
 
-// Added Visit related types
-export interface VisitTask {
+// Added missing PropertyDocument interface for the DocumentVault functionality
+export interface PropertyDocument {
+  id: string;
+  folderId: string;
+  propertyId?: string;
+  name: string;
+  category: DocCategory;
+  fileUrl: string;
+  fileType: string;
+  createdAt?: string;
+}
+
+// Added missing Visit types for property inspection scheduling
+export interface VisitChecklistItem {
   task: string;
   completed: boolean;
 }
@@ -96,26 +114,7 @@ export interface Visit {
   time: string;
   contactName: string;
   contactPhone: string;
-  checklist: VisitTask[];
+  checklist: VisitChecklistItem[];
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
-}
-
-// Added Document related types
-export enum DocCategory {
-  LEGAL = 'Legal',
-  TECHNICAL = 'Technical',
-  FINANCIAL = 'Financial',
-  OTHER = 'Other'
-}
-
-export interface PropertyDocument {
-  id: string;
-  propertyId: string;
-  folderId: string;
-  name: string;
-  category: DocCategory;
-  fileUrl: string;
-  fileType: string;
-  createdAt: string;
 }
