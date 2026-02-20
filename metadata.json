@@ -1,6 +1,7 @@
 {
   "name": "PropBrain - Property Buyer's Second Brain",
-  "description": "A centralized platform for property buyers to organize searches, manage visits, calculate renovation costs, and collaborate with architects and contractors.",
+  "version": "1.0A",
+  "description": "Plataforma centralizada para compradores de propiedades con análisis de IA, gestión de tesis de inversión y auditoría técnica de activos.",
   "requestFramePermissions": [
     "geolocation"
   ]

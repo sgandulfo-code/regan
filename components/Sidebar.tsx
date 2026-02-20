@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
+  // Fix: Changed parameter type from void to string to allow passing tab ID strings and match React state setter
   setActiveTab: (tab: string) => void;
   userRole?: UserRole;
   folders: SearchFolder[];
@@ -43,7 +44,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">
             PB
           </div>
-          <span className="font-bold text-xl text-slate-800 tracking-tight">PropBrain</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-lg text-slate-800 tracking-tight leading-none">PropBrain</span>
+            <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mt-1">Intelligence</span>
+          </div>
         </div>
         {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
       </div>
@@ -98,8 +102,20 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </nav>
 
+      <div className="p-4">
+        <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
+           <div className="flex items-center gap-2">
+             <div className="w-6 h-6 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
+               <Cpu className="w-3 h-3" />
+             </div>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version</span>
+           </div>
+           <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">1.0A</span>
+        </div>
+      </div>
+
       {onLogout && (
-        <div className="p-6 border-t border-slate-50">
+        <div className="p-6 pt-0 border-t border-slate-50">
           <button 
             onClick={onLogout}
             className="w-full flex items-center gap-3 p-4 rounded-2xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all font-bold text-sm"
