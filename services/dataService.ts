@@ -359,7 +359,7 @@ export const dataService = {
       .from('visits')
       .insert([{
         property_id: visit.propertyId,
-        folder_id: visit.folderId,
+        folder_id: visit.folderId || null,
         user_id: userId,
         date: visit.date,
         time: visit.time,
@@ -371,6 +371,11 @@ export const dataService = {
       }])
       .select()
       .single();
+    
+    if (error) {
+      console.error('Error creating visit:', error);
+      return null;
+    }
     return data;
   },
 
@@ -378,6 +383,8 @@ export const dataService = {
     const { data, error } = await supabase
       .from('visits')
       .update({
+        property_id: visit.propertyId,
+        folder_id: visit.folderId || null,
         date: visit.date,
         time: visit.time,
         contact_name: visit.contactName,
@@ -389,6 +396,11 @@ export const dataService = {
       .eq('id', id)
       .select()
       .single();
+    
+    if (error) {
+      console.error('Error updating visit:', error);
+      return null;
+    }
     return data;
   },
 

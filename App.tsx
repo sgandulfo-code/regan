@@ -189,17 +189,23 @@ const App: React.FC = () => {
 
   const handleVisitConfirm = async (visitData: Omit<Visit, 'id'>) => {
     if (!user) return;
+    console.log('Confirming visit:', visitData);
     setIsSyncing(true);
-    if (editingVisit) {
-      await dataService.updateVisit(editingVisit.id, visitData);
-    } else {
-      await dataService.createVisit(visitData, user.id);
+    try {
+      if (editingVisit) {
+        await dataService.updateVisit(editingVisit.id, visitData);
+      } else {
+        await dataService.createVisit(visitData, user.id);
+      }
+      const v = await dataService.getVisits(user.id, activeFolderId);
+      setVisits(v);
+      setIsVisitModalOpen(false);
+      setEditingVisit(null);
+    } catch (error) {
+      console.error('Error in handleVisitConfirm:', error);
+    } finally {
+      setIsSyncing(false);
     }
-    const v = await dataService.getVisits(user.id, activeFolderId);
-    setVisits(v);
-    setIsVisitModalOpen(false);
-    setEditingVisit(null);
-    setIsSyncing(false);
   };
 
   const handleCompleteVisit = async (visitId: string, propertyId: string) => {
