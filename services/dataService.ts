@@ -388,7 +388,20 @@ export const dataService = {
   },
 
   async createVisit(visit: Partial<any>, userId: string) {
-    console.log('Attempting to create visit with data:', { ...visit, user_id: userId });
+    // Ensure time has seconds if only HH:MM is provided
+    let formattedTime = visit.time;
+    if (formattedTime && formattedTime.length === 5) {
+      formattedTime += ':00';
+    }
+
+    console.log('Attempting to create visit with data:', { 
+      property_id: visit.propertyId,
+      folder_id: visit.folderId,
+      user_id: userId,
+      visit_date: visit.date,
+      visit_time: formattedTime
+    });
+
     const { data, error } = await supabase
       .from('visits')
       .insert([{
@@ -396,7 +409,7 @@ export const dataService = {
         folder_id: visit.folderId || null,
         user_id: userId,
         visit_date: visit.date,
-        visit_time: visit.time,
+        visit_time: formattedTime,
         contact_name: visit.contactName,
         contact_phone: visit.contactPhone,
         notes: visit.notes,
@@ -407,7 +420,7 @@ export const dataService = {
       .single();
     
     if (error) {
-      console.error('Supabase error creating visit:', error);
+      console.error('Supabase error creating visit:', error.message, error.details, error.hint);
       return null;
     }
     console.log('Visit created successfully:', data);
@@ -415,13 +428,19 @@ export const dataService = {
   },
 
   async updateVisit(id: string, visit: Partial<any>) {
+    // Ensure time has seconds if only HH:MM is provided
+    let formattedTime = visit.time;
+    if (formattedTime && formattedTime.length === 5) {
+      formattedTime += ':00';
+    }
+
     const { data, error } = await supabase
       .from('visits')
       .update({
         property_id: visit.propertyId,
         folder_id: visit.folderId || null,
         visit_date: visit.date,
-        visit_time: visit.time,
+        visit_time: formattedTime,
         contact_name: visit.contactName,
         contact_phone: visit.contactPhone,
         notes: visit.notes,
@@ -433,7 +452,7 @@ export const dataService = {
       .single();
     
     if (error) {
-      console.error('Error updating visit:', error);
+      console.error('Supabase error updating visit:', error.message, error.details, error.hint);
       return null;
     }
     return data;
