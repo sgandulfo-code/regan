@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             key={item.id}
             onClick={() => {
               setActiveTab(item.id);
-              if (item.id === 'dashboard') setActiveFolderId(null);
+              if (item.id === 'dashboard' || item.id === 'visits') setActiveFolderId(null);
             }}
             className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
               activeTab === item.id && !activeFolderId

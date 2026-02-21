@@ -138,6 +138,7 @@ export interface Visit {
   status: 'Scheduled' | 'Completed' | 'Cancelled';
   clientFeedback?: string;
   createdAt?: string;
+  property?: any;
 }
 
 export interface SharedItinerary {

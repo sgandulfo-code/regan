@@ -134,16 +134,29 @@ export const dataService = {
   },
 
   // Properties
-  async getProperties(userId: string, folderId?: string) {
+  async getProperties(userId: string, folderId?: string | null) {
     let query = supabase.from('properties').select('*, renovations(*)');
     
     if (folderId) {
       query = query.eq('folder_id', folderId);
     } else {
-      query = query.eq('user_id', userId);
+      // Get all folders the user has access to first
+      const folders = await this.getFolders(userId);
+      const folderIds = folders.map(f => f.id);
+      
+      if (folderIds.length > 0) {
+        query = query.or(`user_id.eq.${userId},folder_id.in.(${folderIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', userId);
+      }
     }
 
     const { data, error } = await query;
+    if (error) {
+      console.error('Error fetching properties:', error);
+      return [];
+    }
+
     return (data || []).map((p: any) => ({
       id: p.id,
       folderId: p.folder_id,
@@ -323,19 +336,35 @@ export const dataService = {
 
   // Visits
   async getVisits(userId: string, folderId?: string | null) {
+    console.log('Fetching visits for user:', userId, 'folder:', folderId);
     let query = supabase
       .from('visits')
-      .select('*, property:properties(title, address, images)')
-      .eq('user_id', userId);
+      .select('*, property:properties(title, address, images)');
     
     if (folderId) {
       query = query.eq('folder_id', folderId);
+    } else {
+      // Get all folders the user has access to
+      const folders = await this.getFolders(userId);
+      const folderIds = folders.map(f => f.id);
+      
+      if (folderIds.length > 0) {
+        query = query.or(`user_id.eq.${userId},folder_id.in.(${folderIds.join(',')})`);
+      } else {
+        query = query.eq('user_id', userId);
+      }
     }
 
     const { data, error } = await query
       .order('visit_date', { ascending: true })
       .order('visit_time', { ascending: true });
     
+    if (error) {
+      console.error('Error fetching visits:', error);
+      return [];
+    }
+
+    console.log('Visits data received:', data);
     return (data || []).map(v => ({
       id: v.id,
       propertyId: v.property_id,
