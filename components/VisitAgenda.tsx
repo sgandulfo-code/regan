@@ -10,9 +10,10 @@ interface VisitAgendaProps {
   onCompleteVisit: (visitId: string, propertyId: string) => void;
   onCancelVisit: (visitId: string) => void;
   onAddVisit: () => void;
+  onShareItinerary?: () => void;
 }
 
-const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit }) => {
+const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary }) => {
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
   const getFolderData = (folderId: string) => folders.find(f => f.id === folderId);
@@ -120,12 +121,22 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
         <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
           <Calendar className="w-4 h-4 text-indigo-600" /> Próximas Visitas Programadas
         </h2>
-        <button 
-          onClick={onAddVisit}
-          className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" /> Agendar Visita
-        </button>
+        <div className="flex gap-3">
+          {onShareItinerary && (
+            <button 
+              onClick={onShareItinerary}
+              className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+            >
+              <ChevronRight className="w-4 h-4 text-indigo-600" /> Compartir Itinerario
+            </button>
+          )}
+          <button 
+            onClick={onAddVisit}
+            className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" /> Agendar Visita
+          </button>
+        </div>
       </div>
 
       <div className="space-y-6">

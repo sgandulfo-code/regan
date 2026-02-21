@@ -36,6 +36,8 @@ import ReportGenerator from './components/ReportGenerator';
 import ShareFolderModal from './components/ShareFolderModal';
 import VisitAgenda from './components/VisitAgenda';
 import VisitFormModal from './components/VisitFormModal';
+import SharedItineraryView from './components/SharedItineraryView';
+import ShareItineraryModal from './components/ShareItineraryModal';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit } from './types';
 import { dataService } from './services/dataService';
@@ -67,6 +69,15 @@ const App: React.FC = () => {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+  const [sharedId, setSharedId] = useState<string | null>(null);
+  const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
+
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith('/shared/')) {
+      setSharedId(path.replace('/shared/', ''));
+    }
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -254,6 +265,7 @@ const App: React.FC = () => {
     });
   }, [properties, activeFolderId, searchQuery, statusFilter, sortBy]);
 
+  if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
 
@@ -542,6 +554,7 @@ const App: React.FC = () => {
             onCompleteVisit={handleCompleteVisit} 
             onCancelVisit={handleCancelVisit}
             onAddVisit={() => setIsVisitModalOpen(true)}
+            onShareItinerary={activeFolderId ? () => setIsShareItineraryModalOpen(true) : undefined}
           />
         )}
       </main>
@@ -561,6 +574,15 @@ const App: React.FC = () => {
         initialData={editingVisit}
         userId={user?.id}
       />
+
+      {activeFolderId && user && (
+        <ShareItineraryModal 
+          isOpen={isShareItineraryModalOpen}
+          onClose={() => setIsShareItineraryModalOpen(false)}
+          folderId={activeFolderId}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 };
