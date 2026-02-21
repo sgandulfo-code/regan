@@ -34,8 +34,10 @@ import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
 import ShareFolderModal from './components/ShareFolderModal';
+import VisitAgenda from './components/VisitAgenda';
+import VisitFormModal from './components/VisitFormModal';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission } from './types';
+import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -62,6 +64,9 @@ const App: React.FC = () => {
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
+  const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -94,8 +99,18 @@ const App: React.FC = () => {
     ]);
     setFolders(f);
     setProperties(p);
+    
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    
     setIsSyncing(false);
   };
+
+  useEffect(() => {
+    if (user) {
+      dataService.getVisits(user.id, activeFolderId).then(setVisits);
+    }
+  }, [user, activeFolderId]);
 
   const calculateDays = (dateString?: string) => {
     if (!dateString) return 0;
@@ -158,6 +173,41 @@ const App: React.FC = () => {
     await loadData();
     const updated = properties.find(p => p.id === selectedProperty.id);
     if (updated) setSelectedProperty(updated);
+    setIsSyncing(false);
+  };
+
+  const handleVisitConfirm = async (visitData: Omit<Visit, 'id'>) => {
+    if (!user) return;
+    setIsSyncing(true);
+    if (editingVisit) {
+      await dataService.updateVisit(editingVisit.id, visitData);
+    } else {
+      await dataService.createVisit(visitData, user.id);
+    }
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    setIsVisitModalOpen(false);
+    setEditingVisit(null);
+    setIsSyncing(false);
+  };
+
+  const handleCompleteVisit = async (visitId: string, propertyId: string) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.updateVisit(visitId, { status: 'Completed' });
+    await dataService.updatePropertyStatus(propertyId, PropertyStatus.VISITED);
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    await loadData();
+    setIsSyncing(false);
+  };
+
+  const handleCancelVisit = async (visitId: string) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.updateVisit(visitId, { status: 'Cancelled' });
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
     setIsSyncing(false);
   };
 
@@ -483,12 +533,34 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
+
+        {activeTab === 'visits' && (
+          <VisitAgenda 
+            visits={visits} 
+            properties={properties} 
+            folders={folders}
+            onCompleteVisit={handleCompleteVisit} 
+            onCancelVisit={handleCancelVisit}
+            onAddVisit={() => setIsVisitModalOpen(true)}
+          />
+        )}
       </main>
 
       <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
       {selectedProperty && <PropertyDetailModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userRole={user.role} onUpdateReno={handleUpdateReno} />}
       {isReportOpen && activeFolder && <ReportGenerator folder={activeFolder} properties={displayProperties} onClose={() => setIsReportOpen(false)} />}
       {sharingFolder && <ShareFolderModal folder={sharingFolder} onClose={() => setSharingFolder(null)} />}
+      
+      <VisitFormModal 
+        isOpen={isVisitModalOpen} 
+        onClose={() => { setIsVisitModalOpen(false); setEditingVisit(null); }} 
+        properties={properties}
+        folders={folders}
+        activeFolderId={activeFolderId}
+        onConfirm={handleVisitConfirm}
+        initialData={editingVisit}
+        userId={user?.id}
+      />
     </div>
   );
 };

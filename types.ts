@@ -128,6 +128,7 @@ export interface Visit {
   id: string;
   propertyId: string;
   folderId: string;
+  userId: string;
   date: string;
   time: string;
   contactName: string;
@@ -135,4 +136,20 @@ export interface Visit {
   checklist: VisitChecklistItem[];
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
+  clientFeedback?: string;
+  createdAt?: string;
+}
+
+export interface SharedItinerary {
+  id: string;
+  folderId: string;
+  createdBy: string;
+  isActive: boolean;
+  settings: {
+    showPrices: boolean;
+    showNotes: boolean;
+    showChecklist: boolean;
+  };
+  createdAt: string;
+  expiresAt?: string;
 }

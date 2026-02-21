@@ -11,12 +11,14 @@ interface VisitFormModalProps {
   activeFolderId: string | null;
   onConfirm: (visit: Omit<Visit, 'id'>) => void;
   initialData?: Visit | null;
+  userId: string;
 }
 
-const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, properties, folders, activeFolderId, onConfirm, initialData }) => {
+const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, properties, folders, activeFolderId, onConfirm, initialData, userId }) => {
   const [formData, setFormData] = useState({
     propertyId: '',
     folderId: activeFolderId || '',
+    userId: userId,
     date: new Date().toISOString().split('T')[0],
     time: '12:00',
     contactName: '',
@@ -42,16 +44,18 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         contactPhone: initialData.contactPhone || '',
         checklist: initialData.checklist || [],
         notes: initialData.notes || '',
-        status: initialData.status
+        status: initialData.status,
+        userId: initialData.userId
       });
     } else {
       setFormData(prev => ({
         ...prev,
+        userId: userId,
         folderId: activeFolderId || '',
         propertyId: properties.filter(p => p.folderId === activeFolderId)[0]?.id || ''
       }));
     }
-  }, [initialData, isOpen, activeFolderId, properties]);
+  }, [initialData, isOpen, activeFolderId, properties, userId]);
 
   const addTask = () => {
     setFormData(prev => ({

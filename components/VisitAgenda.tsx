@@ -1,18 +1,21 @@
 
 import React from 'react';
 import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History } from 'lucide-react';
-import { Visit, Property, PropertyStatus } from '../types';
+import { Visit, Property, PropertyStatus, SearchFolder } from '../types';
 
 interface VisitAgendaProps {
   visits: Visit[];
   properties: Property[];
+  folders: SearchFolder[];
   onCompleteVisit: (visitId: string, propertyId: string) => void;
   onCancelVisit: (visitId: string) => void;
+  onAddVisit: () => void;
 }
 
-const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, onCompleteVisit, onCancelVisit }) => {
+const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit }) => {
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
+  const getFolderData = (folderId: string) => folders.find(f => f.id === folderId);
 
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -21,12 +24,19 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, onComplet
 
   const VisitCard = ({ visit }: { visit: Visit }) => {
     const property = getPropertyData(visit.propertyId);
+    const folder = getFolderData(visit.folderId);
     if (!property) return null;
 
     const isToday = new Date(visit.date).toDateString() === new Date().toDateString();
 
     return (
-      <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
+      <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 ${folder ? 'pt-14' : ''} shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
+        {folder && (
+          <div className="absolute top-0 left-0 flex items-center gap-2 px-6 py-2 bg-slate-50 border-r border-b border-slate-100 rounded-br-2xl">
+            <div className={`w-2 h-2 rounded-full ${folder.color}`}></div>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{folder.name}</span>
+          </div>
+        )}
         {isToday && (
           <div className="absolute top-0 right-0 bg-indigo-600 text-white px-6 py-2 rounded-bl-3xl text-[10px] font-black uppercase tracking-widest animate-pulse">
             Visita Hoy
@@ -110,7 +120,10 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, onComplet
         <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
           <Calendar className="w-4 h-4 text-indigo-600" /> Próximas Visitas Programadas
         </h2>
-        <button className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2">
+        <button 
+          onClick={onAddVisit}
+          className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all flex items-center gap-2"
+        >
           <Plus className="w-4 h-4" /> Agendar Visita
         </button>
       </div>

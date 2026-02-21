@@ -321,6 +321,164 @@ export const dataService = {
     await supabase.from('folder_shares').delete().eq('id', shareId);
   },
 
+  // Visits
+  async getVisits(userId: string, folderId?: string | null) {
+    let query = supabase
+      .from('visits')
+      .select('*, property:properties(title, address, images)')
+      .eq('user_id', userId);
+    
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    }
+
+    const { data, error } = await query
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+    
+    return (data || []).map(v => ({
+      id: v.id,
+      propertyId: v.property_id,
+      folderId: v.folder_id,
+      userId: v.user_id,
+      date: v.date,
+      time: v.time,
+      contactName: v.contact_name,
+      contactPhone: v.contact_phone,
+      notes: v.notes,
+      status: v.status,
+      checklist: v.checklist,
+      clientFeedback: v.client_feedback,
+      createdAt: v.created_at,
+      property: v.property
+    }));
+  },
+
+  async createVisit(visit: Partial<any>, userId: string) {
+    const { data, error } = await supabase
+      .from('visits')
+      .insert([{
+        property_id: visit.propertyId,
+        folder_id: visit.folderId,
+        user_id: userId,
+        date: visit.date,
+        time: visit.time,
+        contact_name: visit.contactName,
+        contact_phone: visit.contactPhone,
+        notes: visit.notes,
+        status: visit.status || 'Scheduled',
+        checklist: visit.checklist || []
+      }])
+      .select()
+      .single();
+    return data;
+  },
+
+  async updateVisit(id: string, visit: Partial<any>) {
+    const { data, error } = await supabase
+      .from('visits')
+      .update({
+        date: visit.date,
+        time: visit.time,
+        contact_name: visit.contactName,
+        contact_phone: visit.contactPhone,
+        notes: visit.notes,
+        status: visit.status,
+        checklist: visit.checklist
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return data;
+  },
+
+  async deleteVisit(id: string) {
+    await supabase.from('visits').delete().eq('id', id);
+  },
+
+  async updateVisitFeedback(id: string, feedback: string) {
+    const { data, error } = await supabase
+      .from('visits')
+      .update({ client_feedback: feedback })
+      .eq('id', id);
+    return { data, error };
+  },
+
+  // Shared Itineraries
+  async createSharedItinerary(folderId: string, userId: string, settings?: any) {
+    const { data, error } = await supabase
+      .from('shared_itineraries')
+      .insert([{
+        folder_id: folderId,
+        created_by: userId,
+        settings: settings || { showPrices: true, showNotes: false, showChecklist: false }
+      }])
+      .select()
+      .single();
+    return data;
+  },
+
+  async getSharedItinerary(id: string) {
+    // This is a public method
+    const { data: itinerary, error: itinError } = await supabase
+      .from('shared_itineraries')
+      .select('*, folder:folders(name, description, color)')
+      .eq('id', id)
+      .eq('is_active', true)
+      .single();
+    
+    if (itinError || !itinerary) return null;
+
+    // Get visits and properties for this folder
+    const { data: visits } = await supabase
+      .from('visits')
+      .select('*, property:properties(*)')
+      .eq('folder_id', itinerary.folder_id)
+      .order('date', { ascending: true })
+      .order('time', { ascending: true });
+
+    return {
+      itinerary: {
+        id: itinerary.id,
+        folderId: itinerary.folder_id,
+        settings: itinerary.settings,
+        folder: itinerary.folder
+      },
+      visits: (visits || []).map(v => ({
+        id: v.id,
+        date: v.date,
+        time: v.time,
+        status: v.status,
+        clientFeedback: v.client_feedback,
+        property: v.property,
+        checklist: itinerary.settings.showChecklist ? v.checklist : []
+      }))
+    };
+  },
+
+  async getFolderSharedLinks(folderId: string) {
+    const { data, error } = await supabase
+      .from('shared_itineraries')
+      .select('*')
+      .eq('folder_id', folderId)
+      .order('created_at', { ascending: false });
+    
+    return (data || []).map(s => ({
+      id: s.id,
+      folderId: s.folder_id,
+      isActive: s.is_active,
+      settings: s.settings,
+      createdAt: s.created_at
+    }));
+  },
+
+  async toggleSharedItinerary(id: string, isActive: boolean) {
+    await supabase
+      .from('shared_itineraries')
+      .update({ is_active: isActive })
+      .eq('id', id);
+  },
+
   async fetchExternalMetadata(url: string) {
     const mshotsFallback = `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1280`;
     try {
