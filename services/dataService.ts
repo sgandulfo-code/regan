@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, FolderShare, SharePermission } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -39,25 +39,50 @@ export const dataService = {
   },
 
   // Folders
-  async getFolders(userId: string) {
-    const { data, error } = await supabase
+  async getFolders(userId: string, userEmail?: string) {
+    // Get owned folders
+    const { data: owned, error: ownedError } = await supabase
       .from('folders')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
-    return (data || []).map(f => ({
-      id: f.id,
-      name: f.name,
-      description: f.description,
-      color: f.color,
-      status: f.status as FolderStatus,
-      transactionType: f.transaction_type as TransactionType,
-      budget: Number(f.budget),
-      startDate: f.start_date,
-      statusUpdatedAt: f.status_updated_at,
-      createdAt: f.created_at
-    }));
+    // Get shared folders
+    let shared: any[] = [];
+    let sharedShares: any[] = [];
+    if (userEmail) {
+      const { data: shares, error: sharesError } = await supabase
+        .from('folder_shares')
+        .select('permission, folder_id, folder:folders(*)')
+        .eq('user_email', userEmail);
+      
+      if (shares) {
+        shared = shares.map(s => s.folder).filter(Boolean);
+        sharedShares = shares;
+      }
+    }
+
+    const allFolders = [...(owned || []), ...shared];
+    // Remove duplicates if any
+    const uniqueFolders = Array.from(new Map(allFolders.map(f => [f.id, f])).values());
+
+    return uniqueFolders.map(f => {
+      const share = sharedShares?.find(s => s.folder_id === f.id);
+      return {
+        id: f.id,
+        name: f.name,
+        description: f.description,
+        color: f.color,
+        status: f.status as FolderStatus,
+        transactionType: f.transaction_type as TransactionType,
+        budget: Number(f.budget),
+        startDate: f.start_date,
+        statusUpdatedAt: f.status_updated_at,
+        createdAt: f.created_at,
+        isShared: f.user_id !== userId,
+        permission: share ? (share.permission as SharePermission) : SharePermission.ADMIN
+      };
+    });
   },
 
   async createFolder(folder: Partial<SearchFolder>, userId: string) {
@@ -110,8 +135,14 @@ export const dataService = {
 
   // Properties
   async getProperties(userId: string, folderId?: string) {
-    let query = supabase.from('properties').select('*, renovations(*)').eq('user_id', userId);
-    if (folderId) query = query.eq('folder_id', folderId);
+    let query = supabase.from('properties').select('*, renovations(*)');
+    
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    } else {
+      query = query.eq('user_id', userId);
+    }
+
     const { data, error } = await query;
     return (data || []).map((p: any) => ({
       id: p.id,
@@ -253,6 +284,41 @@ export const dataService = {
     let query = supabase.from('link_inbox').delete().eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
     await query;
+  },
+
+  // Sharing
+  async shareFolder(folderId: string, userEmail: string, permission: SharePermission) {
+    const { data, error } = await supabase
+      .from('folder_shares')
+      .insert([{
+        folder_id: folderId,
+        user_email: userEmail,
+        permission: permission,
+        invited_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+    return data;
+  },
+
+  async getFolderShares(folderId: string) {
+    const { data, error } = await supabase
+      .from('folder_shares')
+      .select('*')
+      .eq('folder_id', folderId);
+    
+    return (data || []).map(s => ({
+      id: s.id,
+      folderId: s.folder_id,
+      userEmail: s.user_email,
+      permission: s.permission as SharePermission,
+      invitedAt: s.invited_at,
+      acceptedAt: s.accepted_at
+    })) as FolderShare[];
+  },
+
+  async removeFolderShare(shareId: string) {
+    await supabase.from('folder_shares').delete().eq('id', shareId);
   },
 
   async fetchExternalMetadata(url: string) {

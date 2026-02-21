@@ -32,8 +32,9 @@ import FolderFormModal from './components/FolderFormModal';
 import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
+import ShareFolderModal from './components/ShareFolderModal';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem } from './types';
+import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -58,6 +59,7 @@ const App: React.FC = () => {
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -85,7 +87,7 @@ const App: React.FC = () => {
     if (!user) return;
     setIsSyncing(true);
     const [f, p] = await Promise.all([
-      dataService.getFolders(user.id),
+      dataService.getFolders(user.id, user.email),
       dataService.getProperties(user.id)
     ]);
     setFolders(f);
@@ -159,6 +161,11 @@ const App: React.FC = () => {
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
+  const canEdit = useMemo(() => {
+    if (!activeFolder) return true;
+    return activeFolder.permission === SharePermission.EDIT || activeFolder.permission === SharePermission.ADMIN;
+  }, [activeFolder]);
+
   // MOTOR DE FILTRADO Y ORDENADO
   const displayProperties = useMemo(() => {
     let filtered = properties;
@@ -211,6 +218,7 @@ const App: React.FC = () => {
         isSyncing={isSyncing}
         onEditFolder={(f) => { setEditingFolder(f); setIsFolderModalOpen(true); }}
         onDeleteFolder={(id) => dataService.deleteFolder(id).then(loadData)}
+        onShareFolder={(f) => setSharingFolder(f)}
       />
       
       <main className="flex-1 p-10 overflow-y-auto custom-scrollbar">
@@ -218,6 +226,11 @@ const App: React.FC = () => {
           <div className="flex-1">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
               {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+              {activeFolder?.isShared && (
+                <span className="ml-4 inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                  Compartido ({activeFolder.permission})
+                </span>
+              )}
             </h1>
             <p className="text-slate-500 font-medium max-w-2xl">
               {activeFolder ? activeFolder.description : 'Gestión inteligente de activos para el Real Estate moderno'}
@@ -425,6 +438,7 @@ const App: React.FC = () => {
                   onStatusChange={handleUpdateStatus}
                   onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
                   onDelete={handleDeleteProperty}
+                  isEditable={canEdit}
                 />
               ))}
               {displayProperties.length === 0 && (
@@ -452,6 +466,7 @@ const App: React.FC = () => {
       <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
       {selectedProperty && <PropertyDetailModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userRole={user.role} onUpdateReno={handleUpdateReno} />}
       {isReportOpen && activeFolder && <ReportGenerator folder={activeFolder} properties={displayProperties} onClose={() => setIsReportOpen(false)} />}
+      {sharingFolder && <ShareFolderModal folder={sharingFolder} onClose={() => setSharingFolder(null)} />}
     </div>
   );
 };

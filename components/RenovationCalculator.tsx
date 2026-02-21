@@ -9,11 +9,12 @@ interface RenoCalcProps {
   property: Property;
   userRole: UserRole;
   onUpdate: (items: RenovationItem[]) => void;
+  isEditable?: boolean;
 }
 
-const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onUpdate }) => {
+const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onUpdate, isEditable = true }) => {
   const [isSuggesting, setIsSuggesting] = useState(false);
-  const canEdit = userRole === UserRole.BUYER || userRole === UserRole.ARCHITECT;
+  const canEdit = isEditable && (userRole === UserRole.BUYER || userRole === UserRole.ARCHITECT);
   const isArchitect = userRole === UserRole.ARCHITECT;
 
   const handleAiSuggestions = async () => {

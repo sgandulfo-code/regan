@@ -42,3 +42,14 @@ CREATE TABLE IF NOT EXISTS property_documents (
   file_type TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- 5. Tabla de Carpetas Compartidas
+CREATE TABLE IF NOT EXISTS folder_shares (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  folder_id UUID REFERENCES folders(id) ON DELETE CASCADE,
+  user_email TEXT NOT NULL,
+  permission TEXT DEFAULT 'view' CHECK (permission IN ('view', 'edit', 'admin')),
+  invited_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  accepted_at TIMESTAMP WITH TIME ZONE,
+  UNIQUE(folder_id, user_email)
+);

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -15,6 +15,7 @@ interface SidebarProps {
   isSyncing?: boolean;
   onEditFolder?: (folder: SearchFolder) => void;
   onDeleteFolder?: (id: string) => void;
+  onShareFolder?: (folder: SearchFolder) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -27,7 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   isSyncing,
   onEditFolder,
-  onDeleteFolder
+  onDeleteFolder,
+  onShareFolder
 }) => {
   
   const menuItems = [
@@ -89,13 +91,21 @@ const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
                   <span className="truncate pr-8">{folder.name}</span>
+                  {folder.isShared && (
+                    <Users className={`w-3 h-3 ml-auto ${activeFolderId === folder.id ? 'text-white/70' : 'text-slate-400'}`} />
+                  )}
                 </button>
-                {onEditFolder && onDeleteFolder && (
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {onShareFolder && !folder.isShared && (
+                    <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className="p-1 text-slate-400 hover:text-emerald-600" title="Compartir"><Users className="w-3 h-3" /></button>
+                  )}
+                  {onEditFolder && !folder.isShared && (
                     <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className="p-1 text-slate-400 hover:text-indigo-600"><Pencil className="w-3 h-3" /></button>
+                  )}
+                  {onDeleteFolder && (
                     <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className="p-1 text-slate-400 hover:text-rose-600"><Trash2 className="w-3 h-3" /></button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>

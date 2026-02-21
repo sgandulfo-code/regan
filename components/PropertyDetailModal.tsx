@@ -10,9 +10,10 @@ interface PropertyDetailModalProps {
   onClose: () => void;
   userRole: UserRole;
   onUpdateReno: (items: RenovationItem[]) => void;
+  isEditable?: boolean;
 }
 
-const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno }) => {
+const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno, isEditable = true }) => {
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('live');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
@@ -86,7 +87,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               </div>
             </section>
 
-            <section><RenovationCalculator property={property} userRole={userRole} onUpdate={onUpdateReno} /></section>
+            <section><RenovationCalculator property={property} userRole={userRole} onUpdate={onUpdateReno} isEditable={isEditable} /></section>
           </div>
         </div>
 

@@ -21,7 +21,23 @@ export enum TransactionType {
 export enum UserRole {
   BUYER = 'Buyer',
   ARCHITECT = 'Architect',
-  CONTRACTOR = 'Contractor'
+  CONTRACTOR = 'Contractor',
+  VIEWER = 'Viewer'
+}
+
+export enum SharePermission {
+  VIEW = 'view',
+  EDIT = 'edit',
+  ADMIN = 'admin'
+}
+
+export interface FolderShare {
+  id: string;
+  folderId: string;
+  userEmail: string;
+  permission: SharePermission;
+  invitedAt: string;
+  acceptedAt?: string;
 }
 
 // Added missing DocCategory enum for document classification
@@ -43,6 +59,8 @@ export interface SearchFolder {
   startDate?: string;
   statusUpdatedAt?: string;
   createdAt?: string;
+  isShared?: boolean;
+  permission?: SharePermission;
 }
 
 export interface RenovationItem {
