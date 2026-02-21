@@ -15,6 +15,7 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
   const [shares, setShares] = useState<FolderShare[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     loadShares();
@@ -32,13 +33,16 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
     if (!email.trim()) return;
 
     setIsSending(true);
+    setShowSuccess(false);
     try {
       await dataService.shareFolder(folder.id, email.trim(), permission);
       setEmail('');
+      setShowSuccess(true);
       await loadShares();
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error('Error sharing folder:', error);
-      alert('Error al compartir la carpeta');
+      alert('Error al compartir la carpeta.');
     } finally {
       setIsSending(false);
     }
@@ -98,10 +102,21 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
             <button
               type="submit"
               disabled={isSending || !email}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:shadow-none"
+              className={`w-full py-3 ${showSuccess ? 'bg-emerald-500' : 'bg-indigo-600 hover:bg-indigo-700'} text-white rounded-xl font-bold transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50`}
             >
-              {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
-              Enviar Invitación
+              {isSending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : showSuccess ? (
+                <>
+                  <Shield className="w-4 h-4" />
+                  ¡Acceso Concedido!
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Conceder Acceso
+                </>
+              )}
             </button>
           </form>
 
@@ -135,12 +150,6 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
               )}
             </div>
           </div>
-        </div>
-
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 text-center">
-          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-            Los colaboradores podrán ver y/o editar los activos y documentos dentro de esta carpeta según los permisos asignados.
-          </p>
         </div>
       </div>
     </div>

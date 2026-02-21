@@ -1,10 +1,22 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not defined in the environment");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export const parseSemanticSearch = async (description: string) => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `You are a high-precision real estate technical analyst. 
@@ -80,6 +92,7 @@ export const parseSemanticSearch = async (description: string) => {
 
 export const suggestRenovationCosts = async (propertyTitle: string, address: string) => {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Suggest 4 mid-range renovation costs for: "${propertyTitle}" in "${address}". Format: JSON array. Use $ as currency symbol.`,

@@ -100,18 +100,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Ambientes</span>
-            <span className="font-bold text-slate-800 text-xs">{property.environments}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
+          <div className="bg-slate-50 rounded-xl p-2 md:p-2.5 text-center border border-slate-100">
+            <span className="block text-[7px] md:text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Ambientes</span>
+            <span className="font-bold text-slate-800 text-[10px] md:text-xs">{property.environments}</span>
           </div>
-          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Covered</span>
-            <span className="font-bold text-slate-800 text-xs">{property.coveredSqft || property.sqft}m²</span>
+          <div className="bg-slate-50 rounded-xl p-2 md:p-2.5 text-center border border-slate-100">
+            <span className="block text-[7px] md:text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Covered</span>
+            <span className="font-bold text-slate-800 text-[10px] md:text-xs">{property.coveredSqft || property.sqft}m²</span>
           </div>
-          <div className="bg-slate-50 rounded-xl p-2.5 text-center border border-slate-100">
-            <span className="block text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Parking</span>
-            <span className="font-bold text-slate-800 text-xs">{property.parking || 0}</span>
+          <div className="bg-slate-50 rounded-xl p-2 md:p-2.5 text-center border border-slate-100 col-span-2 sm:col-span-1">
+            <span className="block text-[7px] md:text-[8px] text-slate-400 uppercase font-bold tracking-tighter mb-0.5">Parking</span>
+            <span className="font-bold text-slate-800 text-[10px] md:text-xs">{property.parking || 0}</span>
           </div>
         </div>
 

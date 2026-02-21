@@ -5,7 +5,6 @@ import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Tra
 
 interface SidebarProps {
   activeTab: string;
-  // Fix: Changed parameter type from void to string to allow passing tab ID strings and match React state setter
   setActiveTab: (tab: string) => void;
   userRole?: UserRole;
   folders: SearchFolder[];
@@ -40,8 +39,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 h-screen sticky top-0 flex flex-col z-30">
-      <div className="p-8 flex items-center justify-between">
+    <aside className="w-72 lg:w-64 bg-white border-r border-slate-200 h-screen flex flex-col z-30 shadow-2xl lg:shadow-none">
+      <div className="p-6 md:p-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-lg">
             PB
@@ -51,7 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({
             <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mt-1">Intelligence</span>
           </div>
         </div>
-        {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
+        <div className="flex items-center gap-2">
+          {isSyncing && <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />}
+        </div>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">

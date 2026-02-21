@@ -35,20 +35,20 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${isArchitect ? 'ring-2 ring-orange-500/20 border-orange-200' : 'border-slate-200'}`}>
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div className="p-4 md:p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-slate-50/50 gap-4">
         <div className="flex flex-col">
-          <h3 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+          <h3 className="text-base md:text-lg font-bold flex items-center gap-2 text-slate-800">
             {ICONS.Calculator} Renovation Estimator
-            {isArchitect && <span className="bg-orange-100 text-orange-600 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Expert Access</span>}
+            {isArchitect && <span className="bg-orange-100 text-orange-600 text-[9px] md:text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Expert Access</span>}
           </h3>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property: {property.title}</p>
+          <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property: {property.title}</p>
         </div>
         
         {canEdit && (
           <button
             onClick={handleAiSuggestions}
             disabled={isSuggesting}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
+            className={`w-full sm:w-auto flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[10px] md:text-xs font-bold uppercase tracking-wider transition-all shadow-sm ${
               isArchitect 
               ? 'bg-orange-600 text-white hover:bg-orange-700' 
               : 'bg-indigo-600 text-white hover:bg-indigo-700'
@@ -62,7 +62,7 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
         )}
       </div>
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="space-y-4 mb-6">
           {property.renovationCosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
@@ -90,17 +90,17 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
           )}
         </div>
 
-        <div className={`rounded-2xl p-5 space-y-3 shadow-inner ${isArchitect ? 'bg-orange-50' : 'bg-slate-900 text-white'}`}>
-          <div className="flex justify-between text-xs font-semibold opacity-70 uppercase tracking-widest">
+        <div className={`rounded-2xl p-4 md:p-5 space-y-3 shadow-inner ${isArchitect ? 'bg-orange-50' : 'bg-slate-900 text-white'}`}>
+          <div className="flex justify-between text-[10px] md:text-xs font-semibold opacity-70 uppercase tracking-widest">
             <span>Purchase Price</span>
             <span>${property.price.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between text-xs font-semibold uppercase tracking-widest">
+          <div className="flex justify-between text-[10px] md:text-xs font-semibold uppercase tracking-widest">
             <span>Renovation Budget</span>
             <span className={isArchitect ? 'text-orange-600' : 'text-orange-400'}>+${totalReno.toLocaleString()}</span>
           </div>
-          <div className={`pt-3 border-t flex justify-between font-bold text-xl ${isArchitect ? 'border-orange-200 text-slate-800' : 'border-white/10 text-white'}`}>
-            <span className="text-sm self-center">TOTAL PROJECT</span>
+          <div className={`pt-3 border-t flex justify-between font-bold text-lg md:text-xl ${isArchitect ? 'border-orange-200 text-slate-800' : 'border-white/10 text-white'}`}>
+            <span className="text-[10px] md:text-sm self-center">TOTAL PROJECT</span>
             <span>${(property.price + totalReno).toLocaleString()}</span>
           </div>
         </div>
