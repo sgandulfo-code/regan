@@ -161,7 +161,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               return (
                 <div key={v.id} className="bg-white/50 p-6 rounded-3xl border border-slate-200 flex items-center gap-4 opacity-70 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
                   <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-200 shrink-0">
-                    <img src={p?.images?.[0] || p?.images?.[0]} className="w-full h-full object-cover" alt="" />
+                    <img src={p?.images?.[0]} className="w-full h-full object-cover" alt="" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-800 truncate text-sm">{p?.title}</h4>

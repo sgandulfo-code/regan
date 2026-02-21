@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, CheckSquare, Plus, Trash2, Home, Save } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, CheckSquare, Plus, Trash2, Home, Save, FolderOpen } from 'lucide-react';
 import { Visit, Property, SearchFolder } from '../types';
 
 interface VisitFormModalProps {
@@ -48,14 +48,16 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         userId: initialData.userId
       });
     } else {
+      const initialFolderId = activeFolderId || (folders.length > 0 ? folders[0].id : '');
+      const folderProperties = properties.filter(p => p.folderId === initialFolderId);
       setFormData(prev => ({
         ...prev,
         userId: userId,
-        folderId: activeFolderId || '',
-        propertyId: properties.filter(p => p.folderId === activeFolderId)[0]?.id || ''
+        folderId: initialFolderId,
+        propertyId: folderProperties.length > 0 ? folderProperties[0].id : ''
       }));
     }
-  }, [initialData, isOpen, activeFolderId, properties, userId]);
+  }, [initialData, isOpen, activeFolderId, properties, userId, folders]);
 
   const addTask = () => {
     setFormData(prev => ({
@@ -81,11 +83,14 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.propertyId || !formData.date) return;
+    if (!formData.propertyId || !formData.date || !formData.folderId) {
+      alert("Por favor, selecciona una carpeta y una propiedad.");
+      return;
+    }
     onConfirm(formData);
   };
 
-  const filteredProperties = properties.filter(p => !formData.folderId || p.folderId === formData.folderId);
+  const filteredProperties = properties.filter(p => p.folderId === formData.folderId);
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
@@ -105,6 +110,33 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {!activeFolderId && !initialData && (
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <FolderOpen className="w-3 h-3" /> Carpeta / Tesis
+                </label>
+                <select
+                  required
+                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
+                  value={formData.folderId}
+                  onChange={(e) => {
+                    const newFolderId = e.target.value;
+                    const folderProps = properties.filter(p => p.folderId === newFolderId);
+                    setFormData({ 
+                      ...formData, 
+                      folderId: newFolderId,
+                      propertyId: folderProps.length > 0 ? folderProps[0].id : ''
+                    });
+                  }}
+                >
+                  <option value="">Selecciona una carpeta</option>
+                  {folders.map(f => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
@@ -121,6 +153,9 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                     <option key={p.id} value={p.id}>{p.title}</option>
                   ))}
                 </select>
+                {filteredProperties.length === 0 && formData.folderId && (
+                  <p className="text-[10px] text-rose-500 font-bold mt-1 ml-2">No hay propiedades en esta carpeta.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">

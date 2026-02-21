@@ -195,7 +195,11 @@ const App: React.FC = () => {
       if (editingVisit) {
         await dataService.updateVisit(editingVisit.id, visitData);
       } else {
-        await dataService.createVisit(visitData, user.id);
+        const result = await dataService.createVisit(visitData, user.id);
+        if (!result) {
+          alert("Error al registrar la visita. Por favor, verifica los datos.");
+          return;
+        }
       }
       const v = await dataService.getVisits(user.id, activeFolderId);
       setVisits(v);

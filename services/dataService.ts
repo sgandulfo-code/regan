@@ -364,26 +364,31 @@ export const dataService = {
       return [];
     }
 
-    console.log('Visits data received:', data);
-    return (data || []).map(v => ({
-      id: v.id,
-      propertyId: v.property_id,
-      folderId: v.folder_id,
-      userId: v.user_id,
-      date: v.visit_date || v.date,
-      time: v.visit_time || v.time,
-      contactName: v.contact_name,
-      contactPhone: v.contact_phone,
-      notes: v.notes,
-      status: v.status,
-      checklist: v.checklist,
-      clientFeedback: v.client_feedback,
-      createdAt: v.created_at,
-      property: v.property
-    }));
+    console.log('Raw visits from Supabase:', data);
+
+    return (data || []).map(v => {
+      const mapped = {
+        id: v.id,
+        propertyId: v.property_id,
+        folderId: v.folder_id,
+        userId: v.user_id,
+        date: v.visit_date || v.date,
+        time: v.visit_time || v.time,
+        contactName: v.contact_name,
+        contactPhone: v.contact_phone,
+        notes: v.notes,
+        status: v.status,
+        checklist: v.checklist,
+        clientFeedback: v.client_feedback,
+        createdAt: v.created_at,
+        property: v.property
+      };
+      return mapped;
+    });
   },
 
   async createVisit(visit: Partial<any>, userId: string) {
+    console.log('Attempting to create visit with data:', { ...visit, user_id: userId });
     const { data, error } = await supabase
       .from('visits')
       .insert([{
@@ -402,9 +407,10 @@ export const dataService = {
       .single();
     
     if (error) {
-      console.error('Error creating visit:', error);
+      console.error('Supabase error creating visit:', error);
       return null;
     }
+    console.log('Visit created successfully:', data);
     return data;
   },
 

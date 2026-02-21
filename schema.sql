@@ -62,6 +62,16 @@ DROP POLICY IF EXISTS "Users can manage their own visits" ON visits;
 CREATE POLICY "Users can manage their own visits" ON visits
   FOR ALL USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can see visits in folders they have access to" ON visits;
+CREATE POLICY "Users can see visits in folders they have access to" ON visits
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM folder_shares
+      WHERE folder_shares.folder_id = visits.folder_id
+      AND folder_shares.user_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    )
+  );
+
 -- 8. Políticas de RLS para Folder Shares
 DROP POLICY IF EXISTS "Users can see shares for their folders" ON folder_shares;
 CREATE POLICY "Users can see shares for their folders" ON folder_shares
