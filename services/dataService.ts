@@ -333,8 +333,8 @@ export const dataService = {
     }
 
     const { data, error } = await query
-      .order('date', { ascending: true })
-      .order('time', { ascending: true });
+      .order('visit_date', { ascending: true })
+      .order('visit_time', { ascending: true });
     
     return (data || []).map(v => ({
       id: v.id,
@@ -446,8 +446,8 @@ export const dataService = {
       .from('visits')
       .select('*, property:properties(*)')
       .eq('folder_id', itinerary.folder_id)
-      .order('date', { ascending: true })
-      .order('time', { ascending: true });
+      .order('visit_date', { ascending: true })
+      .order('visit_time', { ascending: true });
 
     return {
       itinerary: {
