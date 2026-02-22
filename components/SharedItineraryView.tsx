@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
 interface SharedItineraryViewProps {
@@ -11,6 +11,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
+  const [photos, setPhotos] = useState<{ [key: string]: File[] }>({});
+  const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [submitting, setSubmitting] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
@@ -28,22 +30,62 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     fetchSharedData();
   }, [sharedId]);
 
+  const handlePhotoSelect = (visitId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newPhotos = Array.from(e.target.files);
+      setPhotos(prev => ({
+        ...prev,
+        [visitId]: [...(prev[visitId] || []), ...newPhotos]
+      }));
+    }
+  };
+
+  const removePhoto = (visitId: string, index: number) => {
+    setPhotos(prev => ({
+      ...prev,
+      [visitId]: prev[visitId].filter((_, i) => i !== index)
+    }));
+  };
+
   const handleFeedbackSubmit = async (visitId: string) => {
-    if (!feedback[visitId]) return;
+    if (!feedback[visitId] && (!photos[visitId] || photos[visitId].length === 0)) return;
     
     setSubmitting(prev => ({ ...prev, [visitId]: true }));
     try {
-      await dataService.updateVisitFeedback(visitId, feedback[visitId]);
+      let uploadedUrls: string[] = [];
+      
+      // Upload photos first
+      if (photos[visitId] && photos[visitId].length > 0) {
+        uploadedUrls = await Promise.all(
+          photos[visitId].map(file => dataService.uploadVisitPhoto(file))
+        );
+      }
+
+      await dataService.updateVisitFeedback(
+        visitId, 
+        feedback[visitId] || '', 
+        uploadedUrls, 
+        ratings[visitId]
+      );
+
       // Update local state
       setData((prev: any) => ({
         ...prev,
         visits: prev.visits.map((v: any) => 
-          v.id === visitId ? { ...v, clientFeedback: feedback[visitId] } : v
+          v.id === visitId ? { 
+            ...v, 
+            clientFeedback: feedback[visitId],
+            photos: uploadedUrls,
+            rating: ratings[visitId]
+          } : v
         )
       }));
+      
       setFeedback(prev => ({ ...prev, [visitId]: '' }));
+      setPhotos(prev => ({ ...prev, [visitId]: [] }));
     } catch (error) {
       console.error('Error submitting feedback:', error);
+      alert('Error al enviar feedback. Por favor intenta de nuevo.');
     } finally {
       setSubmitting(prev => ({ ...prev, [visitId]: false }));
     }
@@ -172,33 +214,97 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
                   {/* Feedback Section */}
                   <div className="mt-6 pt-6 border-t border-slate-100">
-                    {visit.clientFeedback ? (
+                    {visit.clientFeedback || (visit.photos && visit.photos.length > 0) ? (
                       <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                           <CheckCircle2 className="w-3 h-3" /> Tu Feedback Enviado
                         </p>
-                        <p className="text-xs font-medium text-emerald-800 italic">"{visit.clientFeedback}"</p>
+                        {visit.rating && (
+                          <div className="flex gap-1 mb-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star key={star} className={`w-3 h-3 ${star <= visit.rating ? 'fill-emerald-500 text-emerald-500' : 'text-emerald-200'}`} />
+                            ))}
+                          </div>
+                        )}
+                        {visit.clientFeedback && (
+                          <p className="text-xs font-medium text-emerald-800 italic mb-2">"{visit.clientFeedback}"</p>
+                        )}
+                        {visit.photos && visit.photos.length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto py-2">
+                            {visit.photos.map((url: string, i: number) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-emerald-200 shrink-0">
+                                <img src={url} className="w-full h-full object-cover" alt="Feedback" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="space-y-3">
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
-                          <MessageSquare className="w-3 h-3" /> ¿Qué te pareció esta propiedad?
-                        </label>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                            <MessageSquare className="w-3 h-3" /> Tu opinión
+                          </label>
+                          <div className="flex gap-1">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button 
+                                key={star}
+                                onClick={() => setRatings(prev => ({ ...prev, [visit.id]: star }))}
+                                className="focus:outline-none transition-transform hover:scale-110"
+                              >
+                                <Star className={`w-4 h-4 ${star <= (ratings[visit.id] || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         <div className="flex gap-2">
-                          <input 
-                            type="text" 
-                            placeholder="Escribe tus impresiones aquí..."
-                            className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                            value={feedback[visit.id] || ''}
-                            onChange={(e) => setFeedback(prev => ({ ...prev, [visit.id]: e.target.value }))}
-                          />
-                          <button 
-                            onClick={() => handleFeedbackSubmit(visit.id)}
-                            disabled={submitting[visit.id] || !feedback[visit.id]}
-                            className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all"
-                          >
-                            {submitting[visit.id] ? <Clock className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                          </button>
+                          <div className="flex-1 space-y-2">
+                            <input 
+                              type="text" 
+                              placeholder="Escribe tus impresiones aquí..."
+                              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                              value={feedback[visit.id] || ''}
+                              onChange={(e) => setFeedback(prev => ({ ...prev, [visit.id]: e.target.value }))}
+                            />
+                            
+                            {/* Photo Upload Preview */}
+                            {photos[visit.id] && photos[visit.id].length > 0 && (
+                              <div className="flex gap-2 overflow-x-auto py-2">
+                                {photos[visit.id].map((file, idx) => (
+                                  <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 group">
+                                    <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="Preview" />
+                                    <button 
+                                      onClick={() => removePhoto(visit.id, idx)}
+                                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-4 h-4 text-white" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col gap-2">
+                            <label className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-all">
+                              <Camera className="w-5 h-5" />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                multiple 
+                                className="hidden" 
+                                onChange={(e) => handlePhotoSelect(visit.id, e)}
+                              />
+                            </label>
+                            <button 
+                              onClick={() => handleFeedbackSubmit(visit.id)}
+                              disabled={submitting[visit.id] || (!feedback[visit.id] && (!photos[visit.id] || photos[visit.id].length === 0))}
+                              className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                            >
+                              {submitting[visit.id] ? <Clock className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     )}

@@ -469,10 +469,34 @@ export const dataService = {
     await supabase.from('visits').delete().eq('id', id);
   },
 
-  async updateVisitFeedback(id: string, feedback: string) {
+  async uploadVisitPhoto(file: File) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('visit-photos')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('visit-photos')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  },
+
+  async updateVisitFeedback(id: string, feedback: string, photos?: string[], rating?: number) {
+    const updatePayload: any = { client_feedback: feedback };
+    if (photos) updatePayload.photos = photos;
+    if (rating !== undefined) updatePayload.rating = rating;
+
     const { data, error } = await supabase
       .from('visits')
-      .update({ client_feedback: feedback })
+      .update(updatePayload)
       .eq('id', id);
     return { data, error };
   },

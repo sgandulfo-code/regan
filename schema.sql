@@ -95,3 +95,35 @@ CREATE POLICY "Public can view active shared itineraries" ON shared_itineraries
 DROP POLICY IF EXISTS "Owners can manage shared itineraries" ON shared_itineraries;
 CREATE POLICY "Owners can manage shared itineraries" ON shared_itineraries
   FOR ALL USING (auth.uid() = created_by);
+
+-- 10. Actualizaciones para Feedback de Visitas (Fotos y Rating)
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS photos TEXT[] DEFAULT '{}';
+ALTER TABLE visits ADD COLUMN IF NOT EXISTS rating INTEGER;
+
+-- Permitir actualizaciones públicas en visitas si pertenecen a un itinerario compartido activo
+DROP POLICY IF EXISTS "Public can update visits via shared itinerary" ON visits;
+CREATE POLICY "Public can update visits via shared itinerary" ON visits
+  FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM shared_itineraries
+      WHERE shared_itineraries.folder_id = visits.folder_id
+      AND shared_itineraries.is_active = true
+    )
+  );
+
+-- 11. Storage Bucket para Fotos de Visitas
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('visit-photos', 'visit-photos', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Políticas de Storage
+DROP POLICY IF EXISTS "Public can upload visit photos" ON storage.objects;
+CREATE POLICY "Public can upload visit photos" ON storage.objects
+  FOR INSERT
+  WITH CHECK (bucket_id = 'visit-photos');
+
+DROP POLICY IF EXISTS "Public can view visit photos" ON storage.objects;
+CREATE POLICY "Public can view visit photos" ON storage.objects
+  FOR SELECT
+  USING (bucket_id = 'visit-photos');
