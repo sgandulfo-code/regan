@@ -428,10 +428,6 @@ export const dataService = {
     
     if (error) {
       console.error('Supabase error creating visit:', error.message, error.details, error.hint);
-      // Fallback check: if visit_date is missing, maybe the table is old
-      if (error.message.includes('visit_date')) {
-        console.warn('The "visit_date" column seems to be missing. Please run the repair script in Supabase SQL Editor.');
-      }
       return null;
     }
     console.log('Visit created successfully:', data);
