@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2 } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder } from '../types';
 
 interface VisitAgendaProps {
@@ -125,9 +125,9 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
           {onShareItinerary && (
             <button 
               onClick={onShareItinerary}
-              className="bg-white border border-slate-200 text-slate-600 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+              className="bg-white border border-slate-200 text-indigo-600 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-sm"
             >
-              <ChevronRight className="w-4 h-4 text-indigo-600" /> Compartir Itinerario
+              <Share2 className="w-4 h-4" /> Compartir Itinerario
             </button>
           )}
           <button 

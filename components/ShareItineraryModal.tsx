@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Link as LinkIcon, Eye, EyeOff, Settings, Globe, Loader2 } from 'lucide-react';
+import { X, Copy, Check, Link as LinkIcon, Eye, EyeOff, Settings, Globe, Loader2, MessageCircle } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
 interface ShareItineraryModalProps {
@@ -64,6 +64,12 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareToWhatsApp = (id: string) => {
+    const url = `${window.location.origin}/shared/${id}`;
+    const text = `Hola! Aquí tienes el itinerario de visitas que preparé: ${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (!isOpen) return null;
@@ -147,6 +153,13 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
                         title={link.isActive ? "Desactivar Link" : "Activar Link"}
                       >
                         {link.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                      </button>
+                      <button 
+                        onClick={() => shareToWhatsApp(link.id)}
+                        className="p-2 bg-emerald-50 hover:bg-emerald-600 hover:text-white rounded-xl text-emerald-600 transition-all flex items-center gap-2"
+                        title="Compartir por WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => copyToClipboard(link.id)}
