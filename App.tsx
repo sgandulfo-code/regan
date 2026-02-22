@@ -73,10 +73,20 @@ const App: React.FC = () => {
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
 
   useEffect(() => {
-    const path = window.location.pathname;
-    if (path.startsWith('/shared/')) {
-      setSharedId(path.replace('/shared/', ''));
-    }
+    const checkSharedRoute = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      
+      if (path.startsWith('/shared/')) {
+        setSharedId(path.replace('/shared/', ''));
+      } else if (hash.startsWith('#/shared/')) {
+        setSharedId(hash.replace('#/shared/', ''));
+      }
+    };
+
+    checkSharedRoute();
+    window.addEventListener('hashchange', checkSharedRoute);
+    return () => window.removeEventListener('hashchange', checkSharedRoute);
   }, []);
 
   useEffect(() => {

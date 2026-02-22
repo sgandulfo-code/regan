@@ -68,14 +68,14 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
   };
 
   const copyToClipboard = (id: string) => {
-    const url = `${window.location.origin}/shared/${id}`;
+    const url = `${window.location.origin}/#/shared/${id}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareToWhatsApp = (id: string) => {
-    const url = `${window.location.origin}/shared/${id}`;
+    const url = `${window.location.origin}/#/shared/${id}`;
     const text = `Hola! Aquí tienes el itinerario de visitas que preparé: ${url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -168,7 +168,7 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className={`w-2 h-2 rounded-full ${link.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></div>
                       <p className="text-xs font-bold text-slate-500 truncate max-w-[150px]">
-                        {window.location.origin}/shared/{link.id}
+                        {window.location.origin}/#/shared/{link.id}
                       </p>
                     </div>
                     <div className="flex gap-2">
