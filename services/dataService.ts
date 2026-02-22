@@ -39,50 +39,57 @@ export const dataService = {
   },
 
   // Folders
-  async getFolders(userId: string, userEmail?: string) {
-    // Get owned folders
+  async getFolders(userId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    const userEmail = user?.email;
+
+    // 1. Get owned folders
     const { data: owned, error: ownedError } = await supabase
       .from('folders')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
-    // Get shared folders
+
+    if (ownedError) console.error('Error fetching owned folders:', ownedError);
+
+    // 2. Get shared folders
     let shared: any[] = [];
-    let sharedShares: any[] = [];
     if (userEmail) {
       const { data: shares, error: sharesError } = await supabase
         .from('folder_shares')
         .select('permission, folder_id, folder:folders(*)')
         .eq('user_email', userEmail);
-      
-      if (shares) {
-        shared = shares.map(s => s.folder).filter(Boolean);
-        sharedShares = shares;
+
+      if (sharesError) {
+        console.error('Error fetching shared folders:', sharesError);
+      } else {
+        shared = (shares || [])
+          .filter(s => s.folder) // Ensure folder data exists
+          .map(s => ({
+            ...s.folder,
+            isShared: true,
+            permission: s.permission
+          }));
       }
     }
 
     const allFolders = [...(owned || []), ...shared];
-    // Remove duplicates if any
     const uniqueFolders = Array.from(new Map(allFolders.map(f => [f.id, f])).values());
 
-    return uniqueFolders.map(f => {
-      const share = sharedShares?.find(s => s.folder_id === f.id);
-      return {
-        id: f.id,
-        name: f.name,
-        description: f.description,
-        color: f.color,
-        status: f.status as FolderStatus,
-        transactionType: f.transaction_type as TransactionType,
-        budget: Number(f.budget),
-        startDate: f.start_date,
-        statusUpdatedAt: f.status_updated_at,
-        createdAt: f.created_at,
-        isShared: f.user_id !== userId,
-        permission: share ? (share.permission as SharePermission) : SharePermission.ADMIN
-      };
-    });
+    return uniqueFolders.map(f => ({
+      id: f.id,
+      name: f.name,
+      description: f.description,
+      color: f.color,
+      status: f.status as FolderStatus,
+      transactionType: f.transaction_type as TransactionType,
+      budget: Number(f.budget),
+      startDate: f.start_date,
+      statusUpdatedAt: f.status_updated_at,
+      createdAt: f.created_at,
+      isShared: f.user_id !== userId,
+      permission: f.permission || SharePermission.ADMIN
+    }));
   },
 
   async createFolder(folder: Partial<SearchFolder>, userId: string) {
@@ -421,6 +428,10 @@ export const dataService = {
     
     if (error) {
       console.error('Supabase error creating visit:', error.message, error.details, error.hint);
+      // Fallback check: if visit_date is missing, maybe the table is old
+      if (error.message.includes('visit_date')) {
+        console.warn('The "visit_date" column seems to be missing. Please run the repair script in Supabase SQL Editor.');
+      }
       return null;
     }
     console.log('Visit created successfully:', data);

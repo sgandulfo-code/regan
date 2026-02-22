@@ -68,7 +68,7 @@ CREATE POLICY "Users can see visits in folders they have access to" ON visits
     EXISTS (
       SELECT 1 FROM folder_shares
       WHERE folder_shares.folder_id = visits.folder_id
-      AND folder_shares.user_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+      AND folder_shares.user_email = auth.jwt() ->> 'email'
     )
   );
 
@@ -85,7 +85,7 @@ CREATE POLICY "Users can see shares for their folders" ON folder_shares
 
 DROP POLICY IF EXISTS "Users can see shares invited to them" ON folder_shares;
 CREATE POLICY "Users can see shares invited to them" ON folder_shares
-  FOR SELECT USING (user_email = (SELECT email FROM auth.users WHERE id = auth.uid()));
+  FOR SELECT USING (user_email = auth.jwt() ->> 'email');
 
 -- 9. Políticas de RLS para Shared Itineraries
 DROP POLICY IF EXISTS "Public can view active shared itineraries" ON shared_itineraries;

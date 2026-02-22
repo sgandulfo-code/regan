@@ -105,7 +105,7 @@ const App: React.FC = () => {
     if (!user) return;
     setIsSyncing(true);
     const [f, p] = await Promise.all([
-      dataService.getFolders(user.id, user.email),
+      dataService.getFolders(user.id),
       dataService.getProperties(user.id)
     ]);
     setFolders(f);
