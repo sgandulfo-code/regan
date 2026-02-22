@@ -15,7 +15,7 @@ interface SidebarProps {
   onEditFolder?: (folder: SearchFolder) => void;
   onDeleteFolder?: (id: string) => void;
   onShareFolder?: (folder: SearchFolder) => void;
-  onShareItinerary?: () => void;
+  onShareItinerary?: (folderId: string) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -103,8 +103,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {onShareFolder && !folder.isShared && (
                     <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className="p-1 text-slate-400 hover:text-emerald-600" title="Compartir"><Users className="w-3 h-3" /></button>
                   )}
-                  {activeFolderId === folder.id && onShareItinerary && (
-                    <button onClick={(e) => { e.stopPropagation(); onShareItinerary(); }} className="p-1 text-slate-400 hover:text-indigo-600" title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
+                  {onShareItinerary && (
+                    <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className="p-1 text-slate-400 hover:text-indigo-600" title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
                   )}
                   {onEditFolder && !folder.isShared && (
                     <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className="p-1 text-slate-400 hover:text-indigo-600"><Pencil className="w-3 h-3" /></button>

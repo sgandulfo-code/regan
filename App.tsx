@@ -302,7 +302,7 @@ const App: React.FC = () => {
           onEditFolder={(f) => { setEditingFolder(f); setIsFolderModalOpen(true); }}
           onDeleteFolder={(id) => dataService.deleteFolder(id).then(loadData)}
           onShareFolder={(f) => setSharingFolder(f)}
-          onShareItinerary={() => setIsShareItineraryModalOpen(true)}
+          onShareItinerary={(folderId) => { setActiveFolderId(folderId); setIsShareItineraryModalOpen(true); }}
         />
       </div>
       
