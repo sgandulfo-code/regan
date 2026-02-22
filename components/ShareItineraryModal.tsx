@@ -44,10 +44,17 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
 
   const handleCreateLink = async () => {
     try {
-      await dataService.createSharedItinerary(folderId, userId, settings);
+      setLoading(true);
+      const result = await dataService.createSharedItinerary(folderId, userId, settings);
+      if (!result) {
+        throw new Error('No se pudo crear el itinerario. Verifica los permisos.');
+      }
       await loadLinks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating shared link:', error);
+      alert(`Error al crear el link: ${error.message || 'Inténtalo de nuevo.'}`);
+    } finally {
+      setLoading(false);
     }
   };
 

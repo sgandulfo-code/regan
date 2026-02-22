@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -15,6 +15,7 @@ interface SidebarProps {
   onEditFolder?: (folder: SearchFolder) => void;
   onDeleteFolder?: (id: string) => void;
   onShareFolder?: (folder: SearchFolder) => void;
+  onShareItinerary?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -28,7 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isSyncing,
   onEditFolder,
   onDeleteFolder,
-  onShareFolder
+  onShareFolder,
+  onShareItinerary
 }) => {
   
   const menuItems = [
@@ -100,6 +102,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {onShareFolder && !folder.isShared && (
                     <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className="p-1 text-slate-400 hover:text-emerald-600" title="Compartir"><Users className="w-3 h-3" /></button>
+                  )}
+                  {activeFolderId === folder.id && onShareItinerary && (
+                    <button onClick={(e) => { e.stopPropagation(); onShareItinerary(); }} className="p-1 text-slate-400 hover:text-indigo-600" title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
                   )}
                   {onEditFolder && !folder.isShared && (
                     <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className="p-1 text-slate-400 hover:text-indigo-600"><Pencil className="w-3 h-3" /></button>
