@@ -21,12 +21,13 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
   });
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && folderId) {
       loadLinks();
     }
   }, [isOpen, folderId]);
 
   const loadLinks = async () => {
+    if (!folderId) return;
     setLoading(true);
     try {
       const data = await dataService.getFolderSharedLinks(folderId);
@@ -73,6 +74,23 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
   };
 
   if (!isOpen) return null;
+
+  if (!folderId) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">
+        <div className="bg-white w-full max-w-sm rounded-[2rem] p-8 text-center shadow-2xl">
+          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-500">
+            <Globe className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-black text-slate-800 mb-2">Selecciona una Carpeta</h3>
+          <p className="text-sm text-slate-500 mb-6">Debes seleccionar una carpeta activa para poder compartir su itinerario.</p>
+          <button onClick={onClose} className="w-full bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition-colors">
+            Entendido
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl animate-in fade-in duration-300">

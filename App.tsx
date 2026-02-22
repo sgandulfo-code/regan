@@ -564,7 +564,7 @@ const App: React.FC = () => {
             onCompleteVisit={handleCompleteVisit} 
             onCancelVisit={handleCancelVisit}
             onAddVisit={() => setIsVisitModalOpen(true)}
-            onShareItinerary={activeFolderId ? () => setIsShareItineraryModalOpen(true) : undefined}
+            onShareItinerary={() => setIsShareItineraryModalOpen(true)}
           />
         )}
       </main>
