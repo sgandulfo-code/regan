@@ -1,7 +1,7 @@
 
-import React from 'react';
-import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image } from 'lucide-react';
-import { Visit, Property, PropertyStatus, SearchFolder } from '../types';
+import React, { useState } from 'react';
+import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send } from 'lucide-react';
+import { Visit, Property, PropertyStatus, SearchFolder, FeedbackItem } from '../types';
 
 interface VisitAgendaProps {
   visits: Visit[];
@@ -11,12 +11,61 @@ interface VisitAgendaProps {
   onCancelVisit: (visitId: string) => void;
   onAddVisit: () => void;
   onShareItinerary?: () => void;
+  onFeedbackUpdate?: (visitId: string, feedback: string, photos: string[], rating?: number) => void;
 }
 
-const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary }) => {
+const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate }) => {
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
   const getFolderData = (folderId: string) => folders.find(f => f.id === folderId);
+
+  const parseFeedback = (visit: Visit): FeedbackItem[] => {
+    if (!visit.clientFeedback) return [];
+    try {
+      if (visit.clientFeedback.trim().startsWith('[')) {
+        const parsed = JSON.parse(visit.clientFeedback);
+        return parsed.map((item: any) => ({
+          ...item,
+          author: item.author || 'client'
+        }));
+      }
+      return [{
+        id: 'legacy',
+        content: visit.clientFeedback,
+        photos: visit.photos || [],
+        createdAt: visit.date || new Date().toISOString(),
+        author: 'client'
+      }];
+    } catch (e) {
+      return [{
+        id: 'error',
+        content: visit.clientFeedback,
+        photos: visit.photos || [],
+        createdAt: visit.date || new Date().toISOString(),
+        author: 'client'
+      }];
+    }
+  };
+
+  const handleSendReply = (visit: Visit) => {
+    if (!replyText[visit.id]?.trim() || !onFeedbackUpdate) return;
+
+    const currentFeedback = parseFeedback(visit);
+    const newReply: FeedbackItem = {
+      id: crypto.randomUUID(),
+      content: replyText[visit.id],
+      photos: [],
+      createdAt: new Date().toISOString(),
+      author: 'agent'
+    };
+
+    const newFeedbackList = [...currentFeedback, newReply];
+    const allPhotos = newFeedbackList.flatMap(item => item.photos);
+
+    onFeedbackUpdate(visit.id, JSON.stringify(newFeedbackList), allPhotos, visit.rating);
+    setReplyText(prev => ({ ...prev, [visit.id]: '' }));
+  };
 
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -95,14 +144,14 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               </div>
             </div>
 
-            {(visit.clientFeedback || visit.rating || (visit.photos && visit.photos.length > 0)) && (
+            {(visit.clientFeedback || visit.rating || (visit.photos && visit.photos.length > 0) || onFeedbackUpdate) && (
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <MessageSquare className="w-3.5 h-3.5" /> Feedback del Cliente
+                  <MessageSquare className="w-3.5 h-3.5" /> Feedback y Notas
                 </p>
                 <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4">
                   {visit.rating && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-4">
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <Star key={star} className={`w-4 h-4 ${star <= visit.rating! ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
@@ -112,25 +161,56 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                     </div>
                   )}
                   
-                  {visit.clientFeedback && (
-                    <div className="flex gap-3">
-                      <div className="w-1 bg-indigo-500 rounded-full shrink-0"></div>
-                      <p className="text-sm text-slate-600 italic">"{visit.clientFeedback}"</p>
-                    </div>
-                  )}
-
-                  {visit.photos && visit.photos.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <Image className="w-3 h-3" /> Fotos Adjuntas ({visit.photos.length})
-                      </p>
-                      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                        {visit.photos.map((photo, idx) => (
-                          <a key={idx} href={photo} target="_blank" rel="noreferrer" className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shrink-0 hover:opacity-80 transition-opacity">
-                            <img src={photo} className="w-full h-full object-cover" alt={`Feedback ${idx + 1}`} />
-                          </a>
-                        ))}
+                  <div className="space-y-4">
+                    {parseFeedback(visit).map((item) => (
+                      <div key={item.id} className={`flex flex-col ${item.author === 'agent' ? 'items-end' : 'items-start'}`}>
+                        <div className={`max-w-[85%] rounded-2xl p-4 ${
+                          item.author === 'agent' 
+                            ? 'bg-indigo-600 text-white rounded-br-none' 
+                            : 'bg-white border border-slate-200 text-slate-600 rounded-bl-none'
+                        }`}>
+                          <p className="text-sm font-medium whitespace-pre-wrap">{item.content}</p>
+                          {item.photos && item.photos.length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto py-2 mt-2">
+                              {item.photos.map((url, i) => (
+                                <a key={i} href={url} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-white/20 shrink-0">
+                                  <img src={url} className="w-full h-full object-cover" alt="Feedback" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          <p className={`text-[9px] font-bold mt-2 uppercase tracking-widest ${
+                            item.author === 'agent' ? 'text-indigo-200' : 'text-slate-300'
+                          }`}>
+                            {item.author === 'agent' ? 'Tú' : 'Cliente'} • {new Date(item.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {onFeedbackUpdate && (
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200/50">
+                      <input 
+                        type="text"
+                        placeholder="Escribir una respuesta o nota..."
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                        value={replyText[visit.id] || ''}
+                        onChange={(e) => setReplyText(prev => ({ ...prev, [visit.id]: e.target.value }))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendReply(visit);
+                          }
+                        }}
+                      />
+                      <button 
+                        onClick={() => handleSendReply(visit)}
+                        disabled={!replyText[visit.id]?.trim()}
+                        className="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        <Send className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>

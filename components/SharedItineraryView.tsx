@@ -55,21 +55,27 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     if (!visit.clientFeedback) return [];
     try {
       if (visit.clientFeedback.trim().startsWith('[')) {
-        return JSON.parse(visit.clientFeedback);
+        const parsed = JSON.parse(visit.clientFeedback);
+        return parsed.map((item: any) => ({
+          ...item,
+          author: item.author || 'client'
+        }));
       }
       // Legacy format
       return [{
         id: 'legacy',
         content: visit.clientFeedback,
         photos: visit.photos || [],
-        createdAt: visit.date || new Date().toISOString()
+        createdAt: visit.date || new Date().toISOString(),
+        author: 'client'
       }];
     } catch (e) {
       return [{
         id: 'error',
         content: visit.clientFeedback,
         photos: visit.photos || [],
-        createdAt: visit.date || new Date().toISOString()
+        createdAt: visit.date || new Date().toISOString(),
+        author: 'client'
       }];
     }
   };
@@ -95,7 +101,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         id: crypto.randomUUID(),
         content: feedback[visitId] || '',
         photos: uploadedUrls,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        author: 'client'
       };
 
       const newFeedbackList = [...currentFeedback, newItem];
@@ -473,7 +480,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       {/* Feedback List */}
                       <div className="space-y-3 mb-4">
                         {parseFeedback(visit).map((item) => (
-                          <div key={item.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 group relative">
+                          <div 
+                            key={item.id} 
+                            className={`rounded-2xl p-4 border group relative ${
+                              item.author === 'agent' 
+                                ? 'bg-indigo-50 border-indigo-100 ml-8' 
+                                : 'bg-slate-50 border-slate-100 mr-8'
+                            }`}
+                          >
                             {editingFeedback[visit.id]?.id === item.id ? (
                               <div className="space-y-3">
                                 <textarea 
@@ -528,26 +542,38 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             ) : (
                               <>
                                 <div className="flex justify-between items-start mb-2">
-                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {new Date(item.createdAt).toLocaleDateString()} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                  </span>
-                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button 
-                                      onClick={() => setEditingFeedback(prev => ({ ...prev, [visit.id]: item }))}
-                                      className="p-1.5 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
-                                    >
-                                      <Edit2 className="w-3 h-3" />
-                                    </button>
-                                    <button 
-                                      onClick={() => handleDeleteFeedbackItem(visit.id, item.id)}
-                                      className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </button>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                                      item.author === 'agent' ? 'text-indigo-500' : 'text-slate-400'
+                                    }`}>
+                                      {item.author === 'agent' ? 'Agente' : 'Tú'}
+                                    </span>
+                                    <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">
+                                      • {new Date(item.createdAt).toLocaleDateString()} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
                                   </div>
+                                  
+                                  {item.author !== 'agent' && (
+                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button 
+                                        onClick={() => setEditingFeedback(prev => ({ ...prev, [visit.id]: item }))}
+                                        className="p-1.5 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
+                                      >
+                                        <Edit2 className="w-3 h-3" />
+                                      </button>
+                                      <button 
+                                        onClick={() => handleDeleteFeedbackItem(visit.id, item.id)}
+                                        className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                                 
-                                <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                <p className={`text-sm font-medium leading-relaxed whitespace-pre-wrap ${
+                                  item.author === 'agent' ? 'text-indigo-900' : 'text-slate-700'
+                                }`}>{item.content}</p>
                                 
                                 {item.photos && item.photos.length > 0 && (
                                   <div className="flex gap-2 overflow-x-auto py-3 mt-2">

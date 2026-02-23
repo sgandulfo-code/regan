@@ -130,6 +130,7 @@ export interface FeedbackItem {
   photos: string[];
   createdAt: string;
   updatedAt?: string;
+  author: 'client' | 'agent';
 }
 
 export interface Visit {

@@ -246,6 +246,15 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  const handleFeedbackUpdate = async (visitId: string, feedback: string, photos: string[], rating?: number) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.updateVisitFeedback(visitId, feedback, photos, rating);
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    setIsSyncing(false);
+  };
+
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
   const canEdit = useMemo(() => {
@@ -580,6 +589,7 @@ const App: React.FC = () => {
             onCancelVisit={handleCancelVisit}
             onAddVisit={() => setIsVisitModalOpen(true)}
             onShareItinerary={() => setIsShareItineraryModalOpen(true)}
+            onFeedbackUpdate={handleFeedbackUpdate}
           />
         )}
       </main>
