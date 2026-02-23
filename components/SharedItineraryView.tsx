@@ -1,14 +1,15 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight } from 'lucide-react';
 import { dataService } from '../services/dataService';
+import PropertyMapView from './PropertyMapView';
 
 interface SharedItineraryViewProps {
   sharedId: string;
 }
 
 const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) => {
-  const [activeTab, setActiveTab] = useState<'timeline' | 'properties'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'properties' | 'map'>('timeline');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
@@ -121,32 +122,65 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-2xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className={`w-12 h-12 ${itinerary.folder.color} rounded-2xl flex items-center justify-center text-white shadow-lg`}>
-              <Star className="w-6 h-6" />
+              <Home className="w-6 h-6" />
             </div>
             <div>
               <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">{itinerary.folder.name}</h1>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Itinerario de Visitas</p>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Portal del Cliente</p>
             </div>
           </div>
-          <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+          <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
             En Vivo
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-8">
-        {/* Intro */}
-        <div className="bg-indigo-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden">
+      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+        {/* Intro / Folder Details */}
+        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-2xl font-black mb-2 tracking-tight">¡Hola! 👋</h2>
-            <p className="text-indigo-100 text-sm font-medium leading-relaxed">
-              Aquí tienes el cronograma detallado para nuestras visitas de hoy. Podrás ver la ubicación, horarios y dejar tus comentarios en tiempo real.
+            <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6 max-w-2xl">
+              Bienvenido a tu espacio exclusivo. Aquí encontrarás el detalle de tu búsqueda, el itinerario de visitas y el acceso a todas las propiedades seleccionadas.
             </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Presupuesto</span>
+                </div>
+                <p className="text-lg font-black text-slate-800">${itinerary.folder.budget?.toLocaleString() || 'N/A'}</p>
+              </div>
+              
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
+                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Operación</span>
+                </div>
+                <p className="text-lg font-black text-slate-800">{itinerary.folder.transactionType || 'N/A'}</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observación</span>
+                </div>
+                <p className="text-xs font-bold text-slate-600 line-clamp-2">{itinerary.folder.description || 'Sin observaciones'}</p>
+              </div>
+            </div>
           </div>
-          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
         </div>
 
         {/* Navigation */}
@@ -168,11 +202,19 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             >
               <LayoutGrid className="w-4 h-4" /> Propiedades
             </button>
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+                activeTab === 'map' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <MapIcon className="w-4 h-4" /> Mapa
+            </button>
           </div>
         </div>
 
         {/* Content */}
-        {activeTab === 'timeline' ? (
+        {activeTab === 'timeline' && (
           <div className="space-y-6 relative">
             <div className="absolute left-8 top-10 bottom-10 w-0.5 bg-slate-200 hidden sm:block"></div>
             
@@ -343,7 +385,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
             )}
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'properties' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {properties && properties.length > 0 ? (
               properties.map((property: any) => (
@@ -385,6 +429,22 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </div>
                     </div>
 
+                    {/* Additional Details */}
+                    <div className="space-y-2 mb-6">
+                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                         <span className="font-medium text-slate-400">Dormitorios</span>
+                         <span className="font-bold text-slate-700">{property.rooms}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                         <span className="font-medium text-slate-400">Expensas</span>
+                         <span className="font-bold text-slate-700">${property.expenses?.toLocaleString() || 0}</span>
+                       </div>
+                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
+                         <span className="font-medium text-slate-400">Antigüedad</span>
+                         <span className="font-bold text-slate-700">{property.age || 0} años</span>
+                       </div>
+                    </div>
+
                     <a 
                       href={property.url} 
                       target="_blank" 
@@ -402,6 +462,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay propiedades en esta carpeta.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'map' && (
+          <div className="h-[600px] w-full">
+            <PropertyMapView 
+              properties={properties} 
+              onSelectProperty={(p) => {
+                 if (p.url) window.open(p.url, '_blank');
+              }} 
+            />
           </div>
         )}
 
