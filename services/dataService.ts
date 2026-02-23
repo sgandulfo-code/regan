@@ -536,6 +536,13 @@ export const dataService = {
       .order('visit_date', { ascending: true })
       .order('visit_time', { ascending: true });
 
+    // Get all properties for this folder (for the property list view)
+    const { data: properties } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('folder_id', itinerary.folder_id)
+      .order('created_at', { ascending: false });
+
     return {
       itinerary: {
         id: itinerary.id,
@@ -553,6 +560,19 @@ export const dataService = {
         photos: v.photos,
         property: v.property,
         checklist: itinerary.settings.showChecklist ? v.checklist : []
+      })),
+      properties: (properties || []).map(p => ({
+        id: p.id,
+        title: p.title,
+        address: p.address,
+        price: p.price,
+        images: p.images,
+        environments: p.environments,
+        rooms: p.rooms,
+        bathrooms: p.bathrooms,
+        sqft: p.sqft,
+        status: p.status,
+        url: p.url
       }))
     };
   },
