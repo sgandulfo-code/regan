@@ -565,6 +565,7 @@ export const dataService = {
         id: p.id,
         title: p.title,
         address: p.address,
+        exactAddress: p.exact_address,
         price: p.price,
         images: p.images,
         environments: p.environments,
