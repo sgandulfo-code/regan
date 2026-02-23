@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 
@@ -148,7 +148,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               Bienvenido a tu espacio exclusivo. Aquí encontrarás el detalle de tu búsqueda, el itinerario de visitas y el acceso a todas las propiedades seleccionadas.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
@@ -172,13 +172,33 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-6 h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
-                    <MessageSquare className="w-3.5 h-3.5" />
+                    <Activity className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observación</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Estado</span>
                 </div>
-                <p className="text-xs font-bold text-slate-600 line-clamp-2">{itinerary.folder.description || 'Sin observaciones'}</p>
+                <p className="text-lg font-black text-slate-800">{itinerary.folder.status || 'N/A'}</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fecha Inicio</span>
+                </div>
+                <p className="text-lg font-black text-slate-800">{itinerary.folder.startDate ? new Date(itinerary.folder.startDate).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
+
+            {itinerary.folder.description && (
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observaciones</span>
+                </div>
+                <p className="text-sm font-medium text-slate-600 leading-relaxed">{itinerary.folder.description}</p>
+              </div>
+            )}
           </div>
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
         </div>

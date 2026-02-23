@@ -521,7 +521,7 @@ export const dataService = {
     // This is a public method
     const { data: itinerary, error: itinError } = await supabase
       .from('shared_itineraries')
-      .select('*, folder:folders(name, description, color)')
+      .select('*, folder:folders(name, description, color, budget, transaction_type, start_date, status)')
       .eq('id', id)
       .eq('is_active', true)
       .single();
@@ -548,7 +548,13 @@ export const dataService = {
         id: itinerary.id,
         folderId: itinerary.folder_id,
         settings: itinerary.settings,
-        folder: itinerary.folder
+        folder: {
+          ...itinerary.folder,
+          transactionType: itinerary.folder.transaction_type,
+          startDate: itinerary.folder.start_date,
+          budget: itinerary.folder.budget,
+          status: itinerary.folder.status
+        }
       },
       visits: (visits || []).map(v => ({
         id: v.id,
