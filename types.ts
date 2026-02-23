@@ -124,6 +124,14 @@ export interface VisitChecklistItem {
   completed: boolean;
 }
 
+export interface FeedbackItem {
+  id: string;
+  content: string;
+  photos: string[];
+  createdAt: string;
+  updatedAt?: string;
+}
+
 export interface Visit {
   id: string;
   propertyId: string;

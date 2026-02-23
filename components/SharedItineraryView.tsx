@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
+import { FeedbackItem } from '../types';
 
 interface SharedItineraryViewProps {
   sharedId: string;
@@ -16,6 +17,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [photos, setPhotos] = useState<{ [key: string]: File[] }>({});
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [submitting, setSubmitting] = useState<{ [key: string]: boolean }>({});
+  const [editingFeedback, setEditingFeedback] = useState<{ [key: string]: FeedbackItem | null }>({});
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -49,6 +51,29 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }));
   };
 
+  const parseFeedback = (visit: any): FeedbackItem[] => {
+    if (!visit.clientFeedback) return [];
+    try {
+      if (visit.clientFeedback.trim().startsWith('[')) {
+        return JSON.parse(visit.clientFeedback);
+      }
+      // Legacy format
+      return [{
+        id: 'legacy',
+        content: visit.clientFeedback,
+        photos: visit.photos || [],
+        createdAt: visit.date || new Date().toISOString()
+      }];
+    } catch (e) {
+      return [{
+        id: 'error',
+        content: visit.clientFeedback,
+        photos: visit.photos || [],
+        createdAt: visit.date || new Date().toISOString()
+      }];
+    }
+  };
+
   const handleFeedbackSubmit = async (visitId: string) => {
     if (!feedback[visitId] && (!photos[visitId] || photos[visitId].length === 0)) return;
     
@@ -63,10 +88,25 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         );
       }
 
+      const visit = data.visits.find((v: any) => v.id === visitId);
+      const currentFeedback = parseFeedback(visit);
+      
+      const newItem: FeedbackItem = {
+        id: crypto.randomUUID(),
+        content: feedback[visitId] || '',
+        photos: uploadedUrls,
+        createdAt: new Date().toISOString()
+      };
+
+      const newFeedbackList = [...currentFeedback, newItem];
+      
+      // Aggregate all photos for backward compatibility
+      const allPhotos = newFeedbackList.flatMap(item => item.photos);
+
       await dataService.updateVisitFeedback(
         visitId, 
-        feedback[visitId] || '', 
-        uploadedUrls, 
+        JSON.stringify(newFeedbackList), 
+        allPhotos, 
         ratings[visitId]
       );
 
@@ -76,8 +116,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         visits: prev.visits.map((v: any) => 
           v.id === visitId ? { 
             ...v, 
-            clientFeedback: feedback[visitId],
-            photos: uploadedUrls,
+            clientFeedback: JSON.stringify(newFeedbackList),
+            photos: allPhotos,
             rating: ratings[visitId]
           } : v
         )
@@ -90,6 +130,107 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       alert('Error al enviar feedback. Por favor intenta de nuevo.');
     } finally {
       setSubmitting(prev => ({ ...prev, [visitId]: false }));
+    }
+  };
+
+  const handleUpdateFeedbackItem = async (visitId: string) => {
+    const updatedItem = editingFeedback[visitId];
+    if (!updatedItem) return;
+
+    const visit = data.visits.find((v: any) => v.id === visitId);
+    const currentFeedback = parseFeedback(visit);
+    
+    const newFeedbackList = currentFeedback.map(item => 
+      item.id === updatedItem.id ? { ...updatedItem, updatedAt: new Date().toISOString() } : item
+    );
+    
+    const allPhotos = newFeedbackList.flatMap(item => item.photos);
+
+    try {
+      await dataService.updateVisitFeedback(
+        visitId, 
+        JSON.stringify(newFeedbackList), 
+        allPhotos,
+        visit.rating
+      );
+
+      setData((prev: any) => ({
+        ...prev,
+        visits: prev.visits.map((v: any) => 
+          v.id === visitId ? { 
+            ...v, 
+            clientFeedback: JSON.stringify(newFeedbackList),
+            photos: allPhotos
+          } : v
+        )
+      }));
+      setEditingFeedback(prev => ({ ...prev, [visitId]: null }));
+    } catch (error) {
+      console.error('Error updating feedback:', error);
+    }
+  };
+
+  const handleEditPhotoUpload = async (visitId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && editingFeedback[visitId]) {
+      const files = Array.from(e.target.files);
+      try {
+        const uploadedUrls = await Promise.all(
+          files.map(file => dataService.uploadVisitPhoto(file))
+        );
+        
+        setEditingFeedback(prev => ({
+          ...prev,
+          [visitId]: {
+            ...prev[visitId]!,
+            photos: [...prev[visitId]!.photos, ...uploadedUrls]
+          }
+        }));
+      } catch (error) {
+        console.error('Error uploading photos:', error);
+      }
+    }
+  };
+
+  const handleEditRemovePhoto = (visitId: string, photoUrl: string) => {
+    if (editingFeedback[visitId]) {
+      setEditingFeedback(prev => ({
+        ...prev,
+        [visitId]: {
+          ...prev[visitId]!,
+          photos: prev[visitId]!.photos.filter(p => p !== photoUrl)
+        }
+      }));
+    }
+  };
+
+  const handleDeleteFeedbackItem = async (visitId: string, itemId: string) => {
+    if (!window.confirm('¿Eliminar este comentario?')) return;
+    
+    const visit = data.visits.find((v: any) => v.id === visitId);
+    const currentFeedback = parseFeedback(visit);
+    const newFeedbackList = currentFeedback.filter(item => item.id !== itemId);
+    const allPhotos = newFeedbackList.flatMap(item => item.photos);
+
+    try {
+      await dataService.updateVisitFeedback(
+        visitId, 
+        JSON.stringify(newFeedbackList), 
+        allPhotos,
+        visit.rating
+      );
+
+      setData((prev: any) => ({
+        ...prev,
+        visits: prev.visits.map((v: any) => 
+          v.id === visitId ? { 
+            ...v, 
+            clientFeedback: JSON.stringify(newFeedbackList),
+            photos: allPhotos
+          } : v
+        )
+      }));
+    } catch (error) {
+      console.error('Error deleting feedback:', error);
     }
   };
 
@@ -300,100 +441,176 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
                     {/* Feedback Section */}
                     <div className="mt-6 pt-6 border-t border-slate-100">
-                      {visit.clientFeedback || (visit.photos && visit.photos.length > 0) ? (
-                        <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100">
-                          <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3" /> Tu Feedback Enviado
-                          </p>
-                          {visit.rating && (
-                            <div className="flex gap-1 mb-2">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star key={star} className={`w-3 h-3 ${star <= visit.rating ? 'fill-emerald-500 text-emerald-500' : 'text-emerald-200'}`} />
-                              ))}
-                            </div>
-                          )}
-                          {visit.clientFeedback && (
-                            <p className="text-xs font-medium text-emerald-800 italic mb-2">"{visit.clientFeedback}"</p>
-                          )}
-                          {visit.photos && visit.photos.length > 0 && (
-                            <div className="flex gap-2 overflow-x-auto py-2">
-                              {visit.photos.map((url: string, i: number) => (
-                                <a key={i} href={url} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-lg overflow-hidden border border-emerald-200 shrink-0">
-                                  <img src={url} className="w-full h-full object-cover" alt="Feedback" />
-                                </a>
-                              ))}
-                            </div>
-                          )}
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                          <MessageSquare className="w-3.5 h-3.5 text-indigo-600" /> 
+                          Feedback & Notas
+                        </h4>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button 
+                              key={star}
+                              onClick={() => {
+                                setRatings(prev => ({ ...prev, [visit.id]: star }));
+                                // Auto-save rating when clicked
+                                dataService.updateVisitFeedback(visit.id, visit.clientFeedback, visit.photos, star);
+                                // Update local state to prevent reverting
+                                setData((prev: any) => ({
+                                  ...prev,
+                                  visits: prev.visits.map((v: any) => 
+                                    v.id === visit.id ? { ...v, rating: star } : v
+                                  )
+                                }));
+                              }}
+                              className="focus:outline-none transition-transform hover:scale-110"
+                            >
+                              <Star className={`w-3.5 h-3.5 ${star <= (visit.rating || ratings[visit.id] || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
+                            </button>
+                          ))}
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
-                              <MessageSquare className="w-3 h-3" /> Tu opinión
-                            </label>
-                            <div className="flex gap-1">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button 
-                                  key={star}
-                                  onClick={() => setRatings(prev => ({ ...prev, [visit.id]: star }))}
-                                  className="focus:outline-none transition-transform hover:scale-110"
-                                >
-                                  <Star className={`w-4 h-4 ${star <= (ratings[visit.id] || 0) ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                      </div>
 
-                          <div className="flex gap-2">
-                            <div className="flex-1 space-y-2">
-                              <input 
-                                type="text" 
-                                placeholder="Escribe tus impresiones aquí..."
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
-                                value={feedback[visit.id] || ''}
-                                onChange={(e) => setFeedback(prev => ({ ...prev, [visit.id]: e.target.value }))}
-                              />
-                              
-                              {/* Photo Upload Preview */}
-                              {photos[visit.id] && photos[visit.id].length > 0 && (
+                      {/* Feedback List */}
+                      <div className="space-y-3 mb-4">
+                        {parseFeedback(visit).map((item) => (
+                          <div key={item.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100 group relative">
+                            {editingFeedback[visit.id]?.id === item.id ? (
+                              <div className="space-y-3">
+                                <textarea 
+                                  className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20"
+                                  value={editingFeedback[visit.id]?.content}
+                                  onChange={(e) => setEditingFeedback(prev => ({
+                                    ...prev,
+                                    [visit.id]: { ...prev[visit.id]!, content: e.target.value }
+                                  }))}
+                                  rows={3}
+                                />
+                                
                                 <div className="flex gap-2 overflow-x-auto py-2">
-                                  {photos[visit.id].map((file, idx) => (
-                                    <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 group">
-                                      <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="Preview" />
+                                  {editingFeedback[visit.id]?.photos.map((url, i) => (
+                                    <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0 group/photo">
+                                      <img src={url} className="w-full h-full object-cover" alt="Edit" />
                                       <button 
-                                        onClick={() => removePhoto(visit.id, idx)}
-                                        className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={() => handleEditRemovePhoto(visit.id, url)}
+                                        className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity"
                                       >
                                         <X className="w-4 h-4 text-white" />
                                       </button>
                                     </div>
                                   ))}
+                                  <label className="w-16 h-16 bg-white border border-slate-200 text-slate-400 rounded-lg flex items-center justify-center hover:bg-slate-50 hover:text-indigo-600 cursor-pointer transition-all shrink-0">
+                                    <Plus className="w-5 h-5" />
+                                    <input 
+                                      type="file" 
+                                      multiple 
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => handleEditPhotoUpload(visit.id, e)}
+                                    />
+                                  </label>
                                 </div>
-                              )}
-                            </div>
 
-                            <div className="flex flex-col gap-2">
-                              <label className="w-12 h-12 bg-slate-50 border border-slate-200 text-slate-400 rounded-2xl flex items-center justify-center hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-all">
-                                <Camera className="w-5 h-5" />
-                                <input 
-                                  type="file" 
-                                  accept="image/*" 
-                                  multiple 
-                                  className="hidden" 
-                                  onChange={(e) => handlePhotoSelect(visit.id, e)}
-                                />
-                              </label>
-                              <button 
-                                onClick={() => handleFeedbackSubmit(visit.id)}
-                                disabled={submitting[visit.id] || (!feedback[visit.id] && (!photos[visit.id] || photos[visit.id].length === 0))}
-                                className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all"
-                              >
-                                {submitting[visit.id] ? <Clock className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-                              </button>
-                            </div>
+                                <div className="flex justify-end gap-2">
+                                  <button 
+                                    onClick={() => setEditingFeedback(prev => ({ ...prev, [visit.id]: null }))}
+                                    className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                  <button 
+                                    onClick={() => handleUpdateFeedbackItem(visit.id)}
+                                    className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1"
+                                  >
+                                    <Check className="w-3 h-3" /> Guardar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                    {new Date(item.createdAt).toLocaleDateString()} • {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                      onClick={() => setEditingFeedback(prev => ({ ...prev, [visit.id]: item }))}
+                                      className="p-1.5 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-colors"
+                                    >
+                                      <Edit2 className="w-3 h-3" />
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDeleteFeedbackItem(visit.id, item.id)}
+                                      className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-500 rounded-lg transition-colors"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <p className="text-sm font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">{item.content}</p>
+                                
+                                {item.photos && item.photos.length > 0 && (
+                                  <div className="flex gap-2 overflow-x-auto py-3 mt-2">
+                                    {item.photos.map((url, i) => (
+                                      <a key={i} href={url} target="_blank" rel="noreferrer" className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shrink-0 hover:ring-2 hover:ring-indigo-500/20 transition-all">
+                                        <img src={url} className="w-full h-full object-cover" alt="Feedback" />
+                                      </a>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Add New Feedback */}
+                      <div className="bg-white rounded-2xl border border-slate-200 p-1 focus-within:ring-2 focus-within:ring-indigo-500/10 transition-all">
+                        <div className="flex gap-2 p-2">
+                          <textarea 
+                            placeholder="Agregar nota o comentario..."
+                            className="flex-1 bg-transparent text-sm font-medium outline-none resize-none h-10 py-2 px-2"
+                            value={feedback[visit.id] || ''}
+                            onChange={(e) => setFeedback(prev => ({ ...prev, [visit.id]: e.target.value }))}
+                          />
+                          <div className="flex flex-col gap-1">
+                            <label className="w-8 h-8 bg-slate-50 border border-slate-200 text-slate-400 rounded-xl flex items-center justify-center hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-all">
+                              <Camera className="w-4 h-4" />
+                              <input 
+                                type="file" 
+                                multiple 
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handlePhotoSelect(visit.id, e)}
+                              />
+                            </label>
+                            <button 
+                              onClick={() => handleFeedbackSubmit(visit.id)}
+                              disabled={submitting[visit.id] || (!feedback[visit.id] && (!photos[visit.id] || photos[visit.id].length === 0))}
+                              className="w-8 h-8 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-200"
+                            >
+                              {submitting[visit.id] ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                            </button>
                           </div>
                         </div>
-                      )}
+
+                        {/* Photo Preview */}
+                        {photos[visit.id] && photos[visit.id].length > 0 && (
+                          <div className="flex gap-2 overflow-x-auto p-2 border-t border-slate-100 bg-slate-50/50 rounded-b-xl">
+                            {photos[visit.id].map((file, idx) => (
+                              <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 group">
+                                <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="Preview" />
+                                <button 
+                                  onClick={() => removePhoto(visit.id, idx)}
+                                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-3 h-3 text-white" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
