@@ -387,6 +387,8 @@ export const dataService = {
         status: v.status,
         checklist: v.checklist,
         clientFeedback: v.client_feedback,
+        rating: v.rating,
+        photos: v.photos,
         createdAt: v.created_at,
         property: v.property
       };
@@ -547,6 +549,8 @@ export const dataService = {
         time: v.visit_time || v.time,
         status: v.status,
         clientFeedback: v.client_feedback,
+        rating: v.rating,
+        photos: v.photos,
         property: v.property,
         checklist: itinerary.settings.showChecklist ? v.checklist : []
       }))

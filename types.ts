@@ -137,6 +137,8 @@ export interface Visit {
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled';
   clientFeedback?: string;
+  rating?: number;
+  photos?: string[];
   createdAt?: string;
   property?: any;
 }

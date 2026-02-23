@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2 } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder } from '../types';
 
 interface VisitAgendaProps {
@@ -94,6 +94,48 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 ))}
               </div>
             </div>
+
+            {(visit.clientFeedback || visit.rating || (visit.photos && visit.photos.length > 0)) && (
+              <div className="mt-8 pt-6 border-t border-slate-100">
+                <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-3.5 h-3.5" /> Feedback del Cliente
+                </p>
+                <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 space-y-4">
+                  {visit.rating && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star key={star} className={`w-4 h-4 ${star <= visit.rating! ? 'fill-amber-400 text-amber-400' : 'text-slate-200'}`} />
+                        ))}
+                      </div>
+                      <span className="text-xs font-bold text-slate-400">({visit.rating}/5)</span>
+                    </div>
+                  )}
+                  
+                  {visit.clientFeedback && (
+                    <div className="flex gap-3">
+                      <div className="w-1 bg-indigo-500 rounded-full shrink-0"></div>
+                      <p className="text-sm text-slate-600 italic">"{visit.clientFeedback}"</p>
+                    </div>
+                  )}
+
+                  {visit.photos && visit.photos.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <Image className="w-3 h-3" /> Fotos Adjuntas ({visit.photos.length})
+                      </p>
+                      <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                        {visit.photos.map((photo, idx) => (
+                          <a key={idx} href={photo} target="_blank" rel="noreferrer" className="w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shrink-0 hover:opacity-80 transition-opacity">
+                            <img src={photo} className="w-full h-full object-cover" alt={`Feedback ${idx + 1}`} />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col gap-3 justify-center">
@@ -166,6 +208,13 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-800 truncate text-sm">{p?.title}</h4>
                     <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status}</p>
+                    {(v.clientFeedback || v.rating) && (
+                      <div className="flex items-center gap-2 mt-1">
+                        {v.rating && <div className="flex text-amber-400"><Star className="w-3 h-3 fill-current" /> <span className="text-[10px] font-bold ml-1 text-slate-500">{v.rating}</span></div>}
+                        {v.clientFeedback && <MessageSquare className="w-3 h-3 text-indigo-400" />}
+                        {v.photos && v.photos.length > 0 && <Image className="w-3 h-3 text-emerald-400" />}
+                      </div>
+                    )}
                   </div>
                   {v.status === 'Completed' ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <AlertCircle className="w-5 h-5 text-rose-500" />}
                 </div>
