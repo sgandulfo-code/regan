@@ -73,7 +73,7 @@ const App: React.FC = () => {
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
 
   useEffect(() => {
-    const checkSharedRoute = () => {
+    const checkRoute = () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
       
@@ -81,12 +81,16 @@ const App: React.FC = () => {
         setSharedId(path.replace('/shared/', ''));
       } else if (hash.startsWith('#/shared/')) {
         setSharedId(hash.replace('#/shared/', ''));
+      } else if (hash.startsWith('#/folder/')) {
+        const folderId = hash.replace('#/folder/', '');
+        setActiveFolderId(folderId);
+        setActiveTab('properties');
       }
     };
 
-    checkSharedRoute();
-    window.addEventListener('hashchange', checkSharedRoute);
-    return () => window.removeEventListener('hashchange', checkSharedRoute);
+    checkRoute();
+    window.addEventListener('hashchange', checkRoute);
+    return () => window.removeEventListener('hashchange', checkRoute);
   }, []);
 
   useEffect(() => {

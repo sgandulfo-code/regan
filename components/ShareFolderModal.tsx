@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Send, UserPlus, Shield, Trash2, Loader2, Mail } from 'lucide-react';
+import { X, Send, UserPlus, Shield, Trash2, Loader2, Mail, Link, Check } from 'lucide-react';
 import { SearchFolder, FolderShare, SharePermission } from '../types';
 import { dataService } from '../services/dataService';
 
@@ -16,10 +16,18 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     loadShares();
   }, [folder.id]);
+
+  const copyLink = () => {
+    const url = `${window.location.origin}/#/folder/${folder.id}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const loadShares = async () => {
     setIsLoading(true);
@@ -119,6 +127,19 @@ const ShareFolderModal: React.FC<ShareFolderModalProps> = ({ folder, onClose }) 
               )}
             </button>
           </form>
+
+          <div className="pt-4 border-t border-slate-100">
+            <button
+              onClick={copyLink}
+              className="w-full py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl font-bold transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Link className="w-4 h-4" />}
+              {copied ? 'Link Copiado' : 'Copiar Link de Acceso'}
+            </button>
+            <p className="text-[10px] text-slate-400 text-center mt-2">
+              Nota: Este link requiere que el usuario tenga cuenta e inicie sesión.
+            </p>
+          </div>
 
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
