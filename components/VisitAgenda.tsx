@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2 } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder, FeedbackItem } from '../types';
 
 interface VisitAgendaProps {
@@ -12,9 +12,11 @@ interface VisitAgendaProps {
   onAddVisit: () => void;
   onShareItinerary?: () => void;
   onFeedbackUpdate?: (visitId: string, feedback: string, photos: string[], rating?: number) => void;
+  onEditVisit?: (visit: Visit) => void;
+  onDeleteVisit?: (visitId: string) => void;
 }
 
-const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate }) => {
+const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate, onEditVisit, onDeleteVisit }) => {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
@@ -106,9 +108,30 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
                 </p>
               </div>
-              <button className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
-                <MoreVertical className="w-5 h-5" />
-              </button>
+              <div className="flex gap-2">
+                {onEditVisit && (
+                  <button 
+                    onClick={() => onEditVisit(visit)}
+                    className="p-2 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                    title="Editar Visita"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                )}
+                {onDeleteVisit && (
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('¿Estás seguro de que quieres eliminar esta visita?')) {
+                        onDeleteVisit(visit.id);
+                      }
+                    }}
+                    className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                    title="Eliminar Visita"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

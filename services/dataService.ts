@@ -456,19 +456,20 @@ export const dataService = {
       formattedTime += ':00';
     }
 
+    const updates: any = {};
+    if (visit.propertyId !== undefined) updates.property_id = visit.propertyId;
+    if (visit.folderId !== undefined) updates.folder_id = visit.folderId || null;
+    if (visit.date !== undefined) updates.visit_date = visit.date;
+    if (formattedTime !== undefined) updates.visit_time = formattedTime;
+    if (visit.contactName !== undefined) updates.contact_name = visit.contactName;
+    if (visit.contactPhone !== undefined) updates.contact_phone = visit.contactPhone;
+    if (visit.notes !== undefined) updates.notes = visit.notes;
+    if (visit.status !== undefined) updates.status = visit.status;
+    if (visit.checklist !== undefined) updates.checklist = visit.checklist;
+
     const { data, error } = await supabase
       .from('visits')
-      .update({
-        property_id: visit.propertyId,
-        folder_id: visit.folderId || null,
-        visit_date: visit.date,
-        visit_time: formattedTime,
-        contact_name: visit.contactName,
-        contact_phone: visit.contactPhone,
-        notes: visit.notes,
-        status: visit.status,
-        checklist: visit.checklist
-      })
+      .update(updates)
       .eq('id', id)
       .select()
       .single();

@@ -247,6 +247,15 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  const handleDeleteVisit = async (visitId: string) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.deleteVisit(visitId);
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    setIsSyncing(false);
+  };
+
   const handleFeedbackUpdate = async (visitId: string, feedback: string, photos: string[], rating?: number) => {
     if (!user) return;
     setIsSyncing(true);
@@ -591,6 +600,8 @@ const App: React.FC = () => {
             onAddVisit={() => setIsVisitModalOpen(true)}
             onShareItinerary={() => setIsShareItineraryModalOpen(true)}
             onFeedbackUpdate={handleFeedbackUpdate}
+            onEditVisit={(visit) => { setEditingVisit(visit); setIsVisitModalOpen(true); }}
+            onDeleteVisit={handleDeleteVisit}
           />
         )}
 
