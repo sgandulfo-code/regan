@@ -283,10 +283,45 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         
         alert('Solicitud enviada! Tu consultor la verá en la agenda.');
       } else {
-        // Create a new "placeholder" visit for the request
-        // Since we don't have user context here (public view), we might need a different approach
-        // For now, we'll just show a message directing them to contact the agent
-        alert('Para agendar una primera visita a esta propiedad, por favor contacta directamente a tu consultor.');
+        // Create a new visit request
+        const newVisitData = {
+          propertyId: property.id,
+          folderId: data.itinerary.folderId,
+          date: new Date().toISOString(), // Placeholder date
+          time: 'A coordinar',
+          contactName: 'Solicitud Web',
+          contactPhone: '',
+          checklist: [],
+          notes: 'Solicitud de visita desde portal del cliente',
+          status: 'Scheduled',
+          clientFeedback: JSON.stringify([{
+            id: crypto.randomUUID(),
+            content: "👋 ¡Hola! Me gustaría visitar esta propiedad.",
+            photos: [],
+            createdAt: new Date().toISOString(),
+            author: 'client'
+          }])
+        };
+
+        const createdVisit = await dataService.createVisit(newVisitData, data.itinerary.folder.userId);
+        
+        if (createdVisit) {
+          // Add property data to the visit for display
+          const visitWithProperty = {
+            ...createdVisit,
+            property: property,
+            propertyId: property.id
+          };
+
+          setData((prev: any) => ({
+            ...prev,
+            visits: [...prev.visits, visitWithProperty]
+          }));
+          
+          alert('Solicitud de visita creada! Tu consultor se pondrá en contacto contigo.');
+        } else {
+          alert('Error al crear la solicitud. Por favor intenta de nuevo.');
+        }
       }
     } catch (error) {
       console.error('Error requesting visit:', error);

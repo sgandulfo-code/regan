@@ -534,7 +534,7 @@ export const dataService = {
     // This is a public method
     const { data: itinerary, error: itinError } = await supabase
       .from('shared_itineraries')
-      .select('*, folder:folders(name, description, color, budget, transaction_type, start_date, status)')
+      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status)')
       .eq('id', id)
       .eq('is_active', true)
       .single();
@@ -563,6 +563,7 @@ export const dataService = {
         settings: itinerary.settings,
         folder: {
           ...itinerary.folder,
+          userId: itinerary.folder.user_id,
           transactionType: itinerary.folder.transaction_type,
           startDate: itinerary.folder.start_date,
           budget: itinerary.folder.budget,
@@ -577,6 +578,7 @@ export const dataService = {
         clientFeedback: v.client_feedback,
         rating: v.rating,
         photos: v.photos,
+        propertyId: v.property_id,
         property: v.property,
         checklist: itinerary.settings.showChecklist ? v.checklist : []
       })),
@@ -592,7 +594,15 @@ export const dataService = {
         bathrooms: p.bathrooms,
         sqft: p.sqft,
         status: p.status,
-        url: p.url
+        url: p.url,
+        fees: p.fees,
+        toilets: p.toilets,
+        parking: p.parking,
+        coveredSqft: p.covered_sqft,
+        uncoveredSqft: p.uncovered_sqft,
+        age: p.age,
+        disposition: p.disposition,
+        orientation: p.orientation
       }))
     };
   },
