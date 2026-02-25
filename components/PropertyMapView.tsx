@@ -149,29 +149,29 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
   };
 
   return (
-    <div className="flex flex-col lg:flex-row bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden h-[750px] animate-in fade-in zoom-in-95 duration-500 relative">
+    <div className="flex flex-col lg:flex-row bg-white rounded-[2rem] lg:rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden h-full animate-in fade-in zoom-in-95 duration-500 relative">
       {/* Sidebar Explorer */}
-      <div className="w-full lg:w-96 border-r border-slate-100 flex flex-col h-full bg-slate-50/30">
-        <div className="p-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+      <div className="w-full lg:w-96 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col h-[40%] lg:h-full bg-slate-50/30 shrink-0">
+        <div className="p-4 lg:p-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
           <div className="flex justify-between items-center mb-1">
-            <h3 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Navigation className="w-4 h-4 text-indigo-600" />
+            <h3 className="text-[10px] lg:text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+              <Navigation className="w-3 h-3 lg:w-4 lg:h-4 text-indigo-600" />
               BluePin Explorer
             </h3>
             {isGeocoding && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
           </div>
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          <p className="text-[9px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-widest">
             {geocodedProperties.filter(p => !p.geocodeFailed).length} Assets Mapped
           </p>
         </div>
         
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-2 lg:space-y-3 custom-scrollbar">
           {geocodedProperties.map((p, index) => (
             <button
               key={p.id}
               disabled={p.geocodeFailed}
               onClick={() => handleSelectFromList(p)}
-              className={`w-full text-left p-5 rounded-[2.2rem] transition-all border group relative ${
+              className={`w-full text-left p-4 lg:p-5 rounded-[1.5rem] lg:rounded-[2.2rem] transition-all border group relative ${
                 selectedProperty?.id === p.id 
                   ? 'bg-white border-indigo-500 shadow-xl ring-2 ring-indigo-50 scale-[1.02] z-10' 
                   : p.geocodeFailed 

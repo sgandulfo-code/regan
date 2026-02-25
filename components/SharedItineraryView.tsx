@@ -943,7 +943,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         )}
 
         {activeTab === 'map' && (
-          <div className="h-[600px] w-full">
+          <div className="h-[85vh] lg:h-[750px] w-full">
             <PropertyMapView 
               properties={properties} 
               onSelectProperty={(p) => {
