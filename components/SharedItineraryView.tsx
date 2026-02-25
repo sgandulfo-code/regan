@@ -18,6 +18,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [submitting, setSubmitting] = useState<{ [key: string]: boolean }>({});
   const [editingFeedback, setEditingFeedback] = useState<{ [key: string]: FeedbackItem | null }>({});
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedPropertyForRequest, setSelectedPropertyForRequest] = useState<any>(null);
+  const [requestMessage, setRequestMessage] = useState('');
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -241,8 +244,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
   };
 
-  const handleRequestVisit = async (property: any) => {
-    if (!window.confirm(`¿Quieres solicitar una visita para ${property.title}?`)) return;
+  const handleRequestVisit = (property: any) => {
+    setSelectedPropertyForRequest(property);
+    setRequestMessage('');
+    setIsRequestModalOpen(true);
+  };
+
+  const submitVisitRequest = async () => {
+    if (!selectedPropertyForRequest) return;
+    
+    const message = requestMessage.trim() || "👋 ¡Hola! Me gustaría visitar esta propiedad.";
+    const property = selectedPropertyForRequest;
 
     try {
       // Find existing visit
@@ -253,7 +265,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         const currentFeedback = parseFeedback(existingVisit);
         const newRequest: FeedbackItem = {
           id: crypto.randomUUID(),
-          content: "👋 ¡Hola! Me gustaría coordinar una nueva visita a esta propiedad.",
+          content: message,
           photos: [],
           createdAt: new Date().toISOString(),
           author: 'client'
@@ -288,7 +300,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           propertyId: property.id,
           folderId: data.itinerary.folderId,
           date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-          time: '09:00:00', // Default time, since it's "to be coordinated"
+          time: '09:00:00', // Default time
           contactName: 'Solicitud Web',
           contactPhone: '',
           checklist: [],
@@ -296,7 +308,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           status: 'Scheduled',
           clientFeedback: JSON.stringify([{
             id: crypto.randomUUID(),
-            content: "👋 ¡Hola! Me gustaría visitar esta propiedad.",
+            content: message,
             photos: [],
             createdAt: new Date().toISOString(),
             author: 'client'
@@ -326,6 +338,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     } catch (error) {
       console.error('Error requesting visit:', error);
       alert('Error al solicitar visita.');
+    } finally {
+      setIsRequestModalOpen(false);
+      setSelectedPropertyForRequest(null);
     }
   };
 
@@ -868,6 +883,68 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           </p>
         </div>
       </main>
+      {/* Request Visit Modal */}
+      {isRequestModalOpen && selectedPropertyForRequest && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">Solicitar Visita</h3>
+              <button 
+                onClick={() => setIsRequestModalOpen(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <img 
+                  src={selectedPropertyForRequest.images[0]} 
+                  className="w-16 h-16 rounded-xl object-cover" 
+                  alt="" 
+                />
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{selectedPropertyForRequest.title}</h4>
+                  <p className="text-xs text-slate-500">{selectedPropertyForRequest.address}</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                  Mensaje para tu consultor
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                  rows={4}
+                  placeholder="Hola, me gustaría visitar esta propiedad el día..."
+                  value={requestMessage}
+                  onChange={(e) => setRequestMessage(e.target.value)}
+                  autoFocus
+                />
+                <p className="text-[10px] text-slate-400 mt-2 font-medium">
+                  * Tu solicitud quedará registrada en el historial de la visita.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={() => setIsRequestModalOpen(false)}
+                className="px-6 py-3 rounded-xl text-xs font-black text-slate-500 hover:bg-slate-200 transition-colors uppercase tracking-widest"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={submitVisitRequest}
+                className="px-6 py-3 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-widest shadow-lg shadow-indigo-200 flex items-center gap-2"
+              >
+                <Send className="w-3.5 h-3.5" /> Enviar Solicitud
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
