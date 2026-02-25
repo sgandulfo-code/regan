@@ -515,13 +515,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="absolute left-8 top-10 bottom-10 w-0.5 bg-slate-200 hidden sm:block"></div>
             
             {visits.length > 0 ? (
-              visits.map((visit: any, idx: number) => {
-                const isRequest = visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)');
-                
-                return (
+              visits.map((visit: any, idx: number) => (
                 <div key={visit.id} className="relative flex flex-col sm:flex-row gap-6 group">
                   {/* Timeline Dot */}
-                  <div className={`absolute left-8 top-10 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-4 ${isRequest ? 'border-amber-500' : 'border-indigo-600'} z-10 hidden sm:block`}></div>
+                  <div className={`absolute left-8 top-10 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-4 ${
+                    visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') 
+                      ? 'border-amber-500' 
+                      : 'border-indigo-600'
+                  } z-10 hidden sm:block`}></div>
                   
                   <div className="flex-1 bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all">
                     <div className="flex flex-col md:flex-row gap-6">
@@ -535,7 +536,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
-                          {isRequest ? (
+                          {visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') ? (
                             <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 flex items-center gap-1.5">
                               <Clock className="w-3 h-3" /> Solicitud Pendiente
                             </span>
@@ -551,7 +552,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             </span>
                           )}
                           
-                          {isRequest && (
+                          {visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') && (
                             <div className="flex gap-2">
                               <button 
                                 onClick={() => handleEditVisitRequest(visit)}
@@ -797,7 +798,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </div>
                   </div>
                 </div>
-              )})
+              ))
             ) : (
               <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                 <Calendar className="w-12 h-12 text-slate-100 mx-auto mb-4" />
