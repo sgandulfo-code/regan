@@ -330,7 +330,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           contactPhone: '',
           checklist: [],
           notes: 'Solicitud de visita desde portal del cliente (Horario a coordinar)',
-          status: 'Scheduled',
+          status: 'Pending',
           clientFeedback: JSON.stringify([{
             id: crypto.randomUUID(),
             content: message,
@@ -515,13 +515,30 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="absolute left-8 top-10 bottom-10 w-0.5 bg-slate-200 hidden sm:block"></div>
             
             {visits.length > 0 ? (
-              visits.map((visit: any, idx: number) => (
-                <div key={visit.id} className="relative flex flex-col sm:flex-row gap-6 group">
+              visits.map((visit: any, idx: number) => {
+                // Determine status based on new fields or legacy logic
+                let displayStatus = 'Pending';
+                let canEdit = false;
+                
+                if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
+                  displayStatus = 'Pending';
+                  canEdit = true;
+                } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
+                  displayStatus = 'Confirmed';
+                } else if (visit.status === 'Completed') {
+                  displayStatus = 'Completed';
+                } else if (visit.status === 'Cancelled') {
+                  displayStatus = 'Cancelled';
+                }
+
+                return (
+                <div key={visit.id} className={`relative flex flex-col sm:flex-row gap-6 group ${displayStatus === 'Cancelled' ? 'opacity-50 grayscale' : ''}`}>
                   {/* Timeline Dot */}
                   <div className={`absolute left-8 top-10 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-4 ${
-                    visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') 
-                      ? 'border-amber-500' 
-                      : 'border-indigo-600'
+                    displayStatus === 'Pending' ? 'border-amber-500' : 
+                    displayStatus === 'Confirmed' ? 'border-indigo-600' :
+                    displayStatus === 'Completed' ? 'border-emerald-500' :
+                    'border-slate-300'
                   } z-10 hidden sm:block`}></div>
                   
                   <div className="flex-1 bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all">
@@ -536,23 +553,31 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
-                          {visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') ? (
+                          {displayStatus === 'Pending' && (
                             <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 flex items-center gap-1.5">
-                              <Clock className="w-3 h-3" /> Solicitud Pendiente
-                            </span>
-                          ) : (
-                            <span className="bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-100 flex items-center gap-1.5">
-                              <Clock className="w-3 h-3" /> {visit.time} HS
+                              <Clock className="w-3 h-3" /> A Confirmar
                             </span>
                           )}
                           
-                          {visit.status === 'Completed' && (
-                            <span className="text-emerald-500 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest">
-                              <CheckCircle2 className="w-3 h-3" /> Visitada
+                          {displayStatus === 'Confirmed' && (
+                            <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" /> Confirmada: {visit.time} HS
+                            </span>
+                          )}
+
+                          {displayStatus === 'Completed' && (
+                            <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" /> Realizada
+                            </span>
+                          )}
+
+                          {displayStatus === 'Cancelled' && (
+                            <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 flex items-center gap-1.5">
+                              <X className="w-3 h-3" /> Eliminada
                             </span>
                           )}
                           
-                          {visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)') && (
+                          {canEdit && (
                             <div className="flex gap-2">
                               <button 
                                 onClick={() => handleEditVisitRequest(visit)}
@@ -798,7 +823,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </div>
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                 <Calendar className="w-12 h-12 text-slate-100 mx-auto mb-4" />

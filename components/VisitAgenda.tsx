@@ -71,7 +71,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
 
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const upcomingVisits = sortedVisits.filter(v => v.status === 'Scheduled');
+  const activeVisits = sortedVisits.filter(v => v.status === 'Scheduled' || v.status === 'Pending' || v.status === 'Confirmed');
   const pastVisits = sortedVisits.filter(v => v.status === 'Completed' || v.status === 'Cancelled');
 
   const VisitCard = ({ visit }: { visit: Visit }) => {
@@ -80,6 +80,15 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     if (!property) return null;
 
     const isToday = new Date(visit.date).toDateString() === new Date().toDateString();
+
+    const handleStatusChange = (newStatus: string) => {
+      // Assuming onEditVisit handles partial updates or we need a new prop for status update
+      // Since we don't have a specific onStatusUpdate, we might need to use onEditVisit or modify the parent
+      // For now, let's assume we can call onEditVisit with the updated status
+      if (onEditVisit) {
+        onEditVisit({ ...visit, status: newStatus as any });
+      }
+    };
 
     return (
       <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 ${folder ? 'pt-14' : ''} shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
@@ -108,7 +117,23 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <select
+                  value={visit.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl border outline-none cursor-pointer transition-all ${
+                    visit.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    visit.status === 'Confirmed' || visit.status === 'Scheduled' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                    visit.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                    'bg-slate-50 text-slate-500 border-slate-200'
+                  }`}
+                >
+                  <option value="Pending">A Confirmar</option>
+                  <option value="Confirmed">Confirmada</option>
+                  <option value="Completed">Realizada</option>
+                  <option value="Cancelled">Eliminada</option>
+                </select>
+
                 {onEditVisit && (
                   <button 
                     onClick={() => onEditVisit(visit)}
@@ -242,18 +267,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
           </div>
           
           <div className="flex flex-col gap-3 justify-center">
-            <button 
-              onClick={() => onCompleteVisit(visit.id, visit.propertyId)}
-              className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="w-4 h-4" /> Marcar Realizada
-            </button>
-            <button 
-              onClick={() => onCancelVisit(visit.id)}
-              className="bg-white border border-slate-200 text-slate-400 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all"
-            >
-              Cancelar Visita
-            </button>
+            {/* Actions now handled by status dropdown */}
           </div>
         </div>
       </div>
@@ -285,8 +299,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
       </div>
 
       <div className="space-y-6">
-        {upcomingVisits.length > 0 ? (
-          upcomingVisits.map(v => <VisitCard key={v.id} visit={v} />)
+        {activeVisits.length > 0 ? (
+          activeVisits.map(v => <VisitCard key={v.id} visit={v} />)
         ) : (
           <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
             <Calendar className="w-16 h-16 text-slate-100 mx-auto mb-6" />

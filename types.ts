@@ -145,7 +145,7 @@ export interface Visit {
   contactPhone: string;
   checklist: VisitChecklistItem[];
   notes: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Confirmed';
   clientFeedback?: string;
   rating?: number;
   photos?: string[];
