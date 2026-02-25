@@ -287,12 +287,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         const newVisitData = {
           propertyId: property.id,
           folderId: data.itinerary.folderId,
-          date: new Date().toISOString(), // Placeholder date
-          time: 'A coordinar',
+          date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+          time: '09:00:00', // Default time, since it's "to be coordinated"
           contactName: 'Solicitud Web',
           contactPhone: '',
           checklist: [],
-          notes: 'Solicitud de visita desde portal del cliente',
+          notes: 'Solicitud de visita desde portal del cliente (Horario a coordinar)',
           status: 'Scheduled',
           clientFeedback: JSON.stringify([{
             id: crypto.randomUUID(),
