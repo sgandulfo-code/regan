@@ -241,6 +241,59 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
   };
 
+  const handleRequestVisit = async (property: any) => {
+    if (!window.confirm(`¿Quieres solicitar una visita para ${property.title}?`)) return;
+
+    try {
+      // Find existing visit
+      const existingVisit = data.visits.find((v: any) => v.propertyId === property.id);
+      
+      if (existingVisit) {
+        // Add request to feedback
+        const currentFeedback = parseFeedback(existingVisit);
+        const newRequest: FeedbackItem = {
+          id: crypto.randomUUID(),
+          content: "👋 ¡Hola! Me gustaría coordinar una nueva visita a esta propiedad.",
+          photos: [],
+          createdAt: new Date().toISOString(),
+          author: 'client'
+        };
+        
+        const newFeedbackList = [...currentFeedback, newRequest];
+        const allPhotos = newFeedbackList.flatMap(item => item.photos);
+
+        await dataService.updateVisitFeedback(
+          existingVisit.id, 
+          JSON.stringify(newFeedbackList), 
+          allPhotos, 
+          existingVisit.rating
+        );
+
+        // Update local state
+        setData((prev: any) => ({
+          ...prev,
+          visits: prev.visits.map((v: any) => 
+            v.id === existingVisit.id ? { 
+              ...v, 
+              clientFeedback: JSON.stringify(newFeedbackList),
+              photos: allPhotos
+            } : v
+          )
+        }));
+        
+        alert('Solicitud enviada! Tu consultor la verá en la agenda.');
+      } else {
+        // Create a new "placeholder" visit for the request
+        // Since we don't have user context here (public view), we might need a different approach
+        // For now, we'll just show a message directing them to contact the agent
+        alert('Para agendar una primera visita a esta propiedad, por favor contacta directamente a tu consultor.');
+      }
+    } catch (error) {
+      console.error('Error requesting visit:', error);
+      alert('Error al solicitar visita.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
@@ -651,71 +704,102 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         )}
 
         {activeTab === 'properties' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {properties && properties.length > 0 ? (
               properties.map((property: any) => (
-                <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group">
-                  <div className="h-48 relative overflow-hidden">
+                <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                  <div className="h-64 relative overflow-hidden shrink-0">
                     <img 
-                      src={property.images[0] || 'https://picsum.photos/seed/prop/400/300'} 
+                      src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                       alt={property.title} 
                     />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm">
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
                       {property.status}
                     </div>
+                    {itinerary.settings.showPrices && (
+                      <div className="absolute bottom-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-lg">
+                        ${property.price.toLocaleString()}
+                      </div>
+                    )}
                   </div>
-                  <div className="p-6">
-                    <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1 truncate">{property.title}</h3>
-                    <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-4 truncate">
-                      <MapPin className="w-3 h-3 text-indigo-500" /> {property.address}
+                  
+                  <div className="p-8 flex-1 flex flex-col">
+                    <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 leading-tight">{property.title}</h3>
+                    <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-6">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
                     </p>
                     
-                    {itinerary.settings.showPrices && (
-                      <p className="text-indigo-600 font-black text-xl mb-4">
-                        ${property.price.toLocaleString()}
-                      </p>
-                    )}
-
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                      <div className="bg-slate-50 rounded-xl p-2 text-center">
-                        <span className="block text-[10px] font-black text-slate-400 uppercase">Amb</span>
-                        <span className="font-bold text-slate-700">{property.environments}</span>
+                    <div className="grid grid-cols-3 gap-3 mb-8">
+                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ambientes</span>
+                        <span className="font-black text-slate-800 text-lg">{property.environments}</span>
                       </div>
-                      <div className="bg-slate-50 rounded-xl p-2 text-center">
-                        <span className="block text-[10px] font-black text-slate-400 uppercase">M²</span>
-                        <span className="font-bold text-slate-700">{property.sqft}</span>
+                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Total</span>
+                        <span className="font-black text-slate-800 text-lg">{property.sqft} m²</span>
                       </div>
-                      <div className="bg-slate-50 rounded-xl p-2 text-center">
-                        <span className="block text-[10px] font-black text-slate-400 uppercase">Baños</span>
-                        <span className="font-bold text-slate-700">{property.bathrooms}</span>
+                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Baños</span>
+                        <span className="font-black text-slate-800 text-lg">{property.bathrooms}</span>
                       </div>
                     </div>
 
-                    {/* Additional Details */}
-                    <div className="space-y-2 mb-6">
-                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                         <span className="font-medium text-slate-400">Dormitorios</span>
-                         <span className="font-bold text-slate-700">{property.rooms}</span>
+                    <div className="space-y-3 mb-8 flex-1">
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>
+                         <span className="text-sm font-black text-slate-700">{property.rooms}</span>
                        </div>
-                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                         <span className="font-medium text-slate-400">Expensas</span>
-                         <span className="font-bold text-slate-700">${property.expenses?.toLocaleString() || 0}</span>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Toilettes</span>
+                         <span className="text-sm font-black text-slate-700">{property.toilets || 0}</span>
                        </div>
-                       <div className="flex justify-between items-center text-xs border-b border-slate-50 pb-2">
-                         <span className="font-medium text-slate-400">Antigüedad</span>
-                         <span className="font-bold text-slate-700">{property.age || 0} años</span>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cocheras</span>
+                         <span className="text-sm font-black text-slate-700">{property.parking || 0}</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Cubierta</span>
+                         <span className="text-sm font-black text-slate-700">{property.coveredSqft || 0} m²</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
+                         <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Antigüedad</span>
+                         <span className="text-sm font-black text-slate-700">{property.age || 0} años</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expensas</span>
+                         <span className="text-sm font-black text-slate-700">${property.fees?.toLocaleString() || 0}</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Disposición</span>
+                         <span className="text-sm font-black text-slate-700">{property.disposition || '-'}</span>
+                       </div>
+                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Orientación</span>
+                         <span className="text-sm font-black text-slate-700">{property.orientation || '-'}</span>
                        </div>
                     </div>
 
-                    <a 
-                      href={property.url} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="w-full bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
-                    >
-                      <ExternalLink className="w-3 h-3" /> Ver Ficha Completa
-                    </a>
+                    <div className="flex flex-col gap-3 mt-auto">
+                      <button 
+                        onClick={() => handleRequestVisit(property)}
+                        className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                      >
+                        <Calendar className="w-4 h-4" /> Solicitar Visita
+                      </button>
+                      <a 
+                        href={property.url} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
+                      >
+                        <ExternalLink className="w-4 h-4" /> Ver Ficha Completa
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))
