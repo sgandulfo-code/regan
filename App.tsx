@@ -38,6 +38,7 @@ import VisitAgenda from './components/VisitAgenda';
 import VisitFormModal from './components/VisitFormModal';
 import SharedItineraryView from './components/SharedItineraryView';
 import ShareItineraryModal from './components/ShareItineraryModal';
+import SettingsView from './components/SettingsView';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit } from './types';
 import { dataService } from './services/dataService';
@@ -591,6 +592,10 @@ const App: React.FC = () => {
             onShareItinerary={() => setIsShareItineraryModalOpen(true)}
             onFeedbackUpdate={handleFeedbackUpdate}
           />
+        )}
+
+        {activeTab === 'settings' && user && (
+          <SettingsView user={user} onUpdateUser={setUser} />
         )}
       </main>
 

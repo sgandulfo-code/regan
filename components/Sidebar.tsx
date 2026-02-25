@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -39,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
+    { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
   ];
 
   return (

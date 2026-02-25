@@ -104,6 +104,7 @@ export interface User {
   name: string;
   role: UserRole;
   email: string;
+  whatsappNumber?: string;
 }
 
 // Added missing PropertyDocument interface for the DocumentVault functionality

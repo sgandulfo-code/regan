@@ -25,8 +25,21 @@ export const dataService = {
       id: data.id,
       name: data.full_name,
       email: data.email,
-      role: data.role as UserRole
+      role: data.role as UserRole,
+      whatsappNumber: data.whatsapp_number
     } as User;
+  },
+
+  async updateProfile(id: string, updates: Partial<User>) {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: updates.name,
+        whatsapp_number: updates.whatsappNumber
+      })
+      .eq('id', id);
+      
+    if (error) throw error;
   },
 
   async createProfile(id: string, name: string, email: string, role: UserRole) {
