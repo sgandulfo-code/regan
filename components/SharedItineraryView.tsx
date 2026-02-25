@@ -244,6 +244,31 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
   };
 
+  const handleDeleteVisitRequest = async (visitId: string) => {
+    if (!window.confirm('¿Estás seguro de que quieres cancelar esta solicitud de visita?')) return;
+    
+    try {
+      await dataService.deleteVisit(visitId);
+      setData((prev: any) => ({
+        ...prev,
+        visits: prev.visits.filter((v: any) => v.id !== visitId)
+      }));
+      alert('Solicitud de visita cancelada.');
+    } catch (error) {
+      console.error('Error deleting visit request:', error);
+      alert('Error al cancelar la solicitud.');
+    }
+  };
+
+  const handleEditVisitRequest = (visit: any) => {
+    const feedback = parseFeedback(visit);
+    const firstMessage = feedback.length > 0 ? feedback[0].content : '';
+    
+    setSelectedPropertyForRequest(visit.property);
+    setRequestMessage(firstMessage);
+    setIsRequestModalOpen(true);
+  };
+
   const handleRequestVisit = (property: any) => {
     setSelectedPropertyForRequest(property);
     setRequestMessage('');
@@ -490,10 +515,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="absolute left-8 top-10 bottom-10 w-0.5 bg-slate-200 hidden sm:block"></div>
             
             {visits.length > 0 ? (
-              visits.map((visit: any, idx: number) => (
+              visits.map((visit: any, idx: number) => {
+                const isRequest = visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)');
+                
+                return (
                 <div key={visit.id} className="relative flex flex-col sm:flex-row gap-6 group">
                   {/* Timeline Dot */}
-                  <div className="absolute left-8 top-10 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-4 border-indigo-600 z-10 hidden sm:block"></div>
+                  <div className={`absolute left-8 top-10 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-4 ${isRequest ? 'border-amber-500' : 'border-indigo-600'} z-10 hidden sm:block`}></div>
                   
                   <div className="flex-1 bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all">
                     <div className="flex flex-col md:flex-row gap-6">
@@ -507,13 +535,39 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-100 flex items-center gap-1.5">
-                            <Clock className="w-3 h-3" /> {visit.time} HS
-                          </span>
+                          {isRequest ? (
+                            <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 flex items-center gap-1.5">
+                              <Clock className="w-3 h-3" /> Solicitud Pendiente
+                            </span>
+                          ) : (
+                            <span className="bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-100 flex items-center gap-1.5">
+                              <Clock className="w-3 h-3" /> {visit.time} HS
+                            </span>
+                          )}
+                          
                           {visit.status === 'Completed' && (
                             <span className="text-emerald-500 flex items-center gap-1 text-[9px] font-black uppercase tracking-widest">
                               <CheckCircle2 className="w-3 h-3" /> Visitada
                             </span>
+                          )}
+                          
+                          {isRequest && (
+                            <div className="flex gap-2">
+                              <button 
+                                onClick={() => handleEditVisitRequest(visit)}
+                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Modificar Solicitud"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteVisitRequest(visit.id)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="Cancelar Solicitud"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           )}
                         </div>
                         
@@ -743,7 +797,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </div>
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                 <Calendar className="w-12 h-12 text-slate-100 mx-auto mb-4" />
