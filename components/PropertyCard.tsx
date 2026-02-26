@@ -42,13 +42,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
           alt={property.title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute top-4 left-14 flex gap-2">
-          <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
-            {property.status}
-          </span>
-          <span className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-md">
-            {ICONS.Star} {property.rating}/5
-          </span>
+        <div className="absolute top-4 left-14 flex flex-col gap-2 items-start">
+          <div className="flex gap-2">
+            <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
+              {property.status}
+            </span>
+            <span className="bg-white/90 backdrop-blur px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shadow-md">
+              {ICONS.Star} {property.rating}/5
+            </span>
+          </div>
+          {property.acquisitionReason && (
+            <span className="bg-slate-900/80 backdrop-blur text-white px-3 py-1 rounded-full text-[9px] font-bold shadow-md uppercase tracking-wider border border-white/10">
+              {property.acquisitionReason}
+            </span>
+          )}
         </div>
         
         {/* Hover Actions */}

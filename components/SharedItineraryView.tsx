@@ -848,8 +848,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                       alt={property.title} 
                     />
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
-                      {property.status}
+                    <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                      <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
+                        {property.status}
+                      </div>
+                      {property.acquisitionReason && (
+                        <div className="bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
+                          {property.acquisitionReason}
+                        </div>
+                      )}
                     </div>
                     {itinerary.settings.showPrices && (
                       <div className="absolute bottom-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-lg">
