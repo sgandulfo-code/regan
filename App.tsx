@@ -40,7 +40,7 @@ import SharedItineraryView from './components/SharedItineraryView';
 import ShareItineraryModal from './components/ShareItineraryModal';
 import SettingsView from './components/SettingsView';
 import Auth from './components/Auth';
-import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit } from './types';
+import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
