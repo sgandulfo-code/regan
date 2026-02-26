@@ -602,8 +602,7 @@ export const dataService = {
         coveredSqft: p.covered_sqft,
         uncoveredSqft: p.uncovered_sqft,
         age: p.age,
-        disposition: p.disposition,
-        orientation: p.orientation
+        floor: p.floor
       }))
     };
   },

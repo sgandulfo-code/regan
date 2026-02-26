@@ -909,12 +909,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                          <span className="text-sm font-black text-slate-700">${property.fees?.toLocaleString() || 0}</span>
                        </div>
                        <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Disposición</span>
-                         <span className="text-sm font-black text-slate-700">{property.disposition || '-'}</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Orientación</span>
-                         <span className="text-sm font-black text-slate-700">{property.orientation || '-'}</span>
+                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
+                         <span className="text-sm font-black text-slate-700">{property.floor || '-'}</span>
                        </div>
                     </div>
 
