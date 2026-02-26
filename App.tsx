@@ -401,10 +401,13 @@ const App: React.FC = () => {
               )}
 
               {activeFolder.description && (
-                <div 
-                  className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm prose prose-sm max-w-none text-slate-600"
-                  dangerouslySetInnerHTML={{ __html: activeFolder.description }}
-                />
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                  <h3 className="text-slate-800 font-bold mb-2 text-sm uppercase tracking-wider">Observaciones</h3>
+                  <div 
+                    className="prose prose-sm max-w-none text-slate-600"
+                    dangerouslySetInnerHTML={{ __html: activeFolder.description }}
+                  />
+                </div>
               )}
 
               <div className="flex flex-wrap gap-3">
