@@ -63,6 +63,7 @@ export interface SearchFolder {
   createdAt?: string;
   isShared?: boolean;
   permission?: SharePermission;
+  welcomeMessage?: string;
 }
 
 export interface RenovationItem {

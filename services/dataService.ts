@@ -101,7 +101,8 @@ export const dataService = {
       statusUpdatedAt: f.status_updated_at,
       createdAt: f.created_at,
       isShared: f.user_id !== userId,
-      permission: f.permission || SharePermission.ADMIN
+      permission: f.permission || SharePermission.ADMIN,
+      welcomeMessage: f.welcome_message
     }));
   },
 
@@ -117,7 +118,8 @@ export const dataService = {
         transaction_type: folder.transactionType || TransactionType.COMPRA,
         budget: folder.budget || 0,
         start_date: folder.startDate || new Date().toISOString(),
-        status_updated_at: new Date().toISOString()
+        status_updated_at: new Date().toISOString(),
+        welcome_message: folder.welcomeMessage
       }])
       .select()
       .single();
@@ -133,7 +135,8 @@ export const dataService = {
       status: folder.status,
       transaction_type: folder.transactionType,
       budget: folder.budget,
-      start_date: folder.startDate
+      start_date: folder.startDate,
+      welcome_message: folder.welcomeMessage
     };
 
     if (folder.status && currentFolder && folder.status !== currentFolder.status) {
@@ -538,7 +541,7 @@ export const dataService = {
     // This is a public method
     const { data: itinerary, error: itinError } = await supabase
       .from('shared_itineraries')
-      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status)')
+      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status, welcome_message)')
       .eq('id', id)
       .eq('is_active', true)
       .single();
@@ -571,7 +574,8 @@ export const dataService = {
           transactionType: itinerary.folder.transaction_type,
           startDate: itinerary.folder.start_date,
           budget: itinerary.folder.budget,
-          status: itinerary.folder.status
+          status: itinerary.folder.status,
+          welcomeMessage: itinerary.folder.welcome_message
         }
       },
       visits: (visits || []).map(v => ({

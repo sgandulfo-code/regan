@@ -393,6 +393,13 @@ const App: React.FC = () => {
 
           {activeFolder && (
             <div className="space-y-6 animate-in slide-in-from-left-2 duration-500">
+              {activeFolder.welcomeMessage && (
+                <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-sm">
+                  <h3 className="text-indigo-900 font-bold mb-2 text-sm uppercase tracking-wider">Mensaje de Bienvenida</h3>
+                  <p className="text-indigo-700 text-sm leading-relaxed whitespace-pre-wrap">{activeFolder.welcomeMessage}</p>
+                </div>
+              )}
+
               {activeFolder.description && (
                 <div 
                   className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm prose prose-sm max-w-none text-slate-600"

@@ -424,6 +424,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
             <h2 className="text-2xl font-black mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            
+            {itinerary.folder.welcomeMessage && (
+              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-sm mb-6">
+                <p className="text-indigo-700 text-sm leading-relaxed whitespace-pre-wrap">{itinerary.folder.welcomeMessage}</p>
+              </div>
+            )}
+
             <div 
               className="text-slate-500 text-sm font-medium leading-relaxed mb-8 max-w-2xl prose prose-sm prose-slate"
               dangerouslySetInnerHTML={{ 

@@ -18,7 +18,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
     status: FolderStatus.PENDIENTE,
     transactionType: TransactionType.COMPRA,
     budget: 0,
-    startDate: new Date().toISOString().split('T')[0]
+    startDate: new Date().toISOString().split('T')[0],
+    welcomeMessage: ''
   });
 
   useEffect(() => {
@@ -29,7 +30,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         status: initialData.status || FolderStatus.PENDIENTE,
         transactionType: initialData.transactionType || TransactionType.COMPRA,
         budget: initialData.budget || 0,
-        startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        welcomeMessage: initialData.welcomeMessage || ''
       });
     } else {
       setFormData({ 
@@ -38,7 +40,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         status: FolderStatus.PENDIENTE, 
         transactionType: TransactionType.COMPRA,
         budget: 0,
-        startDate: new Date().toISOString().split('T')[0] 
+        startDate: new Date().toISOString().split('T')[0],
+        welcomeMessage: ''
       });
     }
   }, [initialData, isOpen]);
@@ -160,6 +163,20 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <FileText className="w-3 h-3" />
+                Mensaje de Bienvenida
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Ej: Bienvenido a tu búsqueda personalizada..."
+                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-600 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none"
+                value={formData.welcomeMessage}
+                onChange={(e) => setFormData({ ...formData, welcomeMessage: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
