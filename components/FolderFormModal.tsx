@@ -98,21 +98,17 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   <ArrowLeftRight className="w-3 h-3" />
                   Operación
                 </label>
-                <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, transactionType: TransactionType.COMPRA })}
-                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.transactionType === TransactionType.COMPRA ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                    Compra
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, transactionType: TransactionType.ALQUILER })}
-                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.transactionType === TransactionType.ALQUILER ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
-                  >
-                    Alquiler
-                  </button>
+                <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                  {Object.values(TransactionType).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, transactionType: type })}
+                      className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.transactionType === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
               </div>
 

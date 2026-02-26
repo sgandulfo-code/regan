@@ -15,7 +15,9 @@ export enum FolderStatus {
 
 export enum TransactionType {
   COMPRA = 'Compra',
-  ALQUILER = 'Alquiler'
+  ALQUILER = 'Alquiler',
+  VENTA = 'Venta',
+  ALQUILER_TEMPORARIO = 'Alquiler Temporario'
 }
 
 export enum UserRole {
