@@ -72,6 +72,12 @@ export interface RenovationItem {
   estimatedCost: number;
 }
 
+export enum AcquisitionReason {
+  COMPARABLE = 'Comparable',
+  CAPTACION = 'Captación',
+  BUSQUEDA = 'Búsqueda'
+}
+
 export interface Property {
   id: string;
   folderId: string;
@@ -99,6 +105,7 @@ export interface Property {
   lat?: number;
   lng?: number;
   createdAt?: string;
+  acquisitionReason?: AcquisitionReason;
 }
 
 export interface User {

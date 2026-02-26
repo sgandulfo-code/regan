@@ -31,7 +31,7 @@ import {
   Search
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
-import { Property, PropertyStatus } from '../types';
+import { Property, PropertyStatus, AcquisitionReason } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
 
 interface PropertyFormProps {
@@ -61,6 +61,7 @@ interface PropertyFormData {
   floor: string;
   notes: string;
   rating: number;
+  acquisitionReason?: AcquisitionReason;
 }
 
 type CreationStep = 'inbox' | 'verify';
@@ -136,7 +137,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
+    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA
   });
 
   const performAddressValidation = useCallback(async (address: string) => {
@@ -218,7 +219,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         age: propertyToEdit.age || 0,
         floor: propertyToEdit.floor || '',
         notes: propertyToEdit.notes || '',
-        rating: propertyToEdit.rating || 3
+        rating: propertyToEdit.rating || 3,
+        acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA
       });
       setAnalysisResult({ dealScore: propertyToEdit.rating * 20 });
     } else {
@@ -370,7 +372,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3
+      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA
     });
   };
 
@@ -502,13 +504,30 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 gap-8">
-                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
-                      <div className="w-8 h-[2px] bg-indigo-500"></div> Core Identity
-                    </h4>
-                    <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
-                    
-                    {/* Campo de URL de Imagen Restaurado */}
+                    <div className="grid grid-cols-1 gap-8">
+                      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                        <div className="w-8 h-[2px] bg-indigo-500"></div> Core Identity
+                      </h4>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                          <Building className="w-2.5 h-2.5" /> Motivo de Adquisición
+                        </label>
+                        <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                          {Object.values(AcquisitionReason).map((reason) => (
+                            <button
+                              key={reason}
+                              type="button"
+                              onClick={() => setEditedData((prev: PropertyFormData) => ({ ...prev, acquisitionReason: reason }))}
+                              className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${editedData.acquisitionReason === reason ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                              {reason}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                      
+                      {/* Campo de URL de Imagen Restaurado */}
                     <FormField label="Visual Media URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, imageUrl: v}))} icon={ImageIcon} placeholder="https://example.com/property-photo.jpg" />
 
                     <div className="grid grid-cols-2 gap-6">

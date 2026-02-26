@@ -199,6 +199,7 @@ export const dataService = {
       status: p.status as any,
       rating: p.rating,
       notes: p.notes,
+      acquisitionReason: p.acquisition_reason,
       images: p.images || [],
       renovationCosts: (p.renovations || []).map((r: any) => ({
         id: r.id,
@@ -235,6 +236,7 @@ export const dataService = {
         status: property.status,
         rating: property.rating,
         notes: property.notes,
+        acquisition_reason: property.acquisitionReason,
         images: property.images
       }])
       .select()
@@ -263,6 +265,7 @@ export const dataService = {
         floor: property.floor,
         notes: property.notes,
         rating: property.rating,
+        acquisition_reason: property.acquisitionReason,
         images: property.images 
       })
       .eq('id', id)
