@@ -423,10 +423,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {/* Intro / Folder Details */}
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-2xl font-black mb-2 tracking-tight text-slate-900">¡Hola! 👋</h2>
-            <p className="text-slate-500 text-sm font-medium leading-relaxed mb-6 max-w-2xl">
-              Bienvenido a tu espacio exclusivo. Aquí encontrarás el detalle de tu búsqueda, el itinerario de visitas y el acceso a todas las propiedades seleccionadas.
-            </p>
+            <h2 className="text-2xl font-black mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            <div 
+              className="text-slate-500 text-sm font-medium leading-relaxed mb-8 max-w-2xl prose prose-sm prose-slate"
+              dangerouslySetInnerHTML={{ 
+                __html: itinerary.folder.description || 'Bienvenido a tu espacio exclusivo. Aquí encontrarás el detalle de tu búsqueda, el itinerario de visitas y el acceso a todas las propiedades seleccionadas.' 
+              }}
+            />
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">

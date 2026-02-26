@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, DollarSign, ArrowLeftRight } from 'lucide-react';
 import { SearchFolder, FolderStatus, TransactionType } from '../types';
+import Editor from 'react-simple-wysiwyg';
 
 interface FolderFormModalProps {
   isOpen: boolean;
@@ -166,13 +167,13 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                 <FileText className="w-3 h-3" />
                 Notas Estratégicas
               </label>
-              <textarea
-                rows={3}
-                placeholder="Ej: Solo edificios con seguridad, cerca del subte..."
-                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-slate-600 placeholder:text-slate-300 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden">
+                <Editor
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  containerProps={{ style: { height: '200px', border: 'none' } }}
+                />
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

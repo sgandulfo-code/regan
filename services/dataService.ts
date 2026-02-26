@@ -605,7 +605,8 @@ export const dataService = {
         coveredSqft: p.covered_sqft,
         uncoveredSqft: p.uncovered_sqft,
         age: p.age,
-        floor: p.floor
+        floor: p.floor,
+        acquisitionReason: p.acquisition_reason
       }))
     };
   },
