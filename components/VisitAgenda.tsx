@@ -79,7 +79,9 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     const folder = getFolderData(visit.folderId);
     if (!property) return null;
 
-    const isToday = new Date(visit.date).toDateString() === new Date().toDateString();
+    const today = new Date();
+    const visitDateObj = new Date(visit.date + 'T00:00:00');
+    const isToday = today.toDateString() === visitDateObj.toDateString();
 
     const handleStatusChange = (newStatus: string) => {
       // Assuming onEditVisit handles partial updates or we need a new prop for status update
@@ -162,7 +164,13 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
-                <p className="text-sm font-black text-slate-700">{new Date(visit.date).toLocaleDateString()}</p>
+                <p className="text-sm font-black text-slate-700">
+                  {new Date(visit.date + 'T00:00:00').toLocaleDateString('es-ES', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                  })}
+                </p>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hora</p>

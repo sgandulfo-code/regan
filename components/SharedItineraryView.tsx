@@ -530,7 +530,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="space-y-6">
               {activeVisits.length > 0 ? (
                 activeVisits.map((visit: any) => {
-                  const isToday = new Date(visit.date).toDateString() === new Date().toDateString();
+                  // Fix timezone issue by appending time or using local date comparison
+                  const today = new Date();
+                  const visitDateObj = new Date(visit.date + 'T00:00:00');
+                  const isToday = today.toDateString() === visitDateObj.toDateString();
                   
                   // Determine status based on legacy logic
                   let displayStatus = 'Pending';
@@ -629,7 +632,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
-                              <p className="text-sm font-black text-slate-700">{new Date(visit.date).toLocaleDateString()}</p>
+                              <p className="text-sm font-black text-slate-700">
+                                {new Date(visit.date + 'T00:00:00').toLocaleDateString('es-ES', {
+                                  year: 'numeric',
+                                  month: '2-digit',
+                                  day: '2-digit'
+                                })}
+                              </p>
                             </div>
                             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hora</p>

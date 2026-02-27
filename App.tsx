@@ -530,7 +530,9 @@ const App: React.FC = () => {
                     const property = properties.find(p => p.id === visit.propertyId);
                     const folder = folders.find(f => f.id === visit.folderId);
                     const visitDate = new Date(visit.date + 'T' + visit.time);
-                    const isToday = new Date().toDateString() === new Date(visit.date).toDateString();
+                    const today = new Date();
+                    const visitDateObj = new Date(visit.date + 'T00:00:00');
+                    const isToday = today.toDateString() === visitDateObj.toDateString();
 
                     return (
                       <div key={visit.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50 transition-all group">
