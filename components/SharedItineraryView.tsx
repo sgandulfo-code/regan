@@ -269,9 +269,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     setIsRequestModalOpen(true);
   };
 
+  const [requestDate, setRequestDate] = useState('');
+  const [requestTime, setRequestTime] = useState('');
+
   const handleRequestVisit = (property: any) => {
     setSelectedPropertyForRequest(property);
     setRequestMessage('');
+    setRequestDate('');
+    setRequestTime('');
     setIsRequestModalOpen(true);
   };
 
@@ -288,9 +293,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       if (existingVisit) {
         // Add request to feedback
         const currentFeedback = parseFeedback(existingVisit);
+        let content = message;
+        if (requestDate || requestTime) {
+          content += `\n\n(Preferencia: ${requestDate ? new Date(requestDate).toLocaleDateString() : ''} ${requestTime ? requestTime + 'hs' : ''})`;
+        }
+
         const newRequest: FeedbackItem = {
           id: crypto.randomUUID(),
-          content: message,
+          content: content,
           photos: [],
           createdAt: new Date().toISOString(),
           author: 'client'
@@ -324,12 +334,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         const newVisitData = {
           propertyId: property.id,
           folderId: data.itinerary.folderId,
-          date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-          time: '09:00:00', // Default time
+          date: requestDate || new Date().toISOString().split('T')[0], // YYYY-MM-DD
+          time: requestTime ? (requestTime.length === 5 ? requestTime + ':00' : requestTime) : '09:00:00',
           contactName: 'Solicitud Web',
           contactPhone: '',
           checklist: [],
-          notes: 'Solicitud de visita desde portal del cliente (Horario a coordinar)',
+          notes: 'Solicitud de visita desde portal del cliente',
           status: 'Pending',
           clientFeedback: JSON.stringify([{
             id: crypto.randomUUID(),
@@ -1070,6 +1080,32 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 <div>
                   <h4 className="font-bold text-slate-900 text-sm">{selectedPropertyForRequest.title}</h4>
                   <p className="text-xs text-slate-500">{selectedPropertyForRequest.address}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                    Fecha Preferida
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    value={requestDate}
+                    onChange={(e) => setRequestDate(e.target.value)}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                    Hora Preferida
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    value={requestTime}
+                    onChange={(e) => setRequestTime(e.target.value)}
+                  />
                 </div>
               </div>
 

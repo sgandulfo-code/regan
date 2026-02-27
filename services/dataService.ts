@@ -441,9 +441,10 @@ export const dataService = {
         contact_name: visit.contactName,
         contact_phone: visit.contactPhone,
         notes: visit.notes,
-        status: visit.status || 'Scheduled',
+        status: visit.status || 'Pending',
         checklist: visit.checklist || [],
-        client_feedback: visit.clientFeedback
+        client_feedback: visit.clientFeedback,
+        status_updated_at: new Date().toISOString()
       }])
       .select()
       .single();
@@ -471,7 +472,10 @@ export const dataService = {
     if (visit.contactName !== undefined) updates.contact_name = visit.contactName;
     if (visit.contactPhone !== undefined) updates.contact_phone = visit.contactPhone;
     if (visit.notes !== undefined) updates.notes = visit.notes;
-    if (visit.status !== undefined) updates.status = visit.status;
+    if (visit.status !== undefined) {
+      updates.status = visit.status;
+      updates.status_updated_at = new Date().toISOString();
+    }
     if (visit.checklist !== undefined) updates.checklist = visit.checklist;
 
     const { data, error } = await supabase

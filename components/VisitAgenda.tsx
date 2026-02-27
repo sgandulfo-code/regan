@@ -71,7 +71,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
 
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const activeVisits = sortedVisits.filter(v => v.status === 'Scheduled' || v.status === 'Pending' || v.status === 'Confirmed');
+  const activeVisits = sortedVisits.filter(v => v.status === 'Pending' || v.status === 'Confirmed');
   const pastVisits = sortedVisits.filter(v => v.status === 'Completed' || v.status === 'Cancelled');
 
   const VisitCard = ({ visit }: { visit: Visit }) => {
@@ -123,7 +123,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl border outline-none cursor-pointer transition-all ${
                     visit.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                    visit.status === 'Confirmed' || visit.status === 'Scheduled' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
+                    visit.status === 'Confirmed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
                     visit.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                     'bg-slate-50 text-slate-500 border-slate-200'
                   }`}
