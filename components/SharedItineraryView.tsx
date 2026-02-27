@@ -532,6 +532,18 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 activeVisits.map((visit: any) => {
                   const isToday = new Date(visit.date).toDateString() === new Date().toDateString();
                   
+                  // Determine status based on legacy logic
+                  let displayStatus = 'Pending';
+                  if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
+                    displayStatus = 'Pending';
+                  } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
+                    displayStatus = 'Confirmed';
+                  } else if (visit.status === 'Completed') {
+                    displayStatus = 'Completed';
+                  } else if (visit.status === 'Cancelled') {
+                    displayStatus = 'Cancelled';
+                  }
+                  
                   return (
                     <div key={visit.id} className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
                       {isToday && (
@@ -554,7 +566,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               </p>
                             </div>
                             
-                            {visit.status === 'Pending' && (
+                            {displayStatus === 'Pending' && (
                               <div className="flex items-center gap-2">
                                 <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 flex items-center gap-1.5">
                                   <Clock className="w-3 h-3" /> A Confirmar
@@ -575,17 +587,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                 </button>
                               </div>
                             )}
-                            {visit.status === 'Confirmed' && (
+                            {displayStatus === 'Confirmed' && (
                               <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Confirmada
                               </span>
                             )}
-                            {visit.status === 'Completed' && (
+                            {displayStatus === 'Completed' && (
                               <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Realizada
                               </span>
                             )}
-                            {visit.status === 'Cancelled' && (
+                            {displayStatus === 'Cancelled' && (
                               <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 flex items-center gap-1.5">
                                 <X className="w-3 h-3" /> Cancelada
                               </span>
@@ -822,7 +834,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-slate-800 truncate text-sm">{v.property.title}</h4>
-                        <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status === 'Completed' ? 'Realizada' : 'Cancelada'}</p>
                         {(v.clientFeedback || v.rating) && (
                           <div className="flex items-center gap-2 mt-1">
                             {v.rating && <div className="flex text-amber-400"><Star className="w-3 h-3 fill-current" /> <span className="text-[10px] font-bold ml-1 text-slate-500">{v.rating}</span></div>}
