@@ -432,16 +432,6 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
             )}
 
-            <div className="mb-8">
-              <h3 className="text-slate-800 font-bold mb-2 text-sm uppercase tracking-wider">Observaciones</h3>
-              <div 
-                className="text-slate-500 text-sm font-medium leading-relaxed max-w-2xl prose prose-sm prose-slate"
-                dangerouslySetInnerHTML={{ 
-                  __html: itinerary.folder.description || 'Bienvenido a tu espacio exclusivo. Aquí encontrarás el detalle de tu búsqueda, el itinerario de visitas y el acceso a todas las propiedades seleccionadas.' 
-                }}
-              />
-            </div>
-
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
@@ -490,7 +480,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observaciones</span>
                 </div>
-                <p className="text-sm font-medium text-slate-600 leading-relaxed">{itinerary.folder.description}</p>
+                <div 
+                  className="text-sm font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: itinerary.folder.description }}
+                />
               </div>
             )}
           </div>
