@@ -316,6 +316,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           existingVisit.rating
         );
 
+        // Update visit date/time if provided
+        if (requestDate || requestTime) {
+          const updates: any = {};
+          if (requestDate) updates.date = requestDate;
+          if (requestTime) updates.time = requestTime;
+          
+          await dataService.updateVisit(existingVisit.id, updates);
+        }
+
         // Update local state
         setData((prev: any) => ({
           ...prev,
@@ -323,7 +332,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             v.id === existingVisit.id ? { 
               ...v, 
               clientFeedback: JSON.stringify(newFeedbackList),
-              photos: allPhotos
+              photos: allPhotos,
+              date: requestDate || v.date,
+              time: requestTime || v.time
             } : v
           )
         }));
