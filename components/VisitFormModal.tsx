@@ -159,16 +159,33 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
-                  <User className="w-3 h-3" /> Contacto Inmobiliaria
+                  <CheckSquare className="w-3 h-3" /> Estado
                 </label>
-                <input
-                  type="text"
-                  placeholder="ej: Juan Pérez"
+                <select
                   className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
-                  value={formData.contactName}
-                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                />
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as Visit['status'] })}
+                >
+                  <option value="Pending">A Confirmar</option>
+                  <option value="Scheduled">Programada</option>
+                  <option value="Confirmed">Confirmada</option>
+                  <option value="Completed">Realizada</option>
+                  <option value="Cancelled">Cancelada</option>
+                </select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                <User className="w-3 h-3" /> Contacto Inmobiliaria
+              </label>
+              <input
+                type="text"
+                placeholder="ej: Juan Pérez"
+                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
+                value={formData.contactName}
+                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-6">
