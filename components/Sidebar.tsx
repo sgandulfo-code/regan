@@ -16,6 +16,7 @@ interface SidebarProps {
   onDeleteFolder?: (id: string) => void;
   onShareFolder?: (folder: SearchFolder) => void;
   onShareItinerary?: (folderId: string) => void;
+  pendingVisitsCount?: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -30,14 +31,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   onEditFolder,
   onDeleteFolder,
   onShareFolder,
-  onShareItinerary
+  onShareItinerary,
+  pendingVisitsCount = 0
 }) => {
   
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
-    { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" /> },
+    { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" />, badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
   ];
@@ -74,7 +76,12 @@ const Sidebar: React.FC<SidebarProps> = ({
             }`}
           >
             {item.icon}
-            <span className="text-sm">{item.label}</span>
+            <span className="text-sm flex-1 text-left">{item.label}</span>
+            {(item as any).badge && (
+              <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                {(item as any).badge}
+              </span>
+            )}
           </button>
         ))}
 
