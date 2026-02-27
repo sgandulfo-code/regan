@@ -509,6 +509,69 @@ const App: React.FC = () => {
 
         {activeTab === 'dashboard' && !activeFolderId && (
           <div className="space-y-8">
+            {/* Weekly Agenda Section */}
+            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                  <CalendarDays className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800 tracking-tight">Agenda Semanal</h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próximas visitas confirmadas</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {visits
+                  .filter(v => v.status === 'Confirmed')
+                  .sort((a, b) => new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime())
+                  .slice(0, 5) // Show next 5 confirmed visits
+                  .map(visit => {
+                    const property = properties.find(p => p.id === visit.propertyId);
+                    const folder = folders.find(f => f.id === visit.folderId);
+                    const visitDate = new Date(visit.date + 'T' + visit.time);
+                    const isToday = new Date().toDateString() === new Date(visit.date).toDateString();
+
+                    return (
+                      <div key={visit.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50 transition-all group">
+                        <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500'}`}>
+                          <span className="text-[10px] font-black uppercase tracking-widest leading-none">{visitDate.toLocaleDateString('es-ES', { weekday: 'short' }).slice(0, 3)}</span>
+                          <span className="text-lg font-black leading-none mt-1">{visitDate.getDate()}</span>
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs font-black text-slate-800 truncate">{property?.title || 'Propiedad desconocida'}</span>
+                            {folder && (
+                              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest whitespace-nowrap ${folder.color.replace('bg-', 'text-').replace('600', '500')} bg-slate-100`}>
+                                {folder.name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {visit.time.slice(0, 5)} HS</span>
+                            <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {property?.address}</span>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => { setActiveFolderId(visit.folderId); setActiveTab('visits'); }}
+                          className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-300 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-all"
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                
+                {visits.filter(v => v.status === 'Confirmed').length === 0 && (
+                  <div className="text-center py-8 text-slate-400">
+                    <p className="text-xs font-medium">No hay visitas confirmadas próximamente.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
               <button
                 onClick={() => setFolderTransactionFilter('All')}
