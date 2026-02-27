@@ -553,8 +553,30 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       )}
 
                       <div className="flex flex-col lg:flex-row gap-8">
-                        <div className="w-full lg:w-48 h-48 rounded-[2rem] overflow-hidden shrink-0 shadow-lg">
+                        <div className="w-full lg:w-48 h-48 rounded-[2rem] overflow-hidden shrink-0 shadow-lg relative">
                           <img src={visit.property.images[0] || 'https://picsum.photos/seed/prop/400/400'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                          <div className="absolute top-3 left-3 z-10">
+                            {displayStatus === 'Pending' && (
+                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                                <Clock className="w-3 h-3" /> A Confirmar
+                              </span>
+                            )}
+                            {displayStatus === 'Confirmed' && (
+                              <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3 h-3" /> Confirmada
+                              </span>
+                            )}
+                            {displayStatus === 'Completed' && (
+                              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3 h-3" /> Realizada
+                              </span>
+                            )}
+                            {displayStatus === 'Cancelled' && (
+                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                                <X className="w-3 h-3" /> Cancelada
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         <div className="flex-1">
