@@ -442,7 +442,8 @@ export const dataService = {
         contact_phone: visit.contactPhone,
         notes: visit.notes,
         status: visit.status || 'Scheduled',
-        checklist: visit.checklist || []
+        checklist: visit.checklist || [],
+        client_feedback: visit.clientFeedback
       }])
       .select()
       .single();
