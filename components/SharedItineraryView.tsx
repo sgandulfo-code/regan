@@ -877,15 +877,53 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {activeTab === 'properties' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {properties && properties.length > 0 ? (
-              properties.map((property: any) => (
-                <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
-                  <div className="h-64 relative overflow-hidden shrink-0">
-                    <img 
-                      src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      alt={property.title} 
-                    />
-                    <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+              properties.map((property: any) => {
+                const visit = visits.find((v: any) => v.propertyId === property.id);
+                let displayStatus = null;
+                
+                if (visit) {
+                  if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
+                    displayStatus = 'Pending';
+                  } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
+                    displayStatus = 'Confirmed';
+                  } else if (visit.status === 'Completed') {
+                    displayStatus = 'Completed';
+                  } else if (visit.status === 'Cancelled') {
+                    displayStatus = 'Cancelled';
+                  }
+                }
+
+                return (
+                  <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                    <div className="h-64 relative overflow-hidden shrink-0">
+                      <img 
+                        src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        alt={property.title} 
+                      />
+                      <div className="absolute top-4 left-4 z-10">
+                        {displayStatus === 'Pending' && (
+                          <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <Clock className="w-3 h-3" /> A Confirmar
+                          </span>
+                        )}
+                        {displayStatus === 'Confirmed' && (
+                          <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3" /> Confirmada
+                          </span>
+                        )}
+                        {displayStatus === 'Completed' && (
+                          <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3" /> Realizada
+                          </span>
+                        )}
+                        {displayStatus === 'Cancelled' && (
+                          <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <X className="w-3 h-3" /> Cancelada
+                          </span>
+                        )}
+                      </div>
+                      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
                       <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
                         {property.status}
                       </div>
@@ -976,7 +1014,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </div>
                   </div>
                 </div>
-              ))
+              );
+            })
             ) : (
               <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                 <Home className="w-12 h-12 text-slate-100 mx-auto mb-4" />
