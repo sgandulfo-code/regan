@@ -28,7 +28,9 @@ import {
   AlertTriangle,
   CheckCircle,
   X,
-  Search
+  Search,
+  User,
+  Phone
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus, AcquisitionReason } from '../types';
