@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -40,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" />, badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined },
+    { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
   ];

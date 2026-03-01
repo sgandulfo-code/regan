@@ -38,6 +38,7 @@ import VisitAgenda from './components/VisitAgenda';
 import VisitFormModal from './components/VisitFormModal';
 import SharedItineraryView from './components/SharedItineraryView';
 import ShareItineraryModal from './components/ShareItineraryModal';
+import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -707,6 +708,10 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
+
+        {activeTab === 'request-visits' && user && (
+          <RequestVisitView properties={properties} user={user} />
+        )}
 
         {activeTab === 'visits' && (
           <VisitAgenda 
