@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2, DollarSign } from 'lucide-react';
-import { Property, UserRole, RenovationItem } from '../types';
+import { Property, UserRole, RenovationItem, TransactionType } from '../types';
 import RenovationCalculator from './RenovationCalculator';
+import ClosingCostsWidget from './ClosingCostsWidget';
 import { dataService } from '../services/dataService';
 
 interface PropertyDetailModalProps {
@@ -74,6 +75,10 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                 <p className="text-xl md:text-2xl font-black text-slate-800">${property.fees || 0}</p>
               </div>
             </div>
+
+            <section>
+              <ClosingCostsWidget property={property} transactionType={TransactionType.COMPRA} />
+            </section>
 
             <section className="space-y-6">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
