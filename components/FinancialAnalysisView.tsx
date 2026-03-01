@@ -12,8 +12,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   const [searchTerm, setSearchTerm] = useState('');
   
   // Analysis State
-  const [purchasePrice, setPurchasePrice] = useState(0);
-  const [salePrice, setSalePrice] = useState(0);
+  const [transactionPrice, setTransactionPrice] = useState(0);
   const [deedValue, setDeedValue] = useState(0);
   
   // Buy Side Percentages
@@ -30,8 +29,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
 
   useEffect(() => {
     if (selectedProperty) {
-      setPurchasePrice(selectedProperty.price);
-      setSalePrice(selectedProperty.price * 1.3); // Default estimated sale price (+30%)
+      setTransactionPrice(selectedProperty.price);
       setDeedValue(selectedProperty.price);
     }
   }, [selectedProperty]);
@@ -46,8 +44,8 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-8 pb-20">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Análisis Financiero</h2>
-            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Selecciona una propiedad para analizar costos de compra y venta</p>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tight">Análisis de Operación</h2>
+            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Selecciona una propiedad para simular el cierre</p>
           </div>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -86,29 +84,28 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   }
 
   // Calculations
-  const renovationCost = selectedProperty.renovationCosts?.reduce((sum, item) => sum + item.estimatedCost, 0) || 0;
   
   // Buy Side
-  const buyAgencyFee = (purchasePrice * buyAgencyFeePct) / 100;
+  const buyAgencyFee = (transactionPrice * buyAgencyFeePct) / 100;
   const buyNotaryFee = (deedValue * buyNotaryFeePct) / 100;
   const buyStampTax = (deedValue * buyStampTaxPct) / 100;
-  const totalPurchaseCost = purchasePrice + buyAgencyFee + buyNotaryFee + buyStampTax + renovationCost;
+  const totalBuyerCost = transactionPrice + buyAgencyFee + buyNotaryFee + buyStampTax;
 
   // Sell Side
-  const sellAgencyFee = (salePrice * sellAgencyFeePct) / 100;
+  const sellAgencyFee = (transactionPrice * sellAgencyFeePct) / 100;
   const sellTransferTax = (deedValue * sellTransferTaxPct) / 100; // Usually on deed value
   const sellNotaryFee = (deedValue * sellNotaryFeePct) / 100;
-  const totalSaleExpenses = sellAgencyFee + sellTransferTax + sellNotaryFee;
-  const netSaleProceeds = salePrice - totalSaleExpenses;
+  const totalSellerExpenses = sellAgencyFee + sellTransferTax + sellNotaryFee;
+  const netSellerProceeds = transactionPrice - totalSellerExpenses;
 
-  const potentialProfit = netSaleProceeds - totalPurchaseCost;
-  const roi = (potentialProfit / totalPurchaseCost) * 100;
+  // Agent Result
+  const totalCommission = buyAgencyFee + sellAgencyFee;
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
 
-  const CostRow = ({ label, value, pct, onChangePct, color = "slate" }: any) => (
+  const CostRow = ({ label, value, pct, onChangePct, color = "slate", isNegative = false }: any) => (
     <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-indigo-200 transition-colors">
       <div className="flex items-center gap-3">
         <div className={`w-2 h-2 rounded-full bg-${color}-500`}></div>
@@ -127,7 +124,9 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
           )}
         </div>
       </div>
-      <span className="text-xs font-black text-slate-900">{formatCurrency(value)}</span>
+      <span className={`text-xs font-black ${isNegative ? 'text-rose-500' : 'text-slate-900'}`}>
+        {isNegative ? '-' : ''}{formatCurrency(value)}
+      </span>
     </div>
   );
 
@@ -138,42 +137,30 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
           <ArrowRight className="w-6 h-6 rotate-180 text-slate-400" />
         </button>
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Análisis Financiero</h2>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Análisis de Operación</h2>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">{selectedProperty.title}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* BUY SIDE COLUMN */}
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
-              <TrendingDown className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-900">Gastos de Compra</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inversión Total Requerida</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Precio de Compra</label>
-              <div className="flex items-center gap-2">
+        
+        {/* COMMON INPUTS */}
+        <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row gap-6">
+           <div className="flex-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Precio de Operación (Real)</label>
+              <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 <DollarSign className="w-5 h-5 text-slate-400" />
                 <input 
                   type="number" 
-                  value={purchasePrice} 
-                  onChange={(e) => setPurchasePrice(parseFloat(e.target.value))}
-                  className="w-full bg-transparent text-2xl font-black text-slate-900 outline-none"
+                  value={transactionPrice} 
+                  onChange={(e) => setTransactionPrice(parseFloat(e.target.value))}
+                  className="w-full bg-transparent text-xl font-black text-slate-900 outline-none"
                 />
               </div>
-            </div>
-
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Valor Escrituración</label>
-               <div className="flex items-center gap-2">
+           </div>
+           <div className="flex-1">
+               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Valor Escrituración (Fiscal)</label>
+               <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
                 <FileText className="w-5 h-5 text-slate-400" />
                 <input 
                   type="number" 
@@ -182,25 +169,43 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                   className="w-full bg-transparent text-xl font-bold text-slate-700 outline-none"
                 />
               </div>
-            </div>
+           </div>
+        </div>
 
+        {/* BUYER SIDE */}
+        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+              <TrendingDown className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-slate-900">Lado Comprador</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total a Desembolsar</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
             <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-xs font-bold text-slate-600">Precio Propiedad</span>
+                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice)}</span>
+              </div>
               <CostRow label="Honorarios Inmobiliaria" value={buyAgencyFee} pct={buyAgencyFeePct} onChangePct={setBuyAgencyFeePct} color="rose" />
               <CostRow label="Escribanía (s/ Escritura)" value={buyNotaryFee} pct={buyNotaryFeePct} onChangePct={setBuyNotaryFeePct} color="emerald" />
               <CostRow label="Impuesto Sellos (s/ Escritura)" value={buyStampTax} pct={buyStampTaxPct} onChangePct={setBuyStampTaxPct} color="amber" />
-              <CostRow label="Reformas Estimadas" value={renovationCost} color="violet" />
             </div>
 
             <div className="pt-6 border-t border-slate-100">
               <div className="flex justify-between items-end">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total a Invertir</span>
-                <span className="text-3xl font-black text-slate-900">{formatCurrency(totalPurchaseCost)}</span>
+                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Operación</span>
+                <span className="text-3xl font-black text-slate-900">{formatCurrency(totalBuyerCost)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* SELL SIDE COLUMN */}
+        {/* SELLER SIDE */}
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-indigo-500"></div>
           <div className="flex items-center gap-4 mb-8">
@@ -208,69 +213,48 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
               <TrendingUp className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-900">Gastos de Venta</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Escenario de Salida / Venta</p>
+              <h3 className="text-xl font-black text-slate-900">Lado Vendedor</h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Neto a Recibir</p>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Precio de Venta Estimado</label>
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-slate-400" />
-                <input 
-                  type="number" 
-                  value={salePrice} 
-                  onChange={(e) => setSalePrice(parseFloat(e.target.value))}
-                  className="w-full bg-transparent text-2xl font-black text-slate-900 outline-none"
-                />
-              </div>
-            </div>
-
             <div className="space-y-3">
-              <CostRow label="Honorarios Inmobiliaria" value={sellAgencyFee} pct={sellAgencyFeePct} onChangePct={setSellAgencyFeePct} color="rose" />
-              <CostRow label="ITI / Impuestos (s/ Escritura)" value={sellTransferTax} pct={sellTransferTaxPct} onChangePct={setSellTransferTaxPct} color="amber" />
-              <CostRow label="Gastos Escritura Vendedor" value={sellNotaryFee} pct={sellNotaryFeePct} onChangePct={setSellNotaryFeePct} color="emerald" />
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-xs font-bold text-slate-600">Precio Venta</span>
+                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice)}</span>
+              </div>
+              <CostRow label="Honorarios Inmobiliaria" value={sellAgencyFee} pct={sellAgencyFeePct} onChangePct={setSellAgencyFeePct} color="rose" isNegative />
+              <CostRow label="ITI / Impuestos (s/ Escritura)" value={sellTransferTax} pct={sellTransferTaxPct} onChangePct={setSellTransferTaxPct} color="amber" isNegative />
+              <CostRow label="Gastos Escritura" value={sellNotaryFee} pct={sellNotaryFeePct} onChangePct={setSellNotaryFeePct} color="emerald" isNegative />
             </div>
 
             <div className="pt-6 border-t border-slate-100 space-y-4">
-              <div className="flex justify-between items-end opacity-60">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Gastos Venta</span>
-                <span className="text-lg font-black text-rose-500">-{formatCurrency(totalSaleExpenses)}</span>
-              </div>
               <div className="flex justify-between items-end">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Neto a Recibir</span>
-                <span className="text-3xl font-black text-indigo-600">{formatCurrency(netSaleProceeds)}</span>
+                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Neto en Mano</span>
+                <span className="text-3xl font-black text-indigo-600">{formatCurrency(netSellerProceeds)}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* SUMMARY / ROI */}
+        {/* AGENT RESULT */}
         <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-6">
             <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm">
-              <Calculator className="w-8 h-8 text-emerald-400" />
+              <Briefcase className="w-8 h-8 text-emerald-400" />
             </div>
             <div>
-              <h3 className="text-2xl font-black tracking-tight">Resultado de la Operación</h3>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Neto Venta - Total Inversión</p>
+              <h3 className="text-2xl font-black tracking-tight">Resultado del Agente</h3>
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Total Honorarios (Comprador + Vendedor)</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-12">
-            <div className="text-right">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profit / Loss</p>
-              <p className={`text-4xl font-black ${potentialProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {potentialProfit >= 0 ? '+' : ''}{formatCurrency(potentialProfit)}
-              </p>
-            </div>
-            <div className="text-right pl-12 border-l border-white/10">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ROI Estimado</p>
-              <p className={`text-4xl font-black ${roi >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {roi.toFixed(2)}%
-              </p>
-            </div>
+          <div className="text-right">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comisión Total</p>
+            <p className="text-5xl font-black text-emerald-400">
+              {formatCurrency(totalCommission)}
+            </p>
           </div>
         </div>
       </div>
