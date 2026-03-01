@@ -710,7 +710,7 @@ const App: React.FC = () => {
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
 
         {activeTab === 'request-visits' && user && (
-          <RequestVisitView properties={properties} user={user} />
+          <RequestVisitView properties={properties} user={user} visits={visits} folders={folders} />
         )}
 
         {activeTab === 'visits' && (

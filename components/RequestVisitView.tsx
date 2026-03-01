@@ -1,35 +1,48 @@
 import React from 'react';
-import { Property, User } from '../types';
-import { MapPin, Building, User as UserIcon, Phone, MessageSquare, ExternalLink } from 'lucide-react';
+import { Property, User, Visit, SearchFolder } from '../types';
+import { MapPin, Building, User as UserIcon, Phone, MessageSquare, FolderOpen } from 'lucide-react';
 
 interface RequestVisitViewProps {
   properties: Property[];
   user: User;
+  visits: Visit[];
+  folders: SearchFolder[];
 }
 
-const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user }) => {
-  // Filter properties that have agent info and are not yet visited or are in a state where a visit might be requested
-  // For now, let's show all properties that have agent info, or maybe filter by status if needed.
-  // The prompt implies "visita solicitada a coordinar", which might mean existing visits in 'Pending' state,
-  // OR properties where the user wants to initiate a visit.
-  // Given "pedir visita al agente", it sounds like initiating or following up.
-  // Let's assume we list properties that have agent info so the user can contact them.
-  
-  const propertiesWithAgent = properties.filter(p => p.agentWhatsapp || p.agentName);
+const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, visits, folders }) => {
+  // Filter properties that have agent info AND have a visit in 'Pending' status
+  const propertiesToRequest = properties.filter(p => {
+    const hasAgentInfo = p.agentWhatsapp || p.agentName;
+    if (!hasAgentInfo) return false;
+
+    const visit = visits.find(v => v.propertyId === p.id);
+    // "A coordinar" usually maps to 'Pending' status in this app context
+    return visit && visit.status === 'Pending';
+  });
+
+  const getFolderName = (folderId: string) => {
+    const folder = folders.find(f => f.id === folderId);
+    return folder ? folder.name : 'Sin Carpeta';
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Pedir Visitas</h2>
-          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Coordina tus visitas directamente con los agentes</p>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Coordina tus visitas pendientes directamente con los agentes</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {propertiesWithAgent.map(property => (
-          <div key={property.id} className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all group">
-            <div className="flex gap-6">
+        {propertiesToRequest.map(property => (
+          <div key={property.id} className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-indigo-50 px-4 py-2 rounded-bl-2xl border-b border-l border-indigo-100 flex items-center gap-2">
+               <FolderOpen className="w-3 h-3 text-indigo-500" />
+               <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">{getFolderName(property.folderId)}</span>
+            </div>
+
+            <div className="flex gap-6 mt-6">
               <div className="w-32 h-32 rounded-2xl overflow-hidden shrink-0 relative">
                 <img 
                   src={property.images[0] || 'https://picsum.photos/seed/prop/200/200'} 
@@ -81,11 +94,11 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user })
           </div>
         ))}
 
-        {propertiesWithAgent.length === 0 && (
+        {propertiesToRequest.length === 0 && (
           <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
             <MessageSquare className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay propiedades con información de contacto de agentes.</p>
-            <p className="text-slate-300 text-[10px] mt-2">Edita tus propiedades para agregar el WhatsApp del agente.</p>
+            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay visitas pendientes de coordinar con información de agente.</p>
+            <p className="text-slate-300 text-[10px] mt-2">Asegúrate de tener visitas en estado "Pendiente" y datos del agente cargados.</p>
           </div>
         )}
       </div>
