@@ -21,7 +21,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedPropertyForRequest, setSelectedPropertyForRequest] = useState<any>(null);
   const [requestMessage, setRequestMessage] = useState('');
-  const [agentEmail, setAgentEmail] = useState<string>('');
+  const [agentProfile, setAgentProfile] = useState<any>(null);
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -31,7 +31,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         
         if (result?.itinerary?.folder?.userId) {
           const profile = await dataService.getProfile(result.itinerary.folder.userId);
-          if (profile) setAgentEmail(profile.email);
+          if (profile) setAgentProfile(profile);
         }
       } catch (error) {
         console.error('Error fetching shared itinerary:', error);
@@ -423,12 +423,24 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              En Vivo
-            </div>
-            {agentEmail && (
-              <p className="text-[10px] font-medium text-slate-400">{agentEmail}</p>
+            {agentProfile?.whatsappNumber ? (
+              <a 
+                href={`https://wa.me/${agentProfile.whatsappNumber}?text=${encodeURIComponent(`Hola ${agentProfile.name}, `)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2 hover:bg-emerald-100 transition-colors cursor-pointer"
+              >
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                En Vivo
+              </a>
+            ) : (
+              <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                En Vivo
+              </div>
+            )}
+            {agentProfile?.email && (
+              <p className="text-[10px] font-medium text-slate-400">{agentProfile.email}</p>
             )}
           </div>
         </div>
