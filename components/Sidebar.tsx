@@ -41,7 +41,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" />, badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined },
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
-    { id: 'calculator', label: 'Estimador Reformas', icon: <Calculator className="w-5 h-5" /> },
+    { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
+    { id: 'calculator', label: 'Estimador Reformas', icon: <Pencil className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
   ];
 

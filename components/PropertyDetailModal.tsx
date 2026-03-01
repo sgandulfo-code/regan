@@ -76,10 +76,6 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               </div>
             </div>
 
-            <section>
-              <ClosingCostsWidget property={property} transactionType={TransactionType.COMPRA} />
-            </section>
-
             <section className="space-y-6">
               <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
                 <Info className="w-4 h-4" /> Technical Specifications

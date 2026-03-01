@@ -40,6 +40,7 @@ import SharedItineraryView from './components/SharedItineraryView';
 import ShareItineraryModal from './components/ShareItineraryModal';
 import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
+import FinancialAnalysisView from './components/FinancialAnalysisView';
 import Auth from './components/Auth';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
 import { dataService } from './services/dataService';
@@ -707,6 +708,8 @@ const App: React.FC = () => {
              ))}
           </div>
         )}
+
+        {activeTab === 'financials' && <FinancialAnalysisView properties={properties} />}
 
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
 
