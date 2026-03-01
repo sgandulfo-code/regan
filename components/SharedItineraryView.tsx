@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import { FeedbackItem } from '../types';
@@ -22,6 +22,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [selectedPropertyForRequest, setSelectedPropertyForRequest] = useState<any>(null);
   const [requestMessage, setRequestMessage] = useState('');
   const [agentProfile, setAgentProfile] = useState<any>(null);
+
+  // Sorting State
+  const [sortBy, setSortBy] = useState<'price' | 'pricePerSqft' | 'sqft' | 'rooms'>('price');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     const fetchSharedData = async () => {
@@ -403,6 +407,31 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const sortedVisits = [...(visits || [])].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const activeVisits = sortedVisits.filter((v: any) => v.status === 'Scheduled' || v.status === 'Pending' || v.status === 'Confirmed');
   const pastVisits = sortedVisits.filter((v: any) => v.status === 'Completed' || v.status === 'Cancelled');
+
+  const sortedProperties = properties ? [...properties].sort((a: any, b: any) => {
+    let valA, valB;
+    switch (sortBy) {
+      case 'price':
+        valA = a.price;
+        valB = b.price;
+        break;
+      case 'pricePerSqft':
+        valA = a.sqft > 0 ? a.price / a.sqft : 0;
+        valB = b.sqft > 0 ? b.price / b.sqft : 0;
+        break;
+      case 'sqft':
+        valA = a.sqft;
+        valB = b.sqft;
+        break;
+      case 'rooms':
+        valA = a.rooms;
+        valB = b.rooms;
+        break;
+      default:
+        return 0;
+    }
+    return sortOrder === 'asc' ? valA - valB : valB - valA;
+  }) : [];
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -907,153 +936,178 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         )}
 
         {activeTab === 'properties' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {properties && properties.length > 0 ? (
-              properties.map((property: any) => {
-                const visit = visits.find((v: any) => v.propertyId === property.id);
-                let displayStatus = null;
-                
-                if (visit) {
-                  if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
-                    displayStatus = 'Pending';
-                  } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
-                    displayStatus = 'Confirmed';
-                  } else if (visit.status === 'Completed') {
-                    displayStatus = 'Completed';
-                  } else if (visit.status === 'Cancelled') {
-                    displayStatus = 'Cancelled';
-                  }
-                }
+          <div className="space-y-6">
+            <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="bg-transparent text-slate-600 text-[10px] font-black uppercase tracking-widest px-3 py-2 outline-none cursor-pointer"
+                >
+                  <option value="price">Precio</option>
+                  <option value="pricePerSqft">Valor m²</option>
+                  <option value="sqft">Superficie</option>
+                  <option value="rooms">Ambientes</option>
+                </select>
+                <div className="w-px h-4 bg-slate-200"></div>
+                <button 
+                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                  className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                  title={sortOrder === 'asc' ? "Orden Ascendente" : "Orden Descendente"}
+                >
+                  {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
 
-                return (
-                  <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
-                    <div className="h-64 relative overflow-hidden shrink-0">
-                      <img 
-                        src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                        alt={property.title} 
-                      />
-                      <div className="absolute top-4 left-4 z-10">
-                        {displayStatus === 'Pending' && (
-                          <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
-                            <Clock className="w-3 h-3" /> A Confirmar
-                          </span>
-                        )}
-                        {displayStatus === 'Confirmed' && (
-                          <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3" /> Confirmada
-                          </span>
-                        )}
-                        {displayStatus === 'Completed' && (
-                          <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3 h-3" /> Realizada
-                          </span>
-                        )}
-                        {displayStatus === 'Cancelled' && (
-                          <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
-                            <X className="w-3 h-3" /> Cancelada
-                          </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {sortedProperties && sortedProperties.length > 0 ? (
+                sortedProperties.map((property: any) => {
+                  const visit = visits.find((v: any) => v.propertyId === property.id);
+                  let displayStatus = null;
+                  
+                  if (visit) {
+                    if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
+                      displayStatus = 'Pending';
+                    } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
+                      displayStatus = 'Confirmed';
+                    } else if (visit.status === 'Completed') {
+                      displayStatus = 'Completed';
+                    } else if (visit.status === 'Cancelled') {
+                      displayStatus = 'Cancelled';
+                    }
+                  }
+
+                  return (
+                    <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                      <div className="h-64 relative overflow-hidden shrink-0">
+                        <img 
+                          src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                          alt={property.title} 
+                        />
+                        <div className="absolute top-4 left-4 z-10">
+                          {displayStatus === 'Pending' && (
+                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <Clock className="w-3 h-3" /> A Confirmar
+                            </span>
+                          )}
+                          {displayStatus === 'Confirmed' && (
+                            <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" /> Confirmada
+                            </span>
+                          )}
+                          {displayStatus === 'Completed' && (
+                            <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3 h-3" /> Realizada
+                            </span>
+                          )}
+                          {displayStatus === 'Cancelled' && (
+                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <X className="w-3 h-3" /> Cancelada
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
+                          {property.status}
+                        </div>
+                        {property.acquisitionReason && (
+                          <div className="bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
+                            {property.acquisitionReason}
+                          </div>
                         )}
                       </div>
-                      <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
-                      <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
-                        {property.status}
-                      </div>
-                      {property.acquisitionReason && (
-                        <div className="bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
-                          {property.acquisitionReason}
+                      {itinerary.settings.showPrices && (
+                        <div className="absolute bottom-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-lg">
+                          ${property.price.toLocaleString()}
                         </div>
                       )}
                     </div>
-                    {itinerary.settings.showPrices && (
-                      <div className="absolute bottom-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-lg">
-                        ${property.price.toLocaleString()}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="p-8 flex-1 flex flex-col">
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 leading-tight">{property.title}</h3>
-                    <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-6">
-                      <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
-                    </p>
                     
-                    <div className="grid grid-cols-3 gap-3 mb-8">
-                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ambientes</span>
-                        <span className="font-black text-slate-800 text-lg">{property.environments}</span>
+                    <div className="p-8 flex-1 flex flex-col">
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 leading-tight">{property.title}</h3>
+                      <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-6">
+                        <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
+                      </p>
+                      
+                      <div className="grid grid-cols-3 gap-3 mb-8">
+                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ambientes</span>
+                          <span className="font-black text-slate-800 text-lg">{property.environments}</span>
+                        </div>
+                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Total</span>
+                          <span className="font-black text-slate-800 text-lg">{property.sqft} m²</span>
+                        </div>
+                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
+                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Baños</span>
+                          <span className="font-black text-slate-800 text-lg">{property.bathrooms}</span>
+                        </div>
                       </div>
-                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Total</span>
-                        <span className="font-black text-slate-800 text-lg">{property.sqft} m²</span>
-                      </div>
-                      <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Baños</span>
-                        <span className="font-black text-slate-800 text-lg">{property.bathrooms}</span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-3 mb-8 flex-1">
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>
-                         <span className="text-sm font-black text-slate-700">{property.rooms}</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Toilettes</span>
-                         <span className="text-sm font-black text-slate-700">{property.toilets || 0}</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cocheras</span>
-                         <span className="text-sm font-black text-slate-700">{property.parking || 0}</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Cubierta</span>
-                         <span className="text-sm font-black text-slate-700">{property.coveredSqft || 0} m²</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
-                         <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Antigüedad</span>
-                         <span className="text-sm font-black text-slate-700">{property.age || 0} años</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expensas</span>
-                         <span className="text-sm font-black text-slate-700">${property.fees?.toLocaleString() || 0}</span>
-                       </div>
-                       <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                         <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
-                         <span className="text-sm font-black text-slate-700">{property.floor || '-'}</span>
-                       </div>
-                    </div>
+                      <div className="space-y-3 mb-8 flex-1">
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>
+                           <span className="text-sm font-black text-slate-700">{property.rooms}</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Toilettes</span>
+                           <span className="text-sm font-black text-slate-700">{property.toilets || 0}</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cocheras</span>
+                           <span className="text-sm font-black text-slate-700">{property.parking || 0}</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Cubierta</span>
+                           <span className="text-sm font-black text-slate-700">{property.coveredSqft || 0} m²</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
+                           <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Antigüedad</span>
+                           <span className="text-sm font-black text-slate-700">{property.age || 0} años</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expensas</span>
+                           <span className="text-sm font-black text-slate-700">${property.fees?.toLocaleString() || 0}</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
+                           <span className="text-sm font-black text-slate-700">{property.floor || '-'}</span>
+                         </div>
+                      </div>
 
-                    <div className="flex flex-col gap-3 mt-auto">
-                      <button 
-                        onClick={() => handleRequestVisit(property)}
-                        className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
-                      >
-                        <Calendar className="w-4 h-4" /> Solicitar Visita
-                      </button>
-                      <a 
-                        href={property.url} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
-                      >
-                        <ExternalLink className="w-4 h-4" /> Ver Ficha Completa
-                      </a>
+                      <div className="flex flex-col gap-3 mt-auto">
+                        <button 
+                          onClick={() => handleRequestVisit(property)}
+                          className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                        >
+                          <Calendar className="w-4 h-4" /> Solicitar Visita
+                        </button>
+                        <a 
+                          href={property.url} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
+                        >
+                          <ExternalLink className="w-4 h-4" /> Ver Ficha Completa
+                        </a>
+                      </div>
                     </div>
                   </div>
+                );
+              })
+              ) : (
+                <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
+                  <Home className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay propiedades en esta carpeta.</p>
                 </div>
-              );
-            })
-            ) : (
-              <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
-                <Home className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay propiedades en esta carpeta.</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
