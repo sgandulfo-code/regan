@@ -709,7 +709,7 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'financials' && <FinancialAnalysisView properties={properties} />}
+        {activeTab === 'financials' && <FinancialAnalysisView properties={properties} folders={folders} />}
 
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
 

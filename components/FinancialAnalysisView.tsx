@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Property, TransactionType } from '../types';
-import { DollarSign, TrendingUp, TrendingDown, Calculator, ArrowRight, Building, FileText, Stamp, Briefcase, Search } from 'lucide-react';
+import { Property, TransactionType, SearchFolder } from '../types';
+import { DollarSign, TrendingUp, TrendingDown, Calculator, ArrowRight, Building, FileText, Stamp, Briefcase, Search, Filter } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FinancialAnalysisViewProps {
   properties: Property[];
+  folders: SearchFolder[];
 }
 
-const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ properties }) => {
+const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ properties, folders }) => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('all');
   
   // Analysis State
   const [transactionPrice, setTransactionPrice] = useState(0);
@@ -36,28 +38,48 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
     }
   }, [selectedProperty]);
 
-  const filteredProperties = properties.filter(p => 
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    p.address.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProperties = properties.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          p.address.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFolder = selectedFolderId === 'all' || p.folderId === selectedFolderId;
+    return matchesSearch && matchesFolder;
+  });
 
   if (!selectedProperty) {
     return (
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-8 pb-20">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">Análisis de Operación</h2>
             <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Selecciona una propiedad para simular el cierre</p>
           </div>
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Buscar propiedad..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all w-64"
-            />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Filter className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <select
+                value={selectedFolderId}
+                onChange={(e) => setSelectedFolderId(e.target.value)}
+                className="pl-9 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer min-w-[150px]"
+              >
+                <option value="all">Todas las Carpetas</option>
+                {folders.map(folder => (
+                  <option key={folder.id} value={folder.id}>{folder.name}</option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-slate-400"></div>
+              </div>
+            </div>
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Buscar propiedad..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all w-64"
+              />
+            </div>
           </div>
         </div>
 
@@ -104,6 +126,14 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
 
   // Agent Result
   const totalCommission = buyAgencyFee + sellAgencyFee;
+
+  // Metrics
+  const buyerTotalPct = transactionPrice > 0 ? (totalBuyerCost / transactionPrice) * 100 : 0;
+  const buyerTotalPerSqft = selectedProperty.sqft > 0 ? totalBuyerCost / selectedProperty.sqft : 0;
+  
+  const sellerNetPct = transactionPrice > 0 ? (netSellerProceeds / transactionPrice) * 100 : 0;
+  const sellerNetPerSqft = selectedProperty.sqft > 0 ? netSellerProceeds / selectedProperty.sqft : 0;
+
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
@@ -202,9 +232,13 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             </div>
 
             <div className="pt-6 border-t border-slate-100">
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end mb-2">
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Operación</span>
                 <span className="text-3xl font-black text-slate-900">{formatCurrency(totalBuyerCost)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                <span>{buyerTotalPct.toFixed(2)}% del valor</span>
+                <span>{formatCurrency(buyerTotalPerSqft)} / m²</span>
               </div>
             </div>
           </div>
@@ -236,9 +270,13 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             </div>
 
             <div className="pt-6 border-t border-slate-100 space-y-4">
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end mb-2">
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Neto en Mano</span>
                 <span className="text-3xl font-black text-indigo-600">{formatCurrency(netSellerProceeds)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
+                <span>{sellerNetPct.toFixed(2)}% del valor</span>
+                <span>{formatCurrency(sellerNetPerSqft)} / m²</span>
               </div>
             </div>
           </div>
