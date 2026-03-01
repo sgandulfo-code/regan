@@ -66,7 +66,7 @@ const Auth: React.FC = () => {
           <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-indigo-500/30 mx-auto mb-6">
             PB
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tight mb-2">PropBrain</h1>
+          <h1 className="text-4xl font-black text-white tracking-tight mb-2">PropBi</h1>
           <p className="text-slate-400 font-medium">Secure Property Management</p>
         </div>
 
@@ -192,7 +192,7 @@ const Auth: React.FC = () => {
           </form>
 
           <p className="text-center text-slate-500 text-[10px] mt-8 font-medium">
-            By continuing, you agree to PropBrain's Terms of Service and Privacy Policy.
+            By continuing, you agree to PropBi's Terms of Service and Privacy Policy.
           </p>
         </div>
       </div>

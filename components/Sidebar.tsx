@@ -55,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             PB
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-lg text-slate-800 tracking-tight leading-none">PropBrain</span>
+            <span className="font-bold text-lg text-slate-800 tracking-tight leading-none">PropBi</span>
             <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest mt-1">Intelligence</span>
           </div>
         </div>

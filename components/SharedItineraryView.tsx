@@ -1128,7 +1128,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             PB
           </div>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            Powered by PropBrain Intelligence
+            Powered by PropBi Intelligence
           </p>
         </div>
       </main>
