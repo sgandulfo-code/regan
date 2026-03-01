@@ -19,11 +19,13 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   const [buyAgencyFeePct, setBuyAgencyFeePct] = useState(4);
   const [buyNotaryFeePct, setBuyNotaryFeePct] = useState(1.5);
   const [buyStampTaxPct, setBuyStampTaxPct] = useState(3.5);
+  const [buyOtherPct, setBuyOtherPct] = useState(0);
   
   // Sell Side Percentages
   const [sellAgencyFeePct, setSellAgencyFeePct] = useState(3);
   const [sellTransferTaxPct, setSellTransferTaxPct] = useState(1.5); // ITI or similar
   const [sellNotaryFeePct, setSellNotaryFeePct] = useState(0); // Usually 0 for seller in some jurisdictions, but editable
+  const [sellOtherPct, setSellOtherPct] = useState(0);
   
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
 
@@ -89,13 +91,15 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   const buyAgencyFee = (transactionPrice * buyAgencyFeePct) / 100;
   const buyNotaryFee = (deedValue * buyNotaryFeePct) / 100;
   const buyStampTax = (deedValue * buyStampTaxPct) / 100;
-  const totalBuyerCost = transactionPrice + buyAgencyFee + buyNotaryFee + buyStampTax;
+  const buyOtherCost = (transactionPrice * buyOtherPct) / 100;
+  const totalBuyerCost = transactionPrice + buyAgencyFee + buyNotaryFee + buyStampTax + buyOtherCost;
 
   // Sell Side
   const sellAgencyFee = (transactionPrice * sellAgencyFeePct) / 100;
   const sellTransferTax = (deedValue * sellTransferTaxPct) / 100; // Usually on deed value
   const sellNotaryFee = (deedValue * sellNotaryFeePct) / 100;
-  const totalSellerExpenses = sellAgencyFee + sellTransferTax + sellNotaryFee;
+  const sellOtherCost = (transactionPrice * sellOtherPct) / 100;
+  const totalSellerExpenses = sellAgencyFee + sellTransferTax + sellNotaryFee + sellOtherCost;
   const netSellerProceeds = transactionPrice - totalSellerExpenses;
 
   // Agent Result
@@ -194,6 +198,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
               <CostRow label="Honorarios Inmobiliaria" value={buyAgencyFee} pct={buyAgencyFeePct} onChangePct={setBuyAgencyFeePct} color="rose" />
               <CostRow label="Escribanía (s/ Escritura)" value={buyNotaryFee} pct={buyNotaryFeePct} onChangePct={setBuyNotaryFeePct} color="emerald" />
               <CostRow label="Impuesto Sellos (s/ Escritura)" value={buyStampTax} pct={buyStampTaxPct} onChangePct={setBuyStampTaxPct} color="amber" />
+              <CostRow label="Otros Gastos" value={buyOtherCost} pct={buyOtherPct} onChangePct={setBuyOtherPct} color="slate" />
             </div>
 
             <div className="pt-6 border-t border-slate-100">
@@ -227,6 +232,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
               <CostRow label="Honorarios Inmobiliaria" value={sellAgencyFee} pct={sellAgencyFeePct} onChangePct={setSellAgencyFeePct} color="rose" isNegative />
               <CostRow label="ITI / Impuestos (s/ Escritura)" value={sellTransferTax} pct={sellTransferTaxPct} onChangePct={setSellTransferTaxPct} color="amber" isNegative />
               <CostRow label="Gastos Escritura" value={sellNotaryFee} pct={sellNotaryFeePct} onChangePct={setSellNotaryFeePct} color="emerald" isNegative />
+              <CostRow label="Otros Gastos" value={sellOtherCost} pct={sellOtherPct} onChangePct={setSellOtherPct} color="slate" isNegative />
             </div>
 
             <div className="pt-6 border-t border-slate-100 space-y-4">
