@@ -2,7 +2,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -94,6 +94,41 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
             {property.address}
           </p>
         </div>
+
+        {isEditable && (property.realEstateAgency || property.agentName) && (
+          <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+            {property.realEstateAgency && (
+              <div className="flex items-center gap-2 text-slate-600">
+                <Building className="w-3 h-3 text-indigo-400 shrink-0" />
+                <p className="text-[9px] font-bold uppercase tracking-wide truncate">
+                  {property.realEstateAgency}
+                </p>
+              </div>
+            )}
+            {(property.agentName || property.agentWhatsapp) && (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-slate-600 min-w-0">
+                  <User className="w-3 h-3 text-indigo-400 shrink-0" />
+                  <p className="text-[9px] font-bold uppercase tracking-wide truncate">
+                    {property.agentName || 'Agente'}
+                  </p>
+                </div>
+                {property.agentWhatsapp && (
+                  <a 
+                    href={`https://wa.me/${property.agentWhatsapp.replace(/[^0-9]/g, '')}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-emerald-500 hover:text-emerald-600 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                    title="Contactar por WhatsApp"
+                  >
+                    <Phone className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="flex items-center gap-3 mb-4">
           <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">

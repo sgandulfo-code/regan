@@ -204,6 +204,9 @@ export const dataService = {
       notes: p.notes,
       acquisitionReason: p.acquisition_reason,
       images: p.images || [],
+      realEstateAgency: p.real_estate_agency,
+      agentName: p.agent_name,
+      agentWhatsapp: p.agent_whatsapp,
       renovationCosts: (p.renovations || []).map((r: any) => ({
         id: r.id,
         category: r.category,
@@ -240,7 +243,10 @@ export const dataService = {
         rating: property.rating,
         notes: property.notes,
         acquisition_reason: property.acquisitionReason,
-        images: property.images
+        images: property.images,
+        real_estate_agency: property.realEstateAgency,
+        agent_name: property.agentName,
+        agent_whatsapp: property.agentWhatsapp
       }])
       .select()
       .single();
@@ -269,7 +275,10 @@ export const dataService = {
         notes: property.notes,
         rating: property.rating,
         acquisition_reason: property.acquisitionReason,
-        images: property.images 
+        images: property.images,
+        real_estate_agency: property.realEstateAgency,
+        agent_name: property.agentName,
+        agent_whatsapp: property.agentWhatsapp
       })
       .eq('id', id)
       .select()

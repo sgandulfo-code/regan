@@ -107,6 +107,9 @@ export interface Property {
   lng?: number;
   createdAt?: string;
   acquisitionReason?: AcquisitionReason;
+  realEstateAgency?: string;
+  agentName?: string;
+  agentWhatsapp?: string;
 }
 
 export interface User {

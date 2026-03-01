@@ -62,6 +62,9 @@ interface PropertyFormData {
   notes: string;
   rating: number;
   acquisitionReason?: AcquisitionReason;
+  realEstateAgency?: string;
+  agentName?: string;
+  agentWhatsapp?: string;
 }
 
 type CreationStep = 'inbox' | 'verify';
@@ -137,7 +140,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA
+    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
+    realEstateAgency: '', agentName: '', agentWhatsapp: ''
   });
 
   const performAddressValidation = useCallback(async (address: string) => {
@@ -220,7 +224,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         floor: propertyToEdit.floor || '',
         notes: propertyToEdit.notes || '',
         rating: propertyToEdit.rating || 3,
-        acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA
+        acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA,
+        realEstateAgency: propertyToEdit.realEstateAgency || '',
+        agentName: propertyToEdit.agentName || '',
+        agentWhatsapp: propertyToEdit.agentWhatsapp || ''
       });
       setAnalysisResult({ dealScore: propertyToEdit.rating * 20 });
     } else {
@@ -372,7 +379,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA
+      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
+      realEstateAgency: '', agentName: '', agentWhatsapp: ''
     });
   };
 
@@ -588,6 +596,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       <FormField label="Cocheras" value={editedData.parking} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, parking: v}))} icon={Car} />
                       <FormField label="Años Ant." value={editedData.age} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, age: v}))} icon={Clock} />
                       <FormField label="Piso" type="text" value={editedData.floor} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, floor: v}))} icon={Building} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Contact Intelligence
+                    </h4>
+                    <div className="grid grid-cols-1 gap-6">
+                      <FormField label="Inmobiliaria" type="text" value={editedData.realEstateAgency} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, realEstateAgency: v}))} icon={Building} placeholder="Nombre de la inmobiliaria" />
+                      <div className="grid grid-cols-2 gap-6">
+                        <FormField label="Agente" type="text" value={editedData.agentName} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentName: v}))} icon={User} placeholder="Nombre y Apellido" />
+                        <FormField label="Whatsapp Agente" type="text" value={editedData.agentWhatsapp} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentWhatsapp: v}))} icon={Phone} placeholder="+54 9 11..." />
+                      </div>
                     </div>
                   </div>
 
