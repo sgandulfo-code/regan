@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Property, TransactionType, SearchFolder } from '../types';
-import { DollarSign, TrendingUp, TrendingDown, Calculator, ArrowRight, Building, FileText, Stamp, Briefcase, Search, Filter } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Calculator, ArrowRight, Building, FileText, Stamp, Briefcase, Search, Filter, MessageCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface FinancialAnalysisViewProps {
@@ -139,6 +139,43 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
 
+  const handleShare = (type: 'buyer' | 'seller') => {
+    if (!selectedProperty) return;
+
+    let text = '';
+    
+    if (type === 'buyer') {
+      text = `*Análisis de Compra - ${selectedProperty.title}*\n` +
+             `📍 ${selectedProperty.address}\n\n` +
+             `Precio Propiedad: ${formatCurrency(transactionPrice)}\n` +
+             `------------------\n` +
+             `Gastos:\n` +
+             `• Honorarios (${buyAgencyFeePct}%): ${formatCurrency(buyAgencyFee)}\n` +
+             `• Escribanía (${buyNotaryFeePct}%): ${formatCurrency(buyNotaryFee)}\n` +
+             `• Sellos (${buyStampTaxPct}%): ${formatCurrency(buyStampTax)}\n` +
+             `• Otros: ${formatCurrency(buyOtherCost)}\n` +
+             `------------------\n` +
+             `*TOTAL A DESEMBOLSAR: ${formatCurrency(totalBuyerCost)}*\n` +
+             `(${buyerTotalPct.toFixed(2)}% sobre valor - ${formatCurrency(buyerTotalPerSqft)}/m²)`;
+    } else {
+      text = `*Análisis de Venta - ${selectedProperty.title}*\n` +
+             `📍 ${selectedProperty.address}\n\n` +
+             `Precio Venta: ${formatCurrency(transactionPrice)}\n` +
+             `------------------\n` +
+             `Descuentos:\n` +
+             `• Honorarios (${sellAgencyFeePct}%): -${formatCurrency(sellAgencyFee)}\n` +
+             `• ITI/Impuestos (${sellTransferTaxPct}%): -${formatCurrency(sellTransferTax)}\n` +
+             `• Escritura (${sellNotaryFeePct}%): -${formatCurrency(sellNotaryFee)}\n` +
+             `• Otros: -${formatCurrency(sellOtherCost)}\n` +
+             `------------------\n` +
+             `*NETO A RECIBIR: ${formatCurrency(netSellerProceeds)}*\n` +
+             `(${sellerNetPct.toFixed(2)}% del valor - ${formatCurrency(sellerNetPerSqft)}/m²)`;
+    }
+
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
+
   const CostRow = ({ label, value, pct, onChangePct, color = "slate", isNegative = false }: any) => (
     <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-indigo-200 transition-colors">
       <div className="flex items-center gap-3">
@@ -209,14 +246,23 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
         {/* BUYER SIDE */}
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
-              <TrendingDown className="w-6 h-6" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+                <TrendingDown className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Lado Comprador</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total a Desembolsar</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-900">Lado Comprador</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total a Desembolsar</p>
-            </div>
+            <button 
+              onClick={() => handleShare('buyer')}
+              className="p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-colors"
+              title="Enviar por WhatsApp"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -247,14 +293,23 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
         {/* SELLER SIDE */}
         <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-indigo-500"></div>
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
-              <TrendingUp className="w-6 h-6" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-indigo-600">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Lado Vendedor</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Neto a Recibir</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-black text-slate-900">Lado Vendedor</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Neto a Recibir</p>
-            </div>
+            <button 
+              onClick={() => handleShare('seller')}
+              className="p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors"
+              title="Enviar por WhatsApp"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="space-y-6">
