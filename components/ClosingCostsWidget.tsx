@@ -25,6 +25,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
   const [notaryFeePct, setNotaryFeePct] = useState(1.5); // Escribanía
   const [stampTaxPct, setStampTaxPct] = useState(3.5); // Sellos
   const [otherCosts, setOtherCosts] = useState(0);
+  const [deedValue, setDeedValue] = useState(property.price || 0);
 
   // Initialize agency fee based on transaction type
   useEffect(() => {
@@ -54,8 +55,8 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
   
   // Notary and Stamps usually only apply to Purchase/Sale
   const isPurchase = transactionType === TransactionType.COMPRA;
-  const notaryFee = isPurchase ? (price * notaryFeePct) / 100 : 0;
-  const stampTax = isPurchase ? (price * stampTaxPct) / 100 : 0;
+  const notaryFee = isPurchase ? (deedValue * notaryFeePct) / 100 : 0;
+  const stampTax = isPurchase ? (deedValue * stampTaxPct) / 100 : 0;
 
   const totalCashNeeded = price + agencyFee + notaryFee + stampTax + renovationCost + otherCosts;
 
@@ -135,20 +136,32 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
               <span className="text-xs font-black text-slate-900">{formatCurrency(price)}</span>
             </div>
 
+            {isOpen && isPurchase && (
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+                  <span className="text-xs font-bold text-slate-600">Valor Escrituración</span>
+                </div>
+                <input 
+                  type="number" 
+                  value={deedValue} 
+                  onChange={(e) => setDeedValue(parseFloat(e.target.value))}
+                  className="w-24 text-right text-xs font-black bg-transparent border-b border-slate-300 focus:border-indigo-500 outline-none"
+                />
+              </div>
+            )}
+
             <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-rose-500"></div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-slate-600">Honorarios ({agencyFeePct}%)</span>
-                  {transactionType === TransactionType.ALQUILER_TEMPORARIO && isOpen && (
+                  {isOpen && (
                     <input 
-                      type="range" 
-                      min="5" 
-                      max="20" 
-                      step="0.5"
+                      type="number" 
                       value={agencyFeePct} 
                       onChange={(e) => setAgencyFeePct(parseFloat(e.target.value))}
-                      className="w-24 h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer mt-1"
+                      className="w-16 text-[10px] p-1 border rounded mt-1"
                     />
                   )}
                 </div>
