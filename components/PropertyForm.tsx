@@ -29,8 +29,8 @@ import {
   CheckCircle,
   X,
   Search,
-  User,
-  Phone
+  User as UserIcon,
+  Phone as PhoneIcon
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus, AcquisitionReason, SearchFolder } from '../types';
@@ -641,8 +641,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <div className="grid grid-cols-1 gap-6">
                       <FormField label="Inmobiliaria" type="text" value={editedData.realEstateAgency} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, realEstateAgency: v}))} icon={Building} placeholder="Nombre de la inmobiliaria" />
                       <div className="grid grid-cols-2 gap-6">
-                        <FormField label="Agente" type="text" value={editedData.agentName} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentName: v}))} icon={User} placeholder="Nombre y Apellido" />
-                        <FormField label="Whatsapp Agente" type="text" value={editedData.agentWhatsapp} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentWhatsapp: v}))} icon={Phone} placeholder="+54 9 11..." />
+                        <FormField label="Agente" type="text" value={editedData.agentName} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentName: v}))} icon={UserIcon} placeholder="Nombre y Apellido" />
+                        <FormField label="Whatsapp Agente" type="text" value={editedData.agentWhatsapp} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentWhatsapp: v}))} icon={PhoneIcon} placeholder="+54 9 11..." />
                       </div>
                     </div>
                   </div>
