@@ -21,12 +21,18 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedPropertyForRequest, setSelectedPropertyForRequest] = useState<any>(null);
   const [requestMessage, setRequestMessage] = useState('');
+  const [agentEmail, setAgentEmail] = useState<string>('');
 
   useEffect(() => {
     const fetchSharedData = async () => {
       try {
         const result = await dataService.getSharedItinerary(sharedId);
         setData(result);
+        
+        if (result?.itinerary?.folder?.userId) {
+          const profile = await dataService.getProfile(result.itinerary.folder.userId);
+          if (profile) setAgentEmail(profile.email);
+        }
       } catch (error) {
         console.error('Error fetching shared itinerary:', error);
       } finally {
@@ -405,9 +411,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => window.location.reload()}
               className={`w-12 h-12 ${itinerary.folder.color} rounded-2xl flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-105 transition-transform active:scale-95`}
-              title="Ir al inicio"
+              title="Recargar"
             >
               <Home className="w-6 h-6" />
             </button>
@@ -416,9 +422,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Portal del Cliente</p>
             </div>
           </div>
-          <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            En Vivo
+          <div className="flex flex-col items-end gap-1">
+            <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+              En Vivo
+            </div>
+            {agentEmail && (
+              <p className="text-[10px] font-medium text-slate-400">{agentEmail}</p>
+            )}
           </div>
         </div>
       </header>
@@ -432,7 +443,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             {itinerary.folder.welcomeMessage && (
               <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-sm mb-6">
                 <h3 className="text-indigo-900 font-bold mb-2 text-sm uppercase tracking-wider">Mensaje de Bienvenida</h3>
-                <p className="text-indigo-700 text-sm leading-relaxed whitespace-pre-wrap">{itinerary.folder.welcomeMessage}</p>
+                <p className="text-slate-900 text-sm leading-relaxed whitespace-pre-wrap">{itinerary.folder.welcomeMessage}</p>
               </div>
             )}
 
