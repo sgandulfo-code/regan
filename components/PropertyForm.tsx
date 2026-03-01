@@ -391,6 +391,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     return processingLink?.url || '';
   };
 
+  const [filterText, setFilterText] = useState('');
+
+  const filteredLinks = pendingLinks.filter(link => 
+    link.url.toLowerCase().includes(filterText.toLowerCase())
+  );
+
   if (step === 'inbox') {
     return (
       <div className="max-w-6xl mx-auto py-8 animate-in fade-in duration-500 space-y-10">
@@ -429,13 +435,25 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         <section className="space-y-8">
           <div className="flex items-center justify-between px-6">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
-              <Inbox className="w-4 h-4" /> Pending Verification ({pendingLinks.length})
+              <Inbox className="w-4 h-4" /> Pending Verification ({filteredLinks.length})
             </h3>
-            {isSyncingInbox && <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input 
+                  type="text" 
+                  placeholder="Filter links..." 
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all w-48"
+                />
+              </div>
+              {isSyncingInbox && <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />}
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {pendingLinks.map(link => (
+            {filteredLinks.map(link => (
               <div key={link.id} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl hover:shadow-2xl transition-all flex flex-col group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-indigo-500 transition-colors"></div>
                 <div className="flex justify-between items-start mb-6">
