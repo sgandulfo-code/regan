@@ -670,6 +670,7 @@ const App: React.FC = () => {
             activeFolderId={activeFolderId} 
             propertyToEdit={propertyToEdit}
             onCancelEdit={() => { setPropertyToEdit(null); setActiveTab('properties'); }}
+            folders={folders}
           />
         )}
 

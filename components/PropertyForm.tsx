@@ -33,7 +33,7 @@ import {
   Phone
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
-import { Property, PropertyStatus, AcquisitionReason } from '../types';
+import { Property, PropertyStatus, AcquisitionReason, SearchFolder } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
 
 interface PropertyFormProps {
@@ -42,6 +42,7 @@ interface PropertyFormProps {
   activeFolderId: string | null;
   propertyToEdit?: Property | null;
   onCancelEdit?: () => void;
+  folders?: SearchFolder[];
 }
 
 interface PropertyFormData {
@@ -123,7 +124,7 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
   );
 };
 
-const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, onCancelEdit }) => {
+const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, onCancelEdit, folders = [] }) => {
   const [step, setStep] = useState<CreationStep>(propertyToEdit ? 'verify' : 'inbox');
   const [processingLink, setProcessingLink] = useState<InboxLink | null>(null);
   const [mode, setMode] = useState<ProcessingMode>(propertyToEdit ? 'edit' : null);
@@ -140,6 +141,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [addressStatus, setAddressStatus] = useState<ValidationStatus>('idle');
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [filterFolderId, setFilterFolderId] = useState<string>('all');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
@@ -391,11 +394,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     return processingLink?.url || '';
   };
 
-  const [filterText, setFilterText] = useState('');
-
-  const filteredLinks = pendingLinks.filter(link => 
-    link.url.toLowerCase().includes(filterText.toLowerCase())
-  );
+  const filteredLinks = pendingLinks.filter(link => {
+    const matchesText = link.url.toLowerCase().includes(filterText.toLowerCase());
+    const matchesFolder = filterFolderId === 'all' || link.folder_id === filterFolderId;
+    return matchesText && matchesFolder;
+  });
 
   if (step === 'inbox') {
     return (
@@ -448,6 +451,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all w-48"
                 />
               </div>
+              
+              <select
+                value={filterFolderId}
+                onChange={(e) => setFilterFolderId(e.target.value)}
+                className="pl-4 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer appearance-none"
+              >
+                <option value="all">Todas las carpetas</option>
+                {folders.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+
               {isSyncingInbox && <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />}
             </div>
           </div>
