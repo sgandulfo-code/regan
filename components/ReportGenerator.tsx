@@ -120,7 +120,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl">PB</div>
-                <h1 className="text-xl font-black tracking-tighter text-slate-900">PropBrain | Technical Intelligence</h1>
+                <h1 className="text-xl font-black tracking-tighter text-slate-900">PropBi | Technical Intelligence</h1>
               </div>
               <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">{folder.name}</h2>
               <p className="text-slate-500 font-medium max-w-xl">{folder.description || 'Informe técnico detallado de activos inmobiliarios.'}</p>
@@ -215,21 +215,30 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                 return (
                   <div key={p.id} className="p-8 border-2 border-slate-50 rounded-[2.5rem] bg-slate-50/20 relative flex flex-col mb-8 print:break-inside-avoid print:border-slate-200 print:bg-white print:rounded-3xl print:p-6">
                     <div className="flex justify-between items-start mb-6">
-                      <div className="flex items-center gap-4">
-                        <span className="bg-slate-900 text-white w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm shadow-xl shrink-0">
-                          {idx + 1}
-                        </span>
-                        <div>
-                          <h4 className="font-black text-slate-900 text-lg leading-tight mb-1">{p.title}</h4>
-                          <div className="flex items-center gap-2">
+                      <div className="flex items-start gap-6 w-full">
+                        <div className="w-24 h-24 rounded-2xl overflow-hidden shadow-md shrink-0 border-2 border-white print:border-slate-200">
+                          <img 
+                            src={p.images[0] || 'https://picsum.photos/seed/prop/200/200'} 
+                            alt={p.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="bg-slate-900 text-white w-6 h-6 rounded flex items-center justify-center text-[10px] font-black shadow-sm shrink-0">
+                              {idx + 1}
+                            </span>
+                            <h4 className="font-black text-slate-900 text-lg leading-tight">{p.title}</h4>
+                          </div>
+                          <div className="flex items-center gap-2 mb-2">
                              <MapPin className="w-3.5 h-3.5 text-indigo-600" />
                              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight">{p.address}</p>
                           </div>
+                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5 hover:underline print:text-indigo-800">
+                            <ExternalLink className="w-3.5 h-3.5" /> Ver ficha original
+                          </a>
                         </div>
                       </div>
-                      <a href={p.url} target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1.5 hover:underline print:hidden">
-                        <ExternalLink className="w-3.5 h-3.5" /> Ver original
-                      </a>
                     </div>
 
                     <div className="grid grid-cols-12 gap-6">
@@ -300,7 +309,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
           </section>
 
           <footer className="pt-10 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest print:border-slate-200 print:pt-6">
-            <p>© 2024 PropBrain Technical Intelligence</p>
+            <p>© 2024 PropBi Technical Intelligence</p>
             <p>Ref Búsqueda: {folder.name}</p>
             <p>Uso Exclusivo & Confidencial</p>
           </footer>
