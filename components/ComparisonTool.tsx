@@ -285,7 +285,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
       {isReportOpen && (
         <ComparisonReportGenerator 
           properties={selectedProperties} 
-          folder={folder} 
+          folder={folder || null} 
           onClose={() => setIsReportOpen(false)} 
         />
       )}
