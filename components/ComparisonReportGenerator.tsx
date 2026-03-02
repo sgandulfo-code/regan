@@ -80,15 +80,16 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
                   </div>
                 </div>
                 
-                <h1 className="text-4xl font-black tracking-tighter mb-6 leading-tight text-slate-900">
+                <h1 className="text-5xl font-black tracking-tighter mb-6 leading-tight text-slate-900">
                   {folder ? folder.name : 'Análisis Comparativo'}
                 </h1>
                 
                 <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-100 print:border-slate-200 print:bg-slate-50/50">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Resumen Ejecutivo</h3>
-                  <p className="text-slate-700 text-lg leading-relaxed font-medium">
-                    {folder?.description || 'Comparación detallada "Manzanas con Manzanas" de las propiedades seleccionadas para facilitar la toma de decisiones basada en datos objetivos.'}
-                  </p>
+                  <div 
+                    className="text-slate-700 text-lg leading-relaxed font-medium prose prose-slate max-w-none"
+                    dangerouslySetInnerHTML={{ __html: folder?.description || 'Comparación detallada "Manzanas con Manzanas" de las propiedades seleccionadas para facilitar la toma de decisiones basada en datos objetivos.' }}
+                  />
                 </div>
                 
                 <div className="flex items-center gap-8 pt-6 border-t border-slate-200">
