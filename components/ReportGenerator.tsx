@@ -1,18 +1,9 @@
 
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { Map as MapIcon, Building, User, CheckSquare } from 'lucide-react';
 import { SearchFolder, Property } from '../types';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import ReportLayout from './ReportLayout';
-
-// Fix Leaflet icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+import PropertyMap from './PropertyMap';
 
 interface ReportGeneratorProps {
   folder: SearchFolder;
@@ -21,60 +12,6 @@ interface ReportGeneratorProps {
 }
 
 const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, onClose }) => {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
-
-  useEffect(() => {
-    // Initialize map
-    if (mapContainerRef.current && !mapRef.current && properties.length > 0) {
-      // Calculate center
-      const validProps = properties.filter(p => p.lat && p.lng);
-      if (validProps.length === 0) return;
-
-      const centerLat = validProps.reduce((sum, p) => sum + (p.lat || 0), 0) / validProps.length;
-      const centerLng = validProps.reduce((sum, p) => sum + (p.lng || 0), 0) / validProps.length;
-
-      mapRef.current = L.map(mapContainerRef.current, {
-        zoomControl: false,
-        attributionControl: false
-      }).setView([centerLat, centerLng], 13);
-
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(mapRef.current);
-
-      // Add markers
-      validProps.forEach((p, idx) => {
-        if (p.lat && p.lng && mapRef.current) {
-          const icon = L.divIcon({
-            className: 'custom-div-icon',
-            html: `<div style="background-color: #4F46E5; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">${idx + 1}</div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-          });
-
-          L.marker([p.lat, p.lng], { icon }).addTo(mapRef.current);
-        }
-      });
-
-      // Fit bounds
-      if (validProps.length > 1) {
-        const bounds = L.latLngBounds(validProps.map(p => [p.lat!, p.lng!]));
-        mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-
-    // Cleanup
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
-    };
-  }, [properties]);
-
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
   };
@@ -98,9 +35,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
     >
       <section className="mb-12 print:break-inside-avoid">
         <div className="bg-slate-50 p-2 rounded-[2.5rem] border border-slate-200 print:border-none print:p-0 print:bg-white">
-          <div className="w-full h-[500px] rounded-[2rem] overflow-hidden relative z-0 print:h-[500px] print:rounded-xl border border-slate-100 print:border-slate-300 shadow-sm">
-            <div ref={mapContainerRef} className="w-full h-full" />
-          </div>
+          <PropertyMap properties={properties} height="500px" />
         </div>
         <div className="mt-4 flex items-center justify-center gap-2 text-slate-400">
             <MapIcon className="w-4 h-4" />
