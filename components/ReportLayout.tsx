@@ -128,7 +128,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
       <style>{`
         @media print {
           @page {
-            size: A4;
+            size: auto;
             margin: 0.5cm;
           }
           html, body {
@@ -162,6 +162,7 @@ const ReportLayout: React.FC<ReportLayoutProps> = ({
             height: auto !important;
             display: block !important;
             padding: 0 !important;
+            zoom: 0.85; /* Scale down slightly to fit content */
           }
           #report-content {
             padding: 0 !important;

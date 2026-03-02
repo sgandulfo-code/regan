@@ -11,27 +11,24 @@ L.Icon.Default.mergeOptions({
 });
 
 interface PropertyMapProps {
-  properties: { lat?: number; lng?: number; title?: string }[];
+  properties: { id: string; lat?: number; lng?: number; title?: string; address?: string; exactAddress?: string }[];
   height?: string;
 }
 
 const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.LayerGroup | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // If map already exists, just update markers? 
-    // For simplicity in reports, we can destroy and recreate or just init once.
-    // Since properties might change, let's handle init carefully.
-    
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
         attributionControl: false,
         scrollWheelZoom: false,
-        dragging: false // Static map for report
+        dragging: false 
       });
 
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -41,49 +38,68 @@ const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' 
       }).addTo(map);
 
       mapRef.current = map;
+      markersRef.current = L.layerGroup().addTo(map);
     }
 
     const map = mapRef.current;
-    
-    // Clear existing markers if any (though usually this component mounts once)
-    map.eachLayer((layer) => {
-      if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
-      }
-    });
+    const markersLayer = markersRef.current;
 
-    const validProps = properties.filter(p => p.lat && p.lng);
-    
-    if (validProps.length > 0) {
-      const markers = validProps.map((p, idx) => {
-        const icon = L.divIcon({
-          className: 'custom-div-icon',
-          html: `<div style="background-color: #4F46E5; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">${idx + 1}</div>`,
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
-        });
-        return L.marker([p.lat!, p.lng!], { icon }).addTo(map);
+    const plotProperties = async () => {
+      if (!markersLayer) return;
+      markersLayer.clearLayers();
+
+      const bounds = L.latLngBounds([]);
+      let hasMarkers = false;
+
+      const createIcon = (index: number) => L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: #4F46E5; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">${index + 1}</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
 
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds(), { padding: [50, 50] });
-    } else {
-      // Default view if no props
-      map.setView([40.4168, -3.7038], 13);
-    }
+      for (let i = 0; i < properties.length; i++) {
+        const p = properties[i];
+        let lat = p.lat;
+        let lng = p.lng;
 
-    // CRITICAL FIX: Invalidate size after mount to ensure map renders correctly in modal
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
+        // If no coordinates, try to geocode
+        if ((!lat || !lng) && (p.exactAddress || p.address)) {
+          try {
+            const query = p.exactAddress || p.address;
+            const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query || '')}&limit=1`);
+            const data = await resp.json();
+            if (data.features && data.features.length > 0) {
+              [lng, lat] = data.features[0].geometry.coordinates;
+            }
+          } catch (e) {
+            console.error("Geocoding error:", e);
+          }
+        }
+
+        if (lat && lng) {
+          L.marker([lat, lng], { icon: createIcon(i) }).addTo(markersLayer);
+          bounds.extend([lat, lng]);
+          hasMarkers = true;
+        }
+      }
+
+      if (hasMarkers) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        map.setView([40.4168, -3.7038], 13); // Default fallback
+      }
+      
+      // Invalidate size to ensure correct rendering
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    };
+
+    plotProperties();
 
     return () => {
-      // We don't necessarily need to destroy the map on unmount if the ref persists, 
-      // but for safety in React:
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+      // Cleanup if needed
     };
   }, [properties]);
 
