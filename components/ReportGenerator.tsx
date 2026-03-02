@@ -127,29 +127,32 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                </div>
             </div>
             
-            <div className="bg-slate-900 text-white p-10 rounded-[2.5rem] print:rounded-2xl print:p-8 relative overflow-hidden print:bg-slate-900 print:text-white">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+            <div className="bg-slate-50 text-slate-900 p-10 rounded-[2.5rem] print:rounded-none print:p-0 print:bg-white relative overflow-hidden border border-slate-100 print:border-none">
               <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-500/30">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100">
                     Tesis de Inversión
                   </div>
-                  <div className="bg-white/10 text-slate-300 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
+                  <div className="bg-white text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200">
                     {properties.length} Activos
                   </div>
                 </div>
                 
-                <h1 className="text-5xl font-black tracking-tighter mb-4 leading-tight">{folder.name}</h1>
-                <p className="text-slate-300 text-lg max-w-2xl leading-relaxed font-medium">{folder.description || 'Informe técnico detallado de activos inmobiliarios y análisis de mercado.'}</p>
+                <h1 className="text-5xl font-black tracking-tighter mb-6 leading-tight text-slate-900">{folder.name}</h1>
                 
-                <div className="mt-10 flex items-center gap-8 pt-8 border-t border-white/10">
+                <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-100 print:border-slate-200 print:bg-slate-50/50">
+                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de la Búsqueda</h3>
+                  <p className="text-slate-700 text-lg leading-relaxed font-medium">{folder.description || 'Informe técnico detallado de activos inmobiliarios y análisis de mercado.'}</p>
+                </div>
+                
+                <div className="flex items-center gap-8 pt-6 border-t border-slate-200">
                   <div>
-                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Fecha de Emisión</p>
-                     <p className="font-bold text-white">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha de Emisión</p>
+                     <p className="font-bold text-slate-900">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
                   </div>
                   <div>
-                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Plataforma</p>
-                     <p className="font-bold text-white">PropBi Intelligence</p>
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Plataforma</p>
+                     <p className="font-bold text-slate-900">PropBi Intelligence</p>
                   </div>
                 </div>
               </div>
