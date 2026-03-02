@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Printer, Check, Trophy, DollarSign, Ruler, Layers, Building } from 'lucide-react';
 import { Property, SearchFolder } from '../types';
 
@@ -37,7 +38,7 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
     return val === Math.max(...values);
   };
 
-  return (
+  return createPortal(
     <div className="report-overlay fixed inset-0 z-[200] bg-slate-900/40 backdrop-blur-md flex justify-center overflow-y-auto py-10 px-4 print:p-0 print:bg-white print:static print:overflow-visible">
       <div className="report-container w-full max-w-[1200px] bg-white rounded-[3rem] shadow-2xl flex flex-col print:shadow-none print:rounded-none print:w-full print:max-w-none print:block">
         
@@ -270,7 +271,7 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
-          #root main, #root aside {
+          #root {
             display: none !important;
           }
           .report-overlay {
@@ -311,7 +312,8 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body
   );
 };
 
