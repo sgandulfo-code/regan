@@ -277,8 +277,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                       </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 print:grid-cols-12">
-                       <div className="md:col-span-8 bg-white p-5 rounded-3xl border border-slate-100 print:border-slate-200">
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-12 gap-6 print:block print:space-y-4">
+                       <div className="md:col-span-8 bg-white p-5 rounded-3xl border border-slate-100 print:border-slate-200 print:w-full print:mb-4">
                           <p className="text-[9px] font-black text-slate-400 uppercase mb-3 flex items-center gap-2">
                             <FileText className="w-3 h-3 text-indigo-600" /> Notas Analíticas
                           </p>
@@ -286,7 +286,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                             {p.notes || 'Análisis técnico no disponible para este activo.'}
                           </p>
                        </div>
-                       <div className="md:col-span-4 bg-slate-900 p-5 rounded-3xl text-white flex flex-col justify-center">
+                       <div className="md:col-span-4 bg-slate-900 p-5 rounded-3xl text-white flex flex-col justify-center print:w-full print:bg-slate-900 print:text-white">
                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Proyecto de Reforma</p>
                           <div className="space-y-2">
                              <div className="flex justify-between items-center text-[11px] opacity-70">
