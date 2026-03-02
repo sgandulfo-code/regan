@@ -142,7 +142,34 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                 
                 <div className="mb-8 p-6 bg-white rounded-2xl border border-slate-100 print:border-slate-200 print:bg-slate-50/50">
                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Detalle de la Búsqueda</h3>
-                  <p className="text-slate-700 text-lg leading-relaxed font-medium">{folder.description || 'Informe técnico detallado de activos inmobiliarios y análisis de mercado.'}</p>
+                  <p className="text-slate-700 text-lg leading-relaxed font-medium mb-6">{folder.description || 'Informe técnico detallado de activos inmobiliarios y análisis de mercado.'}</p>
+                  
+                  <div className="grid grid-cols-4 gap-4 border-t border-slate-100 pt-6">
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Operación</p>
+                      <p className="font-bold text-slate-900 text-sm">{folder.transactionType || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Presupuesto</p>
+                      <p className="font-bold text-slate-900 text-sm">{folder.budget ? `$${folder.budget.toLocaleString()}` : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Estado</p>
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                        folder.status === 'Abierta' ? 'bg-emerald-100 text-emerald-700' : 
+                        folder.status === 'Cerrada' ? 'bg-slate-100 text-slate-600' : 
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {folder.status}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Días Activa</p>
+                      <p className="font-bold text-slate-900 text-sm">
+                        {folder.createdAt ? Math.floor((new Date().getTime() - new Date(folder.createdAt).getTime()) / (1000 * 3600 * 24)) : 0} días
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-8 pt-6 border-t border-slate-200">
