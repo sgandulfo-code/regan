@@ -711,7 +711,7 @@ const App: React.FC = () => {
 
         {activeTab === 'financials' && <FinancialAnalysisView properties={properties} folders={folders} />}
 
-        {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} />}
+        {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} folder={activeFolder} />}
 
         {activeTab === 'request-visits' && user && (
           <RequestVisitView properties={properties} user={user} visits={visits} folders={folders} />
