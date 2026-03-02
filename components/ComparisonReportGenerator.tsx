@@ -58,12 +58,25 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
                 {properties.map((p) => (
                   <th key={p.id} className="p-6 min-w-[200px] align-top border-r border-slate-200 last:border-r-0">
                     <div className="space-y-4">
-                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm">
-                        <img 
-                          src={p.images[0] || 'https://picsum.photos/seed/prop/300/200'} 
-                          alt={p.title} 
-                          className="w-full h-full object-cover"
-                        />
+                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm group relative">
+                        {p.url ? (
+                          <a href={p.url} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+                            <img 
+                              src={p.images[0] || 'https://picsum.photos/seed/prop/300/200'} 
+                              alt={p.title} 
+                              className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                <span className="bg-white/90 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">Ver Ficha</span>
+                            </div>
+                          </a>
+                        ) : (
+                          <img 
+                            src={p.images[0] || 'https://picsum.photos/seed/prop/300/200'} 
+                            alt={p.title} 
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                       </div>
                       <div>
                         <h3 className="font-black text-slate-900 text-sm leading-tight mb-2 line-clamp-3 uppercase tracking-tight">{p.title}</h3>

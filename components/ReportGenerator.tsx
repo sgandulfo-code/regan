@@ -141,17 +141,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                   </div>
                 )}
                 
-                {/* Agent Info */}
-                {(p.agentName || p.realEstateAgency) && (
-                   <div className="flex items-center gap-4 pt-4 border-t border-slate-100 print:pt-2">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                         <User className="w-3 h-3" /> {p.agentName || 'Agente no especificado'}
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                         <Building className="w-3 h-3" /> {p.realEstateAgency || 'Inmobiliaria no especificada'}
-                      </div>
-                   </div>
-                )}
+                {/* Agent Info Removed as per request */}
               </div>
             </div>
           </div>
