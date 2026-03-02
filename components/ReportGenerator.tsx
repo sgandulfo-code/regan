@@ -116,28 +116,55 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
         </div>
 
         <div id="report-content" className="p-16 space-y-12 print:p-10 print:space-y-6">
-          <header className="flex justify-between items-start border-b-2 border-slate-900 pb-10">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl">PB</div>
-                <h1 className="text-xl font-black tracking-tighter text-slate-900">PropBi | Technical Intelligence</h1>
-              </div>
-              <h2 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">{folder.name}</h2>
-              <p className="text-slate-500 font-medium max-w-xl">{folder.description || 'Informe técnico detallado de activos inmobiliarios.'}</p>
+          <header className="mb-12 print:mb-8">
+            <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6 print:hidden">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-lg">PB</div>
+                  <span className="font-bold text-slate-900 tracking-tight">PropBi Intelligence</span>
+               </div>
+               <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Reporte Confidencial</p>
+               </div>
             </div>
-            <div className="text-right">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fecha de Emisión</p>
-              <p className="font-bold text-slate-900">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            
+            <div className="bg-slate-900 text-white p-10 rounded-[2.5rem] print:rounded-2xl print:p-8 relative overflow-hidden print:bg-slate-900 print:text-white">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-500/30">
+                    Tesis de Inversión
+                  </div>
+                  <div className="bg-white/10 text-slate-300 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/10">
+                    {properties.length} Activos
+                  </div>
+                </div>
+                
+                <h1 className="text-5xl font-black tracking-tighter mb-4 leading-tight">{folder.name}</h1>
+                <p className="text-slate-300 text-lg max-w-2xl leading-relaxed font-medium">{folder.description || 'Informe técnico detallado de activos inmobiliarios y análisis de mercado.'}</p>
+                
+                <div className="mt-10 flex items-center gap-8 pt-8 border-t border-white/10">
+                  <div>
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Fecha de Emisión</p>
+                     <p className="font-bold text-white">{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  </div>
+                  <div>
+                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Plataforma</p>
+                     <p className="font-bold text-white">PropBi Intelligence</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </header>
 
-          <section className="space-y-4 print:break-inside-avoid">
-            <div className="flex items-center gap-3">
-              <MapIcon className="w-5 h-5 text-indigo-600" />
-              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Distribución de Activos en el Mapa</h3>
+          <section className="mb-12 print:break-inside-avoid">
+            <div className="bg-slate-50 p-2 rounded-[2.5rem] border border-slate-200 print:border-none print:p-0 print:bg-white">
+              <div className="w-full h-[500px] rounded-[2rem] overflow-hidden relative z-0 print:h-[500px] print:rounded-xl border border-slate-100 print:border-slate-300 shadow-sm">
+                <div ref={mapContainerRef} className="w-full h-full" />
+              </div>
             </div>
-            <div className="w-full h-[450px] rounded-[2.5rem] overflow-hidden border-2 border-slate-100 relative bg-slate-50 shadow-inner print:h-[400px]">
-              <div ref={mapContainerRef} className="w-full h-full z-0" />
+            <div className="mt-4 flex items-center justify-center gap-2 text-slate-400">
+               <MapIcon className="w-4 h-4" />
+               <p className="text-[10px] font-bold uppercase tracking-widest">Vista Geo-Espacial de Activos</p>
             </div>
           </section>
 
