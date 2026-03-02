@@ -186,9 +186,10 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="flex items-center gap-1 opacity-50 group-hover:opacity-100 transition-opacity">
               <input 
                 type="number" 
+                step="0.01"
                 value={pct} 
                 onChange={(e) => onChangePct(parseFloat(e.target.value))}
-                className="w-10 text-[9px] bg-transparent border-b border-slate-300 focus:border-indigo-500 outline-none p-0 text-center"
+                className="w-12 text-[9px] bg-transparent border-b border-slate-300 focus:border-indigo-500 outline-none p-0 text-center"
               />
               <span className="text-[9px]">%</span>
             </div>
