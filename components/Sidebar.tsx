@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-    { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER },
+    { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" />, badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined },
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },

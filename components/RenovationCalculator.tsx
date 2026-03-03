@@ -14,7 +14,7 @@ interface RenoCalcProps {
 
 const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onUpdate, isEditable = true }) => {
   const [isSuggesting, setIsSuggesting] = useState(false);
-  const canEdit = isEditable && (userRole === UserRole.BUYER || userRole === UserRole.ARCHITECT);
+  const canEdit = isEditable && (userRole === UserRole.BUYER || userRole === UserRole.ARCHITECT || userRole === UserRole.AGENT);
   const isArchitect = userRole === UserRole.ARCHITECT;
 
   const handleAiSuggestions = async () => {
