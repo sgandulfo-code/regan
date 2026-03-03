@@ -151,19 +151,19 @@ const Auth: React.FC = () => {
             {mode === 'signup' && (
               <div className="space-y-2 pt-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Professional Role</label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="flex flex-wrap gap-2 justify-center">
                   {[
                     { id: UserRole.BUYER, icon: UserCircle, label: 'Buyer' },
-                    { id: UserRole.ARCHITECT, icon: Sparkles, label: 'Archit.' },
-                    { id: UserRole.CONTRACTOR, icon: Building2, label: 'Contr.' },
                     { id: UserRole.AGENT, icon: Briefcase, label: 'Agent' },
-                    { id: UserRole.CLIENT, icon: Smile, label: 'Client' }
+                    { id: UserRole.CLIENT, icon: Smile, label: 'Client' },
+                    { id: UserRole.ARCHITECT, icon: Sparkles, label: 'Architect' },
+                    { id: UserRole.CONTRACTOR, icon: Building2, label: 'Contractor' }
                   ].map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => setRole(r.id)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all flex-1 min-w-[80px] ${
                         role === r.id 
                           ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg' 
                           : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'

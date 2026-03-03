@@ -42,10 +42,16 @@ export const dataService = {
     if (error) throw error;
   },
 
-  async createProfile(id: string, name: string, email: string, role: UserRole) {
+  async createProfile(id: string, name: string, email: string, role: UserRole, whatsappNumber?: string) {
     const { data, error } = await supabase
       .from('profiles')
-      .insert([{ id, full_name: name, email, role }])
+      .insert([{ 
+        id, 
+        full_name: name, 
+        email, 
+        role,
+        whatsapp_number: whatsappNumber 
+      }])
       .select()
       .single();
     return data;
