@@ -24,7 +24,8 @@ export enum UserRole {
   BUYER = 'Buyer',
   ARCHITECT = 'Architect',
   CONTRACTOR = 'Contractor',
-  VIEWER = 'Viewer'
+  AGENT = 'Agent',
+  CLIENT = 'Client'
 }
 
 export enum SharePermission {

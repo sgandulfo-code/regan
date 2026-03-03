@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, User as UserIcon, ArrowRight, Sparkles, Building2, UserCircle, Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowRight, Sparkles, Building2, UserCircle, Loader2, Eye, EyeOff, AlertCircle, Briefcase, Smile } from 'lucide-react';
 import { UserRole } from '../types';
 import { supabase } from '../services/supabase';
 import { dataService } from '../services/dataService';
@@ -151,11 +151,13 @@ const Auth: React.FC = () => {
             {mode === 'signup' && (
               <div className="space-y-2 pt-2">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Professional Role</label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-5 gap-2">
                   {[
                     { id: UserRole.BUYER, icon: UserCircle, label: 'Buyer' },
                     { id: UserRole.ARCHITECT, icon: Sparkles, label: 'Archit.' },
-                    { id: UserRole.CONTRACTOR, icon: Building2, label: 'Contr.' }
+                    { id: UserRole.CONTRACTOR, icon: Building2, label: 'Contr.' },
+                    { id: UserRole.AGENT, icon: Briefcase, label: 'Agent' },
+                    { id: UserRole.CLIENT, icon: Smile, label: 'Client' }
                   ].map((r) => (
                     <button
                       key={r.id}
