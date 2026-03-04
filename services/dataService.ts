@@ -213,6 +213,7 @@ export const dataService = {
       realEstateAgency: p.real_estate_agency,
       agentName: p.agent_name,
       agentWhatsapp: p.agent_whatsapp,
+      isPublic: p.is_public !== undefined ? p.is_public : true,
       renovationCosts: (p.renovations || []).map((r: any) => ({
         id: r.id,
         category: r.category,
@@ -298,6 +299,10 @@ export const dataService = {
 
   async updatePropertyStatus(id: string, status: string) {
     await supabase.from('properties').update({ status }).eq('id', id);
+  },
+
+  async togglePropertyVisibility(id: string, isPublic: boolean) {
+    await supabase.from('properties').update({ is_public: isPublic }).eq('id', id);
   },
 
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {
@@ -581,6 +586,7 @@ export const dataService = {
       .from('properties')
       .select('*')
       .eq('folder_id', itinerary.folder_id)
+      .eq('is_public', true)
       .order('created_at', { ascending: false });
 
     return {

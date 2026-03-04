@@ -111,6 +111,7 @@ export interface Property {
   realEstateAgency?: string;
   agentName?: string;
   agentWhatsapp?: string;
+  isPublic?: boolean;
 }
 
 export interface User {

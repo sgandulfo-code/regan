@@ -156,6 +156,13 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  const handleToggleVisibility = async (id: string, isPublic: boolean) => {
+    setIsSyncing(true);
+    await dataService.togglePropertyVisibility(id, isPublic);
+    await loadData();
+    setIsSyncing(false);
+  };
+
   const handleAddProperty = async (prop: Property) => {
     if (!user) return;
     setIsSyncing(true);
@@ -685,6 +692,7 @@ const App: React.FC = () => {
                   index={idx} 
                   onSelect={setSelectedProperty} 
                   onStatusChange={handleUpdateStatus}
+                  onToggleVisibility={handleToggleVisibility}
                   onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
                   onDelete={handleDeleteProperty}
                   isEditable={canEdit}

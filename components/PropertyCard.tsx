@@ -2,19 +2,20 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
   index: number;
   onSelect: (p: Property) => void;
   onStatusChange: (id: string, status: PropertyStatus) => void;
+  onToggleVisibility?: (id: string, isPublic: boolean) => void;
   onEdit: (p: Property) => void;
   onDelete: (id: string) => void;
   isEditable?: boolean;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, onStatusChange, onEdit, onDelete, isEditable = true }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -60,6 +61,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
         
         {/* Hover Actions */}
         <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onToggleVisibility && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onToggleVisibility(property.id, !property.isPublic); }}
+              className={`p-2 backdrop-blur rounded-xl shadow-lg transition-all ${property.isPublic !== false ? 'bg-white/90 text-slate-600 hover:text-indigo-600' : 'bg-slate-900/90 text-white hover:bg-slate-800'}`}
+              title={property.isPublic !== false ? "Visible en link compartido" : "Oculto en link compartido"}
+            >
+              {property.isPublic !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </button>
+          )}
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(property); }}
             className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-indigo-600 shadow-lg transition-all"
