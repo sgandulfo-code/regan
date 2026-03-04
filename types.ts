@@ -145,6 +145,7 @@ export interface ClientChecklistItem {
   label: string;
   response: 'yes' | 'no' | 'maybe' | null;
   comment?: string;
+  photos?: string[];
 }
 
 export interface FeedbackItem {

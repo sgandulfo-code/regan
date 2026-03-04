@@ -64,12 +64,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     fetchSharedData();
   }, [sharedId]);
 
-  const handleClientChecklistUpdate = async (visitId: string, itemId: string, response: 'yes' | 'no' | 'maybe' | null) => {
+  const handleClientChecklistUpdate = async (visitId: string, itemId: string, updates: any) => {
     const visit = data.visits.find((v: any) => v.id === visitId);
     if (!visit || !visit.clientChecklist) return;
 
     const newChecklist = visit.clientChecklist.map((item: any) => 
-      item.id === itemId ? { ...item, response } : item
+      item.id === itemId ? { ...item, ...updates } : item
     );
 
     // Optimistic update
@@ -84,8 +84,38 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       await dataService.updateVisitClientChecklist(visitId, newChecklist);
     } catch (error) {
       console.error('Error updating checklist:', error);
-      // Revert on error (optional, but good practice)
     }
+  };
+
+  const handleChecklistPhotoUpload = async (visitId: string, itemId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      try {
+        // Upload photos
+        const uploadedUrls = await Promise.all(
+          files.map(file => dataService.uploadVisitPhoto(file))
+        );
+        
+        // Get current photos
+        const visit = data.visits.find((v: any) => v.id === visitId);
+        const item = visit.clientChecklist.find((i: any) => i.id === itemId);
+        const currentPhotos = item.photos || [];
+        
+        // Update checklist
+        handleClientChecklistUpdate(visitId, itemId, { photos: [...currentPhotos, ...uploadedUrls] });
+      } catch (error) {
+        console.error('Error uploading checklist photos:', error);
+        alert('Error al subir fotos. Intenta de nuevo.');
+      }
+    }
+  };
+
+  const handleRemoveChecklistPhoto = (visitId: string, itemId: string, photoUrl: string) => {
+    const visit = data.visits.find((v: any) => v.id === visitId);
+    const item = visit.clientChecklist.find((i: any) => i.id === itemId);
+    const currentPhotos = item.photos || [];
+    
+    handleClientChecklistUpdate(visitId, itemId, { photos: currentPhotos.filter((p: string) => p !== photoUrl) });
   };
 
   const handlePhotoSelect = (visitId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -797,43 +827,82 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               </h4>
                               <div className="space-y-3">
                                 {visit.clientChecklist.map((item: any) => (
-                                  <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                    <span className="text-xs font-bold text-slate-700">{item.label}</span>
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'yes')}
-                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
-                                          item.response === 'yes' 
-                                            ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-200' 
-                                            : 'bg-white text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-200'
-                                        }`}
-                                      >
-                                        <Check className="w-3.5 h-3.5" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Sí</span>
-                                      </button>
-                                      <button
-                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'no')}
-                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
-                                          item.response === 'no' 
-                                            ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-200' 
-                                            : 'bg-white text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-slate-200'
-                                        }`}
-                                      >
-                                        <X className="w-3.5 h-3.5" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">No</span>
-                                      </button>
-                                      <button
-                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'maybe')}
-                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
-                                          item.response === 'maybe' 
-                                            ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-200' 
-                                            : 'bg-white text-slate-400 hover:bg-amber-50 hover:text-amber-600 border border-slate-200'
-                                        }`}
-                                      >
-                                        <AlertCircle className="w-3.5 h-3.5" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Quizás</span>
-                                      </button>
+                                  <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                      <span className="text-xs font-bold text-slate-700">{item.label}</span>
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => handleClientChecklistUpdate(visit.id, item.id, { response: 'yes' })}
+                                          className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                            item.response === 'yes' 
+                                              ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-200' 
+                                              : 'bg-white text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-200'
+                                          }`}
+                                        >
+                                          <Check className="w-3.5 h-3.5" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest">Sí</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleClientChecklistUpdate(visit.id, item.id, { response: 'no' })}
+                                          className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                            item.response === 'no' 
+                                              ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-200' 
+                                              : 'bg-white text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-slate-200'
+                                          }`}
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest">No</span>
+                                        </button>
+                                        <button
+                                          onClick={() => handleClientChecklistUpdate(visit.id, item.id, { response: 'maybe' })}
+                                          className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                            item.response === 'maybe' 
+                                              ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-200' 
+                                              : 'bg-white text-slate-400 hover:bg-amber-50 hover:text-amber-600 border border-slate-200'
+                                          }`}
+                                        >
+                                          <AlertCircle className="w-3.5 h-3.5" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest">Quizás</span>
+                                        </button>
+                                      </div>
                                     </div>
+
+                                    {/* Comments and Photos */}
+                                    <div className="flex gap-2 items-start pt-2 border-t border-slate-200/50">
+                                      <textarea
+                                        placeholder="Nota opcional..."
+                                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none h-10 min-h-[40px]"
+                                        value={item.comment || ''}
+                                        onChange={(e) => handleClientChecklistUpdate(visit.id, item.id, { comment: e.target.value })}
+                                      />
+                                      <label className="p-2 bg-white border border-slate-200 text-slate-400 rounded-xl hover:bg-slate-50 hover:text-indigo-600 cursor-pointer transition-all shrink-0">
+                                        <Camera className="w-4 h-4" />
+                                        <input 
+                                          type="file" 
+                                          multiple 
+                                          accept="image/*"
+                                          className="hidden"
+                                          onChange={(e) => handleChecklistPhotoUpload(visit.id, item.id, e)}
+                                        />
+                                      </label>
+                                    </div>
+
+                                    {/* Photo Preview */}
+                                    {item.photos && item.photos.length > 0 && (
+                                      <div className="flex gap-2 overflow-x-auto pb-2">
+                                        {item.photos.map((url: string, idx: number) => (
+                                          <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-slate-200 shrink-0 group">
+                                            <img src={url} className="w-full h-full object-cover" alt="Checklist" />
+                                            <button 
+                                              onClick={() => handleRemoveChecklistPhoto(visit.id, item.id, url)}
+                                              className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                              <X className="w-3 h-3 text-white" />
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
                                 ))}
                               </div>

@@ -92,6 +92,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
       }
     };
 
+    const hasFeedback = visit.clientFeedback || visit.rating || (visit.clientChecklist && visit.clientChecklist.some(i => i.response));
+
     return (
       <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 ${folder ? 'pt-14' : ''} shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
         {folder && (
@@ -100,11 +102,18 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
             <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{folder.name}</span>
           </div>
         )}
-        {isToday && (
-          <div className="absolute top-0 right-0 bg-indigo-600 text-white px-6 py-2 rounded-bl-3xl text-[10px] font-black uppercase tracking-widest animate-pulse">
-            Visita Hoy
-          </div>
-        )}
+        <div className="absolute top-0 right-0 flex">
+          {hasFeedback && (
+            <div className="bg-emerald-500 text-white px-4 py-2 rounded-bl-2xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-sm z-10">
+              <MessageSquare className="w-3 h-3" /> Feedback Recibido
+            </div>
+          )}
+          {isToday && (
+            <div className={`bg-indigo-600 text-white px-6 py-2 ${hasFeedback ? '' : 'rounded-bl-3xl'} text-[10px] font-black uppercase tracking-widest animate-pulse`}>
+              Visita Hoy
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-48 h-48 rounded-[2rem] overflow-hidden shrink-0 shadow-lg">
@@ -207,14 +216,32 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {visit.clientChecklist.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between bg-emerald-50/30 border border-emerald-100/50 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 shadow-sm">
-                      <span className="truncate mr-2">{item.label}</span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {item.response === 'yes' && <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Sí</span>}
-                        {item.response === 'no' && <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> No</span>}
-                        {item.response === 'maybe' && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Quizás</span>}
-                        {!item.response && <span className="text-slate-400 text-[9px] uppercase tracking-wider font-bold italic">Pendiente</span>}
+                    <div key={idx} className="bg-emerald-50/30 border border-emerald-100/50 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 shadow-sm flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="truncate mr-2">{item.label}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {item.response === 'yes' && <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Sí</span>}
+                          {item.response === 'no' && <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> No</span>}
+                          {item.response === 'maybe' && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Quizás</span>}
+                          {!item.response && <span className="text-slate-400 text-[9px] uppercase tracking-wider font-bold italic">Pendiente</span>}
+                        </div>
                       </div>
+                      {(item.comment || (item.photos && item.photos.length > 0)) && (
+                        <div className="pt-2 border-t border-emerald-100/30 mt-1">
+                          {item.comment && (
+                            <p className="text-[10px] font-medium text-slate-500 italic mb-2">"{item.comment}"</p>
+                          )}
+                          {item.photos && item.photos.length > 0 && (
+                            <div className="flex gap-2 overflow-x-auto">
+                              {item.photos.map((url, i) => (
+                                <a key={i} href={url} target="_blank" rel="noreferrer" className="w-10 h-10 rounded-lg overflow-hidden border border-white/50 shrink-0">
+                                  <img src={url} className="w-full h-full object-cover" alt="Evidence" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
