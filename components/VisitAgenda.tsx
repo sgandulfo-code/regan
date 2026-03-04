@@ -200,6 +200,27 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               </div>
             </div>
 
+            {visit.clientChecklist && visit.clientChecklist.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-slate-100/50 mt-4">
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                  <CheckSquare className="w-3.5 h-3.5" /> Evaluación del Cliente
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {visit.clientChecklist.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-emerald-50/30 border border-emerald-100/50 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 shadow-sm">
+                      <span className="truncate mr-2">{item.label}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.response === 'yes' && <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Sí</span>}
+                        {item.response === 'no' && <span className="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> No</span>}
+                        {item.response === 'maybe' && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-md text-[9px] uppercase tracking-wider font-black flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Quizás</span>}
+                        {!item.response && <span className="text-slate-400 text-[9px] uppercase tracking-wider font-bold italic">Pendiente</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {(visit.clientFeedback || visit.rating || (visit.photos && visit.photos.length > 0) || onFeedbackUpdate) && (
               <div className="mt-8 pt-6 border-t border-slate-100">
                 <p className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2 mb-4">
