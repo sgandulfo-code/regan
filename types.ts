@@ -140,6 +140,13 @@ export interface VisitChecklistItem {
   completed: boolean;
 }
 
+export interface ClientChecklistItem {
+  id: string;
+  label: string;
+  response: 'yes' | 'no' | 'maybe' | null;
+  comment?: string;
+}
+
 export interface FeedbackItem {
   id: string;
   content: string;
@@ -159,6 +166,7 @@ export interface Visit {
   contactName: string;
   contactPhone: string;
   checklist: VisitChecklistItem[];
+  clientChecklist?: ClientChecklistItem[];
   notes: string;
   status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Confirmed';
   clientFeedback?: string;

@@ -28,6 +28,7 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
       { task: 'Revisar humedades en paredes', completed: false },
       { task: 'Probar persianas y ventanas', completed: false }
     ],
+    clientChecklist: [] as { id: string, label: string, response: 'yes' | 'no' | 'maybe' | null, comment?: string }[],
     notes: '',
     // Use the explicit union type for status to allow all possible Visit status values
     status: 'Scheduled' as Visit['status']
@@ -43,6 +44,7 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         contactName: initialData.contactName || '',
         contactPhone: initialData.contactPhone || '',
         checklist: initialData.checklist || [],
+        clientChecklist: initialData.clientChecklist || [],
         notes: initialData.notes || '',
         status: initialData.status,
         userId: initialData.userId
@@ -54,7 +56,12 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         ...prev,
         userId: userId,
         folderId: initialFolderId,
-        propertyId: folderProperties.length > 0 ? folderProperties[0].id : ''
+        propertyId: folderProperties.length > 0 ? folderProperties[0].id : '',
+        clientChecklist: [
+          { id: crypto.randomUUID(), label: '¿Tiene buena luz natural?', response: null },
+          { id: crypto.randomUUID(), label: '¿Estado general de pintura?', response: null },
+          { id: crypto.randomUUID(), label: '¿Ruidos molestos?', response: null }
+        ]
       }));
     }
   }, [initialData, isOpen, activeFolderId, properties, userId, folders]);
@@ -66,6 +73,13 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
     }));
   };
 
+  const addClientTask = () => {
+    setFormData(prev => ({
+      ...prev,
+      clientChecklist: [...prev.clientChecklist, { id: crypto.randomUUID(), label: '', response: null }]
+    }));
+  };
+
   const removeTask = (index: number) => {
     setFormData(prev => ({
       ...prev,
@@ -73,10 +87,23 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
     }));
   };
 
+  const removeClientTask = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      clientChecklist: prev.clientChecklist.filter((_, i) => i !== index)
+    }));
+  };
+
   const updateTask = (index: number, task: string) => {
     const newList = [...formData.checklist];
     newList[index].task = task;
     setFormData(prev => ({ ...prev, checklist: newList }));
+  };
+
+  const updateClientTask = (index: number, label: string) => {
+    const newList = [...formData.clientChecklist];
+    newList[index].label = label;
+    setFormData(prev => ({ ...prev, clientChecklist: newList }));
   };
 
   if (!isOpen) return null;
@@ -215,7 +242,7 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
-                  <CheckSquare className="w-3 h-3" /> Checklist de Inspección
+                  <CheckSquare className="w-3 h-3" /> Checklist de Inspección (Interno)
                 </label>
                 <button type="button" onClick={addTask} className="text-[10px] font-black text-indigo-600 uppercase hover:underline flex items-center gap-1">
                   <Plus className="w-3 h-3" /> Agregar Punto
@@ -234,6 +261,34 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                     <button type="button" onClick={() => removeTask(idx)} className="p-2 text-slate-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <CheckSquare className="w-3 h-3" /> Checklist para el Cliente (Público)
+                </label>
+                <button type="button" onClick={addClientTask} className="text-[10px] font-black text-emerald-600 uppercase hover:underline flex items-center gap-1">
+                  <Plus className="w-3 h-3" /> Agregar Pregunta
+                </button>
+              </div>
+              <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                {formData.clientChecklist.map((item, idx) => (
+                  <div key={idx} className="flex gap-2 items-center animate-in slide-in-from-left-2">
+                    <input
+                      type="text"
+                      placeholder="Pregunta para el cliente (ej: ¿Buena luz?)"
+                      className="flex-1 p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-xl font-medium text-xs text-slate-600 focus:ring-emerald-500/20"
+                      value={item.label}
+                      onChange={(e) => updateClientTask(idx, e.target.value)}
+                    />
+                    <button type="button" onClick={() => removeClientTask(idx)} className="p-2 text-slate-300 hover:text-rose-500"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                ))}
+                {formData.clientChecklist.length === 0 && (
+                  <p className="text-xs text-slate-400 italic ml-2">Agrega preguntas para que el cliente responda durante la visita.</p>
+                )}
               </div>
             </div>
 

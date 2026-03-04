@@ -64,6 +64,30 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     fetchSharedData();
   }, [sharedId]);
 
+  const handleClientChecklistUpdate = async (visitId: string, itemId: string, response: 'yes' | 'no' | 'maybe' | null) => {
+    const visit = data.visits.find((v: any) => v.id === visitId);
+    if (!visit || !visit.clientChecklist) return;
+
+    const newChecklist = visit.clientChecklist.map((item: any) => 
+      item.id === itemId ? { ...item, response } : item
+    );
+
+    // Optimistic update
+    setData((prev: any) => ({
+      ...prev,
+      visits: prev.visits.map((v: any) => 
+        v.id === visitId ? { ...v, clientChecklist: newChecklist } : v
+      )
+    }));
+
+    try {
+      await dataService.updateVisitClientChecklist(visitId, newChecklist);
+    } catch (error) {
+      console.error('Error updating checklist:', error);
+      // Revert on error (optional, but good practice)
+    }
+  };
+
   const handlePhotoSelect = (visitId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newPhotos = Array.from(e.target.files);
@@ -763,6 +787,58 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               <MapPin className="w-3 h-3" /> Cómo llegar
                             </a>
                           </div>
+
+                          {/* Client Checklist Section */}
+                          {visit.clientChecklist && visit.clientChecklist.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-slate-100">
+                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                                <CheckSquare className="w-3.5 h-3.5 text-emerald-600" /> 
+                                Tu Evaluación
+                              </h4>
+                              <div className="space-y-3">
+                                {visit.clientChecklist.map((item: any) => (
+                                  <div key={item.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <span className="text-xs font-bold text-slate-700">{item.label}</span>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'yes')}
+                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                          item.response === 'yes' 
+                                            ? 'bg-emerald-500 text-white shadow-md ring-2 ring-emerald-200' 
+                                            : 'bg-white text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 border border-slate-200'
+                                        }`}
+                                      >
+                                        <Check className="w-3.5 h-3.5" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Sí</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'no')}
+                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                          item.response === 'no' 
+                                            ? 'bg-rose-500 text-white shadow-md ring-2 ring-rose-200' 
+                                            : 'bg-white text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-slate-200'
+                                        }`}
+                                      >
+                                        <X className="w-3.5 h-3.5" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">No</span>
+                                      </button>
+                                      <button
+                                        onClick={() => handleClientChecklistUpdate(visit.id, item.id, 'maybe')}
+                                        className={`p-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                                          item.response === 'maybe' 
+                                            ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-200' 
+                                            : 'bg-white text-slate-400 hover:bg-amber-50 hover:text-amber-600 border border-slate-200'
+                                        }`}
+                                      >
+                                        <AlertCircle className="w-3.5 h-3.5" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Quizás</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Feedback Section */}
                           <div className="mt-6 pt-6 border-t border-slate-100">

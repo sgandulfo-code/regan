@@ -425,6 +425,7 @@ export const dataService = {
         notes: v.notes,
         status: v.status,
         checklist: v.checklist,
+        clientChecklist: v.client_checklist || [],
         clientFeedback: v.client_feedback,
         rating: v.rating,
         photos: v.photos,
@@ -463,6 +464,7 @@ export const dataService = {
         notes: visit.notes,
         status: visit.status || 'Pending',
         checklist: visit.checklist || [],
+        client_checklist: visit.clientChecklist || [],
         client_feedback: visit.clientFeedback,
         status_updated_at: new Date().toISOString()
       }])
@@ -497,6 +499,7 @@ export const dataService = {
       updates.status_updated_at = new Date().toISOString();
     }
     if (visit.checklist !== undefined) updates.checklist = visit.checklist;
+    if (visit.clientChecklist !== undefined) updates.client_checklist = visit.clientChecklist;
 
     const { data, error } = await supabase
       .from('visits')
@@ -544,6 +547,14 @@ export const dataService = {
     const { data, error } = await supabase
       .from('visits')
       .update(updatePayload)
+      .eq('id', id);
+    return { data, error };
+  },
+
+  async updateVisitClientChecklist(id: string, checklist: any[]) {
+    const { data, error } = await supabase
+      .from('visits')
+      .update({ client_checklist: checklist })
       .eq('id', id);
     return { data, error };
   },
@@ -614,7 +625,8 @@ export const dataService = {
         photos: v.photos,
         propertyId: v.property_id,
         property: v.property,
-        checklist: itinerary.settings.showChecklist ? v.checklist : []
+        checklist: itinerary.settings.showChecklist ? v.checklist : [],
+        clientChecklist: v.client_checklist || []
       })),
       properties: (properties || []).map(p => ({
         id: p.id,
