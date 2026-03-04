@@ -62,7 +62,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
     <div className="max-w-7xl mx-auto py-8 animate-in fade-in duration-500 pb-20">
       <div className="mb-8 flex justify-between items-start">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Comparador "Manzanas con Manzanas"</h2>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Comparación de Propiedades</h2>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">
             Selecciona hasta 4 propiedades para comparar sus atributos lado a lado.
           </p>
