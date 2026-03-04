@@ -326,6 +326,10 @@ const App: React.FC = () => {
     return visits.filter(v => v.status === 'Pending').length;
   }, [visits]);
 
+  const feedbackCount = useMemo(() => {
+    return visits.filter(v => v.clientFeedback || v.rating || (v.clientChecklist && v.clientChecklist.some(i => i.response))).length;
+  }, [visits]);
+
   if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -355,6 +359,7 @@ const App: React.FC = () => {
           onShareFolder={(f) => setSharingFolder(f)}
           onShareItinerary={(folderId) => { setActiveFolderId(folderId); setIsShareItineraryModalOpen(true); }}
           pendingVisitsCount={pendingVisitsCount}
+          feedbackCount={feedbackCount}
         />
       </div>
       

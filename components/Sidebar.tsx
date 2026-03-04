@@ -17,6 +17,7 @@ interface SidebarProps {
   onShareFolder?: (folder: SearchFolder) => void;
   onShareItinerary?: (folderId: string) => void;
   pendingVisitsCount?: number;
+  feedbackCount?: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -32,14 +33,21 @@ const Sidebar: React.FC<SidebarProps> = ({
   onDeleteFolder,
   onShareFolder,
   onShareItinerary,
-  pendingVisitsCount = 0
+  pendingVisitsCount = 0,
+  feedbackCount = 0
 }) => {
   
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
-    { id: 'visits', label: 'Visitas', icon: <Calendar className="w-5 h-5" />, badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined },
+    { 
+      id: 'visits', 
+      label: 'Visitas', 
+      icon: <Calendar className="w-5 h-5" />, 
+      badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined,
+      feedbackBadge: feedbackCount > 0 ? feedbackCount : undefined 
+    },
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'comparison', label: 'Comparador', icon: <ArrowLeftRight className="w-5 h-5" /> },
     { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
@@ -80,11 +88,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             {item.icon}
             <span className="text-sm flex-1 text-left">{item.label}</span>
-            {(item as any).badge && (
-              <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">
-                {(item as any).badge}
-              </span>
-            )}
+            <div className="flex gap-1">
+              {(item as any).feedbackBadge && (
+                <span className="bg-emerald-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                  {(item as any).feedbackBadge}
+                </span>
+              )}
+              {(item as any).badge && (
+                <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-sm animate-pulse">
+                  {(item as any).badge}
+                </span>
+              )}
+            </div>
           </button>
         ))}
 
