@@ -11,7 +11,9 @@ interface ComparisonToolProps {
 
 const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>(
-    properties.slice(0, 3).map(p => p.id)
+    properties.length <= 4 
+      ? properties.map(p => p.id) 
+      : properties.slice(0, 3).map(p => p.id)
   );
   const [isReportOpen, setIsReportOpen] = useState(false);
 
