@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2, LayoutGrid, MessageCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2, LayoutGrid, MessageCircle, Map as MapIcon, Columns } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder, FeedbackItem } from '../types';
+import PropertyMap from './PropertyMap';
 
 interface VisitAgendaProps {
   visits: Visit[];
@@ -18,7 +19,7 @@ interface VisitAgendaProps {
 
 const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate, onEditVisit, onDeleteVisit }) => {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
-  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map' | 'kanban'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
@@ -427,6 +428,153 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     );
   };
 
+  const MapView = () => {
+    // Filter properties that have active visits
+    const activeProperties = activeVisits
+      .map(v => {
+        const prop = getPropertyData(v.propertyId);
+        if (!prop) return null;
+        return {
+          id: prop.id,
+          lat: prop.lat,
+          lng: prop.lng,
+          title: prop.title,
+          address: prop.address,
+          exactAddress: prop.exactAddress
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
+
+    // Remove duplicates
+    const uniqueProperties = Array.from(new Map(activeProperties.map(item => [item.id, item])).values());
+
+    return (
+      <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm animate-in fade-in duration-500">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-xl font-black text-slate-800">Mapa de Ruta</h3>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            {uniqueProperties.length} Propiedades a visitar
+          </p>
+        </div>
+        
+        {uniqueProperties.length > 0 ? (
+          <PropertyMap properties={uniqueProperties} height="500px" />
+        ) : (
+          <div className="h-[500px] bg-slate-50 rounded-[2rem] flex flex-col items-center justify-center border-2 border-dashed border-slate-200">
+            <MapIcon className="w-12 h-12 text-slate-300 mb-4" />
+            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No hay visitas programadas con ubicación para mostrar.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const CompactVisitCard = ({ visit }: { visit: Visit }) => {
+    const property = getPropertyData(visit.propertyId) || visit.property;
+    if (!property) return null;
+
+    const handleStatusChange = (newStatus: string) => {
+      if (onEditVisit) {
+        onEditVisit({ ...visit, status: newStatus as any });
+      }
+    };
+
+    return (
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
+        <div className="h-32 rounded-xl overflow-hidden mb-3 relative">
+           <img src={property.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={property.title} />
+           <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-black text-slate-800 shadow-sm">
+             {visit.time} HS
+           </div>
+           <div className="absolute bottom-2 left-2 bg-slate-900/80 backdrop-blur px-2 py-1 rounded-lg text-[9px] font-bold text-white shadow-sm">
+             {new Date(visit.date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+           </div>
+        </div>
+        <h4 className="font-bold text-slate-800 text-xs mb-1 truncate" title={property.title}>{property.title}</h4>
+        <p className="text-[10px] text-slate-400 font-bold flex items-center gap-1 mb-3 uppercase tracking-wider truncate">
+          <MapPin className="w-3 h-3 text-indigo-500" /> {property.address}
+        </p>
+        
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-50">
+          <div className="flex items-center gap-1.5 min-w-0">
+             <User className="w-3 h-3 text-slate-400" />
+             <span className="text-[10px] font-bold text-slate-600 truncate">{visit.contactName}</span>
+          </div>
+          
+          <div className="flex gap-1">
+            {onEditVisit && (
+              <button 
+                onClick={() => onEditVisit(visit)}
+                className="p-1.5 text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                title="Editar"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <select 
+              value={visit.status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              className="w-4 h-4 opacity-0 absolute inset-0 cursor-pointer"
+              title="Cambiar Estado"
+            >
+              <option value="Pending">A Confirmar</option>
+              <option value="Confirmed">Confirmada</option>
+              <option value="Completed">Realizada</option>
+              <option value="Cancelled">Cancelada</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const KanbanView = () => {
+    const columns = [
+      { id: 'Pending', title: 'A Confirmar', color: 'amber', icon: Clock, bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
+      { id: 'Confirmed', title: 'Confirmada', color: 'indigo', icon: CheckCircle2, bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100' },
+      { id: 'Completed', title: 'Realizada', color: 'emerald', icon: CheckSquare, bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' },
+      { id: 'Cancelled', title: 'Cancelada', color: 'rose', icon: AlertCircle, bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100' },
+    ];
+
+    return (
+      <div className="flex gap-6 overflow-x-auto pb-8 snap-x snap-mandatory px-1">
+        {columns.map(col => {
+           const colVisits = sortedVisits.filter(v => v.status === col.id);
+           const Icon = col.icon;
+           
+           return (
+             <div key={col.id} className={`min-w-[280px] w-[320px] flex-shrink-0 bg-slate-50/50 rounded-[2rem] p-4 border border-slate-200 flex flex-col gap-4 snap-center h-[600px]`}>
+               {/* Header */}
+               <div className={`flex items-center gap-3 pb-4 border-b border-slate-200/60 ${col.text} px-2 pt-2`}>
+                 <div className={`p-2 rounded-xl ${col.bg} border ${col.border}`}>
+                   <Icon className="w-4 h-4" />
+                 </div>
+                 <h3 className="font-black uppercase tracking-widest text-[10px] flex-1">{col.title}</h3>
+                 <span className="bg-white px-2.5 py-1 rounded-lg text-[10px] font-black shadow-sm border border-slate-100 text-slate-600">
+                   {colVisits.length}
+                 </span>
+               </div>
+               
+               {/* Cards */}
+               <div className="flex-1 flex flex-col gap-3 overflow-y-auto custom-scrollbar pr-1 pb-2">
+                 {colVisits.length > 0 ? (
+                   colVisits.map(visit => (
+                     <CompactVisitCard key={visit.id} visit={visit} />
+                   ))
+                 ) : (
+                   <div className="flex-1 flex flex-col items-center justify-center text-slate-300 gap-2 opacity-50">
+                     <Icon className="w-8 h-8" />
+                     <span className="text-[10px] font-bold uppercase tracking-widest">Vacío</span>
+                   </div>
+                 )}
+               </div>
+             </div>
+           );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
@@ -449,6 +597,20 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
             >
               <CalendarIcon className="w-4 h-4" />
             </button>
+            <button 
+              onClick={() => setViewMode('map')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'map' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Vista Mapa"
+            >
+              <MapIcon className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setViewMode('kanban')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'kanban' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Vista Tablero"
+            >
+              <Columns className="w-4 h-4" />
+            </button>
           </div>
 
           {onShareItinerary && (
@@ -468,7 +630,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
         </div>
       </div>
 
-      {viewMode === 'list' ? (
+      {viewMode === 'list' && (
         <div className="space-y-6">
           {activeVisits.length > 0 ? (
             activeVisits.map(v => <VisitCard key={v.id} visit={v} />)
@@ -479,9 +641,13 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
             </div>
           )}
         </div>
-      ) : (
-        <CalendarView />
       )}
+
+      {viewMode === 'calendar' && <CalendarView />}
+      
+      {viewMode === 'map' && <MapView />}
+
+      {viewMode === 'kanban' && <KanbanView />}
 
       {viewMode === 'list' && pastVisits.length > 0 && (
         <div className="space-y-6">
