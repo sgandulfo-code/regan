@@ -28,6 +28,7 @@ import {
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
 import PropertyRow from './components/PropertyRow';
+import FolderRow from './components/FolderRow';
 import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
@@ -614,11 +615,23 @@ const App: React.FC = () => {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            <div className={viewMode === 'list' ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"}>
               {filteredFolders.map(f => {
                 const days = calculateDays(f.startDate);
                 const folderProperties = properties.filter(p => p.folderId === f.id);
                 
+                if (viewMode === 'list') {
+                  return (
+                    <FolderRow
+                      key={f.id}
+                      folder={f}
+                      propertiesCount={folderProperties.length}
+                      daysActive={days}
+                      onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }}
+                    />
+                  );
+                }
+
                 return (
                   <button 
                     key={f.id}
@@ -676,10 +689,22 @@ const App: React.FC = () => {
                   </button>
                 );
               })}
-              <button onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} className="border-2 border-dashed border-slate-200 rounded-[3.5rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[350px] group">
-                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-50 transition-colors"><Plus className="w-8 h-8" /></div>
-                <span className="text-[10px] font-black uppercase tracking-widest">Nueva Tesis Estratégica</span>
-              </button>
+              {viewMode === 'list' ? (
+                <button 
+                  onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
+                  className="w-full bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/10 transition-all text-center group flex items-center justify-center gap-2"
+                >
+                  <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 transition-colors text-slate-400 group-hover:text-indigo-600">
+                    <Plus className="w-4 h-4" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600">Nueva Tesis Estratégica</span>
+                </button>
+              ) : (
+                <button onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} className="border-2 border-dashed border-slate-200 rounded-[3.5rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[350px] group">
+                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-50 transition-colors"><Plus className="w-8 h-8" /></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Nueva Tesis Estratégica</span>
+                </button>
+              )}
             </div>
           </div>
         )}
