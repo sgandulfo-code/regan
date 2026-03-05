@@ -23,7 +23,9 @@ import {
   ChevronDown,
   X,
   Menu,
-  List
+  List,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -69,6 +71,7 @@ const App: React.FC = () => {
   // States para Filtros y Orden
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'All'>('All');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
   const [folderTransactionFilter, setFolderTransactionFilter] = useState<TransactionType | 'All'>('All');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
@@ -313,7 +316,14 @@ const App: React.FC = () => {
       filtered = filtered.filter(p => p.status === statusFilter);
     }
 
-    // 4. Ordenamiento
+    // 4. Filtro por visibilidad
+    if (visibilityFilter === 'visible') {
+      filtered = filtered.filter(p => p.isPublic !== false);
+    } else if (visibilityFilter === 'hidden') {
+      filtered = filtered.filter(p => p.isPublic === false);
+    }
+
+    // 5. Ordenamiento
     return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price-asc': return a.price - b.price;
@@ -324,7 +334,7 @@ const App: React.FC = () => {
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       }
     });
-  }, [properties, activeFolderId, searchQuery, statusFilter, sortBy]);
+  }, [properties, activeFolderId, searchQuery, statusFilter, visibilityFilter, sortBy]);
 
   const filteredFolders = useMemo(() => {
     return folders.filter(f => folderTransactionFilter === 'All' || f.transactionType === folderTransactionFilter);
@@ -502,6 +512,35 @@ const App: React.FC = () => {
                     {status === 'All' ? 'Todos' : status}
                   </button>
                 ))}
+              </div>
+
+              <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-1"></div>
+
+              <div className="relative group">
+                <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl text-[9px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover:border-indigo-200 transition-all">
+                  <div className="flex items-center gap-2">
+                    {visibilityFilter === 'all' ? <Eye className="w-3.5 h-3.5 text-indigo-500" /> : 
+                     visibilityFilter === 'visible' ? <Eye className="w-3.5 h-3.5 text-emerald-500" /> : 
+                     <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+                    <span>Visibilidad: {
+                      visibilityFilter === 'all' ? 'Todas' : 
+                      visibilityFilter === 'visible' ? 'Visibles' : 'Ocultas'
+                    }</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 ml-1 group-hover:rotate-180 transition-transform" />
+                </div>
+                
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                  <button onClick={() => setVisibilityFilter('all')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50 flex items-center gap-2">
+                    <Eye className="w-3 h-3" /> Todas
+                  </button>
+                  <button onClick={() => setVisibilityFilter('visible')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50 flex items-center gap-2">
+                    <Eye className="w-3 h-3 text-emerald-500" /> Visibles
+                  </button>
+                  <button onClick={() => setVisibilityFilter('hidden')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors flex items-center gap-2">
+                    <EyeOff className="w-3 h-3 text-slate-400" /> Ocultas
+                  </button>
+                </div>
               </div>
 
               <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-1"></div>
