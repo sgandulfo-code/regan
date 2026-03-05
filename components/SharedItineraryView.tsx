@@ -26,7 +26,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
   // Sorting State
   const [sortBy, setSortBy] = useState<'price' | 'pricePerSqft' | 'sqft' | 'rooms'>('price');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Comparison State
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
