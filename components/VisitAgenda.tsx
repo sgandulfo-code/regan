@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2, LayoutGrid, MessageCircle } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder, FeedbackItem } from '../types';
 
 interface VisitAgendaProps {
@@ -18,6 +18,8 @@ interface VisitAgendaProps {
 
 const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate, onEditVisit, onDeleteVisit }) => {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [currentDate, setCurrentDate] = useState(new Date());
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
   const getFolderData = (folderId: string) => folders.find(f => f.id === folderId);
@@ -69,6 +71,18 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     setReplyText(prev => ({ ...prev, [visit.id]: '' }));
   };
 
+  const getWhatsAppLink = (visit: Visit, property: Property) => {
+    if (!visit.contactPhone) return null;
+    const phone = visit.contactPhone.replace(/\D/g, '');
+    if (!phone) return null;
+    
+    const dateObj = new Date(visit.date + 'T00:00:00');
+    const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+    const message = `Hola ${visit.contactName}, te escribo para confirmar la visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs.`;
+    
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  };
+
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const activeVisits = sortedVisits.filter(v => v.status === 'Pending' || v.status === 'Confirmed');
@@ -84,15 +98,13 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     const isToday = today.toDateString() === visitDateObj.toDateString();
 
     const handleStatusChange = (newStatus: string) => {
-      // Assuming onEditVisit handles partial updates or we need a new prop for status update
-      // Since we don't have a specific onStatusUpdate, we might need to use onEditVisit or modify the parent
-      // For now, let's assume we can call onEditVisit with the updated status
       if (onEditVisit) {
         onEditVisit({ ...visit, status: newStatus as any });
       }
     };
 
     const hasFeedback = visit.clientFeedback || visit.rating || (visit.clientChecklist && visit.clientChecklist.some(i => i.response));
+    const whatsappLink = getWhatsAppLink(visit, property);
 
     return (
       <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 ${folder ? 'pt-14' : ''} shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
@@ -172,7 +184,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><CalendarIcon className="w-3 h-3" /> Fecha</p>
                 <p className="text-sm font-black text-slate-700">
                   {new Date(visit.date + 'T00:00:00').toLocaleDateString('es-ES', {
                     year: 'numeric',
@@ -189,9 +201,20 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Contacto</p>
                 <p className="text-sm font-black text-slate-700 truncate">{visit.contactName}</p>
               </div>
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group/phone">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
                 <p className="text-sm font-black text-indigo-600">{visit.contactPhone}</p>
+                {whatsappLink && (
+                  <a 
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="absolute -top-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg hover:bg-emerald-600 transition-all hover:scale-110 z-10"
+                    title="Confirmar por WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </a>
+                )}
               </div>
             </div>
 
@@ -330,13 +353,104 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     );
   };
 
+  const CalendarView = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const days = [];
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(new Date(year, month, i));
+    }
+
+    const monthName = currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+
+    const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+    const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+
+    return (
+      <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm animate-in fade-in duration-500">
+        <div className="flex items-center justify-between mb-8">
+          <h3 className="text-xl font-black text-slate-800 capitalize">{monthName}</h3>
+          <div className="flex gap-2">
+            <button onClick={prevMonth} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronLeft className="w-5 h-5 text-slate-600" /></button>
+            <button onClick={nextMonth} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronRight className="w-5 h-5 text-slate-600" /></button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7 gap-4 mb-4">
+          {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map(day => (
+            <div key={day} className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest py-2">
+              {day}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-4">
+          {days.map((date, idx) => {
+            if (!date) return <div key={idx} className="h-32 bg-slate-50/50 rounded-2xl"></div>;
+            
+            const dateStr = date.toISOString().split('T')[0];
+            const dayVisits = visits.filter(v => v.date === dateStr);
+            const isToday = new Date().toDateString() === date.toDateString();
+
+            return (
+              <div key={idx} className={`h-32 rounded-2xl p-3 border transition-all hover:shadow-md ${isToday ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-500/10' : 'bg-white border-slate-100'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <span className={`text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-700'}`}>{date.getDate()}</span>
+                  {dayVisits.length > 0 && (
+                    <span className="bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                      {dayVisits.length}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1 overflow-y-auto max-h-[calc(100%-24px)] custom-scrollbar">
+                  {dayVisits.map(v => {
+                    const prop = getPropertyData(v.propertyId);
+                    return (
+                      <div key={v.id} className="text-[9px] bg-slate-50 p-1.5 rounded-lg border border-slate-100 truncate cursor-pointer hover:bg-indigo-50 hover:border-indigo-100 transition-colors" title={`${v.time} - ${prop?.title}`}>
+                        <span className="font-bold text-indigo-600">{v.time}</span> <span className="text-slate-600">{prop?.address.split(',')[0]}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-12 pb-20 animate-in fade-in duration-700">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
         <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
-          <Calendar className="w-4 h-4 text-indigo-600" /> Próximas Visitas Programadas
+          <CalendarIcon className="w-4 h-4 text-indigo-600" /> Próximas Visitas Programadas
         </h2>
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm mr-4">
+            <button 
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Vista Lista"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button 
+              onClick={() => setViewMode('calendar')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'calendar' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Vista Calendario"
+            >
+              <CalendarIcon className="w-4 h-4" />
+            </button>
+          </div>
+
           {onShareItinerary && (
             <button 
               onClick={onShareItinerary}
@@ -354,18 +468,22 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
         </div>
       </div>
 
-      <div className="space-y-6">
-        {activeVisits.length > 0 ? (
-          activeVisits.map(v => <VisitCard key={v.id} visit={v} />)
-        ) : (
-          <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
-            <Calendar className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No tienes visitas pendientes para esta semana.</p>
-          </div>
-        )}
-      </div>
+      {viewMode === 'list' ? (
+        <div className="space-y-6">
+          {activeVisits.length > 0 ? (
+            activeVisits.map(v => <VisitCard key={v.id} visit={v} />)
+          ) : (
+            <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
+              <CalendarIcon className="w-16 h-16 text-slate-100 mx-auto mb-6" />
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No tienes visitas pendientes para esta semana.</p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <CalendarView />
+      )}
 
-      {pastVisits.length > 0 && (
+      {viewMode === 'list' && pastVisits.length > 0 && (
         <div className="space-y-6">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 pt-10 border-t border-slate-100">
             <History className="w-4 h-4" /> Historial de Visitas
