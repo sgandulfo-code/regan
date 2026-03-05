@@ -1,10 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
 import { FeedbackItem } from '../types';
+
+import SharedPropertyRow from './SharedPropertyRow';
 
 interface SharedItineraryViewProps {
   sharedId: string;
@@ -12,6 +14,7 @@ interface SharedItineraryViewProps {
 
 const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'properties' | 'map'>('timeline');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<{ [key: string]: string }>({});
@@ -1180,6 +1183,23 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   >
                     {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                   </button>
+                  <div className="w-px h-4 bg-slate-200"></div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-1.5 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      title="Vista Cuadrícula"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-1.5 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      title="Vista Lista"
+                    >
+                      <List className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1233,9 +1253,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 gap-8" : "flex flex-col gap-4"}>
               {filteredProperties && filteredProperties.length > 0 ? (
-                filteredProperties.map((property: any) => {
+                filteredProperties.map((property: any, index: number) => {
                   const visit = visits.find((v: any) => v.propertyId === property.id);
                   let displayStatus = null;
                   
@@ -1249,6 +1269,20 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     } else if (visit.status === 'Cancelled') {
                       displayStatus = 'Cancelled';
                     }
+                  }
+
+                  if (viewMode === 'list') {
+                    return (
+                      <SharedPropertyRow
+                        key={property.id}
+                        property={property}
+                        index={index}
+                        onSelect={(p) => { if (p.url) window.open(p.url, '_blank'); }}
+                        onCompare={toggleComparison}
+                        isCompared={comparisonIds.includes(property.id)}
+                        onRequestVisit={handleRequestVisit}
+                      />
+                    );
                   }
 
                   return (
