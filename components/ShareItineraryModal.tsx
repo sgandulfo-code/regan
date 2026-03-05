@@ -171,7 +171,13 @@ const ShareItineraryModal: React.FC<ShareItineraryModalProps> = ({ isOpen, onClo
                         {window.location.origin}/#/shared/{link.id}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg" title="Total de visitas">
+                        <Eye className="w-3 h-3 text-slate-400" />
+                        <span className="text-[10px] font-bold text-slate-600">{link.viewCount || 0}</span>
+                      </div>
+
                       <button 
                         onClick={() => handleToggleActive(link.id, link.isActive)}
                         className={`p-2 rounded-xl transition-all ${link.isActive ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400 bg-slate-50'}`}

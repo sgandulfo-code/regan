@@ -656,16 +656,17 @@ export const dataService = {
   async getFolderSharedLinks(folderId: string) {
     const { data, error } = await supabase
       .from('shared_itineraries')
-      .select('*')
+      .select('*, itinerary_views(count)')
       .eq('folder_id', folderId)
       .order('created_at', { ascending: false });
     
-    return (data || []).map(s => ({
+    return (data || []).map((s: any) => ({
       id: s.id,
       folderId: s.folder_id,
       isActive: s.is_active,
       settings: s.settings,
-      createdAt: s.created_at
+      createdAt: s.created_at,
+      viewCount: s.itinerary_views ? s.itinerary_views[0]?.count : 0
     }));
   },
 
