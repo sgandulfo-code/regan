@@ -48,6 +48,11 @@ import { supabase } from './services/supabase';
 
 type SortOption = 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
 
+const stripHtml = (html: string) => {
+  if (!html) return '';
+  return html.replace(/<[^>]*>?/gm, '');
+};
+
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -636,7 +641,7 @@ const App: React.FC = () => {
                     </div>
 
                     <h3 className="text-2xl font-black mb-2 text-slate-900 tracking-tight leading-tight">{f.name}</h3>
-                    <p className="text-xs text-slate-400 font-medium mb-8 italic line-clamp-2">{f.description}</p>
+                    <p className="text-xs text-slate-400 font-medium mb-8 italic line-clamp-2">{stripHtml(f.description)}</p>
                     
                     <div className="grid grid-cols-2 gap-3 mb-8">
                       <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl">
