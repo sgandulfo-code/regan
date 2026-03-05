@@ -1323,13 +1323,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </p>
                       
                       <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6 md:mb-8">
-                        <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
-                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Ambientes</span>
-                          <span className="font-black text-slate-800 text-base md:text-lg">{property.environments}</span>
+                        <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 text-center border transition-colors ${sortBy === 'rooms' ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>
+                          <span className={`block text-[8px] md:text-[9px] font-black uppercase tracking-widest mb-0.5 md:mb-1 ${sortBy === 'rooms' ? 'text-indigo-600' : 'text-slate-400'}`}>Ambientes</span>
+                          <span className={`font-black text-base md:text-lg ${sortBy === 'rooms' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.environments}</span>
                         </div>
-                        <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
-                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Sup. Total</span>
-                          <span className="font-black text-slate-800 text-base md:text-lg">{property.sqft} m²</span>
+                        <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 text-center border transition-colors ${sortBy === 'sqft' ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>
+                          <span className={`block text-[8px] md:text-[9px] font-black uppercase tracking-widest mb-0.5 md:mb-1 ${sortBy === 'sqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Sup. Total</span>
+                          <span className={`font-black text-base md:text-lg ${sortBy === 'sqft' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.sqft} m²</span>
                         </div>
                         <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
                           <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Baños</span>
@@ -1359,9 +1359,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
                            <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
                          </div>
-                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
-                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Valor m²</span>
-                           <span className="text-sm font-black text-slate-700">
+                         <div className={`flex justify-between items-center py-2 border-b transition-colors ${sortBy === 'pricePerSqft' ? 'border-indigo-100 bg-indigo-50/50 -mx-5 px-5 md:-mx-8 md:px-8' : 'border-slate-50'}`}>
+                           <span className={`text-xs font-bold uppercase tracking-wide ${sortBy === 'pricePerSqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Valor m²</span>
+                           <span className={`text-sm font-black ${sortBy === 'pricePerSqft' ? 'text-indigo-700' : 'text-slate-700'}`}>
                              ${property.sqft > 0 ? Math.round(property.price / property.sqft).toLocaleString() : 'N/A'}
                            </span>
                          </div>
