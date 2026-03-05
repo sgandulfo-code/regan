@@ -156,10 +156,10 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
             <button 
                 onClick={(e) => { e.stopPropagation(); onRequestVisit(property); }}
                 className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-200"
-                title="Solicitar Visita"
+                title="Pedir Visita"
             >
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Solicitar Visita</span>
+                <span>Pedir Visita</span>
             </button>
         </div>
       </div>

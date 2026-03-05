@@ -1418,7 +1418,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           onClick={() => handleRequestVisit(property)}
                           className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
                         >
-                          <Calendar className="w-4 h-4" /> Solicitar Visita
+                          <Calendar className="w-4 h-4" /> Pedir Visita
                         </button>
                         <a 
                           href={property.url} 
