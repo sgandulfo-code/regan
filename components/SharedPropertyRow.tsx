@@ -135,29 +135,30 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
-             {/* Actions */}
-             <div className="flex gap-1">
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onCompare(property.id); }}
-                    className={`p-1.5 rounded-lg transition-all ${isCompared ? 'text-indigo-600 bg-indigo-50' : 'text-slate-300 hover:text-slate-500'}`}
-                    title="Comparar"
-                >
-                    {isCompared ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
-                </button>
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onRequestVisit(property); }}
-                    className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
-                    title="Solicitar Visita"
-                >
-                    <Calendar className="w-3.5 h-3.5" />
-                </button>
-             </div>
-             
+             <button 
+                onClick={(e) => { e.stopPropagation(); onCompare(property.id); }}
+                className={`p-2 rounded-xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${isCompared ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-200 hover:text-indigo-600'}`}
+                title="Comparar"
+            >
+                {isCompared ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+            </button>
+
              <button 
                 onClick={() => onSelect(property)}
-                className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-700 shadow-md shadow-indigo-100 transition-all"
+                className="bg-white border border-slate-200 text-slate-600 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
+                title="Ver Ficha"
             >
-                Ver
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Ficha</span>
+            </button>
+
+            <button 
+                onClick={(e) => { e.stopPropagation(); onRequestVisit(property); }}
+                className="bg-indigo-600 text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-indigo-200"
+                title="Solicitar Visita"
+            >
+                <Calendar className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Visitar</span>
             </button>
         </div>
       </div>
