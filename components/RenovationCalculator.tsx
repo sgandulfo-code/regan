@@ -31,7 +31,7 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
     setIsSuggesting(false);
   };
 
-  const totalReno = property.renovationCosts.reduce((sum, item) => sum + item.estimatedCost, 0);
+  const totalReno = property.renovationCosts?.reduce((sum, item) => sum + item.estimatedCost, 0) || 0;
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm border overflow-hidden transition-all ${isArchitect ? 'ring-2 ring-orange-500/20 border-orange-200' : 'border-slate-200'}`}>

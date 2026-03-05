@@ -26,7 +26,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
     }
   };
 
-  const renoTotal = property.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0);
+  const renoTotal = property.renovationCosts?.reduce((acc, curr) => acc + curr.estimatedCost, 0) || 0;
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative">

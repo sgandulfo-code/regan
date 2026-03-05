@@ -127,7 +127,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                         <h4 className="text-xs font-black uppercase tracking-widest">Proyecto de Reforma</h4>
                       </div>
                       <span className="text-lg font-black text-indigo-400">
-                        {formatCurrency(p.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0))}
+                        {formatCurrency(p.renovationCosts?.reduce((acc, curr) => acc + curr.estimatedCost, 0) || 0)}
                       </span>
                     </div>
                     <div className="space-y-2">

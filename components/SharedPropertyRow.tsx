@@ -30,7 +30,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
     }
   };
 
-  const renoTotal = property.renovationCosts.reduce((acc, curr) => acc + curr.estimatedCost, 0);
+  const renoTotal = property.renovationCosts?.reduce((acc, curr) => acc + curr.estimatedCost, 0) || 0;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 flex flex-col md:flex-row gap-4 items-center hover:shadow-md transition-all group">
