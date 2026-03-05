@@ -22,10 +22,12 @@ import {
   SortDesc,
   ChevronDown,
   X,
-  Menu
+  Menu,
+  List
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
+import PropertyRow from './components/PropertyRow';
 import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
@@ -57,7 +59,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'map'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'map' | 'list'>('grid');
   const [folders, setFolders] = useState<SearchFolder[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [isSyncing, setIsSyncing] = useState(true);
@@ -406,6 +408,7 @@ const App: React.FC = () => {
               )}
               <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
                 <button onClick={() => setViewMode('grid')} className={`p-2 px-3 md:px-4 rounded-xl flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><LayoutGrid className="w-3 h-3" /> <span className="hidden sm:inline">Grid</span></button>
+                <button onClick={() => setViewMode('list')} className={`p-2 px-3 md:px-4 rounded-xl flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><List className="w-3 h-3" /> <span className="hidden sm:inline">List</span></button>
                 <button onClick={() => setViewMode('map')} className={`p-2 px-3 md:px-4 rounded-xl flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'map' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><MapIcon className="w-3 h-3" /> <span className="hidden sm:inline">Map</span></button>
               </div>
               <div className="bg-white p-1.5 md:p-2 rounded-2xl shadow-sm border flex items-center gap-2 md:gap-3">
@@ -693,20 +696,36 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'properties' && (
-          viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
+          viewMode === 'map' ? (
+            <PropertyMapView properties={displayProperties} onSelectProperty={setSelectedProperty} />
+          ) : (
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10" : "flex flex-col gap-3"}>
               {displayProperties.map((p, idx) => (
-                <PropertyCard 
-                  key={p.id} 
-                  property={p} 
-                  index={idx} 
-                  onSelect={setSelectedProperty} 
-                  onStatusChange={handleUpdateStatus}
-                  onToggleVisibility={handleToggleVisibility}
-                  onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
-                  onDelete={handleDeleteProperty}
-                  isEditable={canEdit}
-                />
+                viewMode === 'grid' ? (
+                  <PropertyCard 
+                    key={p.id} 
+                    property={p} 
+                    index={idx} 
+                    onSelect={setSelectedProperty} 
+                    onStatusChange={handleUpdateStatus}
+                    onToggleVisibility={handleToggleVisibility}
+                    onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                    onDelete={handleDeleteProperty}
+                    isEditable={canEdit}
+                  />
+                ) : (
+                  <PropertyRow
+                    key={p.id} 
+                    property={p} 
+                    index={idx} 
+                    onSelect={setSelectedProperty} 
+                    onStatusChange={handleUpdateStatus}
+                    onToggleVisibility={handleToggleVisibility}
+                    onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                    onDelete={handleDeleteProperty}
+                    isEditable={canEdit}
+                  />
+                )
               ))}
               {displayProperties.length === 0 && (
                 <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
@@ -714,8 +733,6 @@ const App: React.FC = () => {
                 </div>
               )}
             </div>
-          ) : (
-            <PropertyMapView properties={displayProperties} onSelectProperty={setSelectedProperty} />
           )
         )}
 
