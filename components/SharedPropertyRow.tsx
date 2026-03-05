@@ -137,10 +137,11 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
         <div className="flex items-center gap-2">
              <button 
                 onClick={(e) => { e.stopPropagation(); onCompare(property.id); }}
-                className={`p-2 rounded-xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${isCompared ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-200 hover:text-indigo-600'}`}
+                className={`px-3 py-2 rounded-xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${isCompared ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-200 text-slate-400 hover:border-indigo-200 hover:text-indigo-600'}`}
                 title="Comparar"
             >
                 {isCompared ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+                <span className="hidden md:inline">Comparar</span>
             </button>
 
              <button 
@@ -149,7 +150,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                 title="Ver Ficha"
             >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Ficha</span>
+                <span>Ver Ficha</span>
             </button>
 
             <button 
@@ -158,7 +159,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                 title="Solicitar Visita"
             >
                 <Calendar className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Visitar</span>
+                <span>Solicitar Visita</span>
             </button>
         </div>
       </div>
