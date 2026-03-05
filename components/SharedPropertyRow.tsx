@@ -141,7 +141,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                 title="Comparar"
             >
                 {isCompared ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
-                <span className="hidden md:inline">Comparar</span>
+                <span>Comparar</span>
             </button>
 
              <button 
