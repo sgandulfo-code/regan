@@ -697,5 +697,20 @@ export const dataService = {
     } catch (e) {
       return { title: '', screenshot: mshotsFallback };
     }
+  },
+
+  async recordItineraryView(sharedId: string) {
+    try {
+      await supabase
+        .from('itinerary_views')
+        .insert([{
+          shared_itinerary_id: sharedId,
+          viewed_at: new Date().toISOString(),
+          user_agent: navigator.userAgent
+        }]);
+    } catch (error) {
+      // Fail silently if table doesn't exist or other error
+      console.warn('Could not record view:', error);
+    }
   }
 };

@@ -54,6 +54,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   useEffect(() => {
     const fetchSharedData = async () => {
       try {
+        // Record view
+        dataService.recordItineraryView(sharedId);
+
         const result = await dataService.getSharedItinerary(sharedId);
         setData(result);
         
