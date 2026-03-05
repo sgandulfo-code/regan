@@ -526,18 +526,18 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-6 flex items-center justify-between">
+          <div className="flex items-center gap-3 md:gap-4">
             <button 
               onClick={() => window.location.reload()}
-              className={`w-12 h-12 ${itinerary.folder.color} rounded-2xl flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-105 transition-transform active:scale-95`}
+              className={`w-10 h-10 md:w-12 md:h-12 ${itinerary.folder.color} rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg cursor-pointer hover:scale-105 transition-transform active:scale-95`}
               title="Recargar"
             >
-              <Home className="w-6 h-6" />
+              <Home className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <div>
-              <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">{itinerary.folder.name}</h1>
-              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Portal del Cliente</p>
+              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">{itinerary.folder.name}</h1>
+              <p className="text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-0.5 md:mt-1">Portal del Cliente</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -546,87 +546,86 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 href={`https://wa.me/${agentProfile.whatsappNumber}?text=${encodeURIComponent(`Hola ${agentProfile.name}, `)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2 hover:bg-emerald-100 transition-colors cursor-pointer"
+                className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5 md:gap-2 hover:bg-emerald-100 transition-colors cursor-pointer"
               >
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                En Vivo
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="hidden md:inline">En Vivo</span>
+                <span className="md:hidden">Chat</span>
               </a>
             ) : (
-              <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                En Vivo
+              <div className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5 md:gap-2">
+                <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span className="hidden md:inline">En Vivo</span>
+                <span className="md:hidden">Online</span>
               </div>
-            )}
-            {agentProfile?.email && (
-              <p className="text-[10px] font-medium text-slate-400">{agentProfile.email}</p>
             )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 space-y-6 md:space-y-8 pb-24 md:pb-8">
         {/* Intro / Folder Details */}
-        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
+        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-2xl font-black mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            <h2 className="text-xl md:text-2xl font-black mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
             
             {itinerary.folder.welcomeMessage && (
-              <div className="bg-indigo-50 p-6 rounded-3xl border border-indigo-100 shadow-sm mb-6">
-                <h3 className="text-indigo-900 font-bold mb-2 text-sm uppercase tracking-wider">Mensaje de Bienvenida</h3>
-                <p className="text-slate-900 text-sm leading-relaxed whitespace-pre-wrap">{itinerary.folder.welcomeMessage}</p>
+              <div className="bg-indigo-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 shadow-sm mb-6">
+                <h3 className="text-indigo-900 font-bold mb-2 text-xs md:text-sm uppercase tracking-wider">Mensaje de Bienvenida</h3>
+                <p className="text-slate-900 text-xs md:text-sm leading-relaxed whitespace-pre-wrap">{itinerary.folder.welcomeMessage}</p>
               </div>
             )}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
+              <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 md:w-6 md:h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Presupuesto</span>
+                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Presupuesto</span>
                 </div>
-                <p className="text-lg font-black text-slate-800">${itinerary.folder.budget?.toLocaleString() || 'N/A'}</p>
+                <p className="text-base md:text-lg font-black text-slate-800">${itinerary.folder.budget?.toLocaleString() || 'N/A'}</p>
               </div>
               
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                    <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 md:w-6 md:h-6 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
+                    <ArrowLeftRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Operación</span>
+                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Operación</span>
                 </div>
-                <p className="text-lg font-black text-slate-800">{itinerary.folder.transactionType || 'N/A'}</p>
+                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.transactionType || 'N/A'}</p>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
-                    <Activity className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 md:w-6 md:h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
+                    <Activity className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Estado</span>
+                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Estado</span>
                 </div>
-                <p className="text-lg font-black text-slate-800">{itinerary.folder.status || 'N/A'}</p>
+                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.status || 'N/A'}</p>
               </div>
 
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <div className="w-5 h-5 md:w-6 md:h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Fecha Inicio</span>
+                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Fecha Inicio</span>
                 </div>
-                <p className="text-lg font-black text-slate-800">{itinerary.folder.startDate ? new Date(itinerary.folder.startDate).toLocaleDateString() : 'N/A'}</p>
+                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.startDate ? new Date(itinerary.folder.startDate).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
 
             {itinerary.folder.description && (
-              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+              <div className="bg-slate-50 rounded-xl md:rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observaciones</span>
                 </div>
                 <div 
-                  className="text-sm font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none"
+                  className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: itinerary.folder.description }}
                 />
               </div>
@@ -635,8 +634,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex justify-center mb-8">
+        {/* Desktop Navigation (Hidden on Mobile) */}
+        <div className="hidden md:flex justify-center mb-8">
           <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 inline-flex">
             <button
               onClick={() => setActiveTab('timeline')}
@@ -665,6 +664,37 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           </div>
         </div>
 
+        {/* Mobile Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 md:hidden z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
+          <button
+            onClick={() => setActiveTab('timeline')}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              activeTab === 'timeline' ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            <Calendar className={`w-6 h-6 ${activeTab === 'timeline' ? 'fill-current' : ''}`} />
+            <span className="text-[9px] font-black uppercase tracking-widest">Agenda</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              activeTab === 'properties' ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            <LayoutGrid className={`w-6 h-6 ${activeTab === 'properties' ? 'fill-current' : ''}`} />
+            <span className="text-[9px] font-black uppercase tracking-widest">Propiedades</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('map')}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              activeTab === 'map' ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            <MapIcon className={`w-6 h-6 ${activeTab === 'map' ? 'fill-current' : ''}`} />
+            <span className="text-[9px] font-black uppercase tracking-widest">Mapa</span>
+          </button>
+        </div>
+
         {/* Content */}
         {activeTab === 'timeline' && (
           <div className="space-y-12">
@@ -689,34 +719,34 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   }
                   
                   return (
-                    <div key={visit.id} className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
+                    <div key={visit.id} className={`bg-white rounded-[2rem] md:rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-5 md:p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
                       {isToday && (
                         <div className="absolute top-0 right-0 bg-indigo-600 text-white px-6 py-2 rounded-bl-3xl text-[10px] font-black uppercase tracking-widest animate-pulse">
                           Visita Hoy
                         </div>
                       )}
 
-                      <div className="flex flex-col lg:flex-row gap-8">
-                        <div className="w-full lg:w-48 h-48 rounded-[2rem] overflow-hidden shrink-0 shadow-lg relative">
+                      <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+                        <div className="w-full lg:w-48 h-40 md:h-48 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shrink-0 shadow-lg relative">
                           <img src={visit.property.images[0] || 'https://picsum.photos/seed/prop/400/400'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                           <div className="absolute top-3 left-3 z-10">
                             {displayStatus === 'Pending' && (
-                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" /> A Confirmar
                               </span>
                             )}
                             {displayStatus === 'Confirmed' && (
-                              <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Confirmada
                               </span>
                             )}
                             {displayStatus === 'Completed' && (
-                              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Realizada
                               </span>
                             )}
                             {displayStatus === 'Cancelled' && (
-                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <X className="w-3 h-3" /> Cancelada
                               </span>
                             )}
@@ -726,9 +756,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">{visit.property.title}</h3>
-                              <p className="text-slate-400 text-xs font-bold flex items-center gap-2 uppercase tracking-widest">
-                                <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {visit.property.address}
+                              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mb-1">{visit.property.title}</h3>
+                              <p className="text-slate-400 text-[10px] md:text-xs font-bold flex items-center gap-1.5 md:gap-2 uppercase tracking-widest">
+                                <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" /> {visit.property.address}
                               </p>
                             </div>
                             
@@ -770,10 +800,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                            <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
-                              <p className="text-sm font-black text-slate-700">
+                              <p className="text-xs md:text-sm font-black text-slate-700">
                                 {new Date(visit.date + 'T00:00:00').toLocaleDateString('es-ES', {
                                   year: 'numeric',
                                   month: '2-digit',
@@ -781,17 +811,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                 })}
                               </p>
                             </div>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hora</p>
-                              <p className="text-sm font-black text-slate-700">{visit.time} HS</p>
+                              <p className="text-xs md:text-sm font-black text-slate-700">{visit.time} HS</p>
                             </div>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Contacto</p>
-                              <p className="text-sm font-black text-slate-700 truncate">{visit.contactName || 'N/A'}</p>
+                              <p className="text-xs md:text-sm font-black text-slate-700 truncate">{visit.contactName || 'N/A'}</p>
                             </div>
-                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                               <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
-                              <p className="text-sm font-black text-indigo-600">{visit.contactPhone || 'N/A'}</p>
+                              <p className="text-xs md:text-sm font-black text-indigo-600">{visit.contactPhone || 'N/A'}</p>
                             </div>
                           </div>
 
@@ -802,7 +832,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               </p>
                               <div className="flex flex-wrap gap-2">
                                 {visit.checklist.map((item: any, idx: number) => (
-                                  <div key={idx} className="flex items-center gap-2 bg-white border border-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-600 shadow-sm">
+                                  <div key={idx} className="flex items-center gap-2 bg-white border border-slate-100 px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-[10px] md:text-xs font-bold text-slate-600 shadow-sm">
                                     {item.completed ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <Square className="w-3 h-3 text-slate-300" />}
                                     {item.task}
                                   </div>
@@ -1217,87 +1247,88 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   }
 
                   return (
-                    <div key={property.id} className="bg-white rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
-                      <div className="h-64 relative overflow-hidden shrink-0">
+                    <div key={property.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                      <div className="h-56 md:h-64 relative overflow-hidden shrink-0">
                         <img 
                           src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                           alt={property.title} 
                         />
-                        <div className="absolute top-4 left-4 z-10">
+                        <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
                           {displayStatus === 'Pending' && (
-                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                               <Clock className="w-3 h-3" /> A Confirmar
                             </span>
                           )}
                           {displayStatus === 'Confirmed' && (
-                            <span className="bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                               <CheckCircle2 className="w-3 h-3" /> Confirmada
                             </span>
                           )}
                           {displayStatus === 'Completed' && (
-                            <span className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                               <CheckCircle2 className="w-3 h-3" /> Realizada
                             </span>
                           )}
                           {displayStatus === 'Cancelled' && (
-                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
                               <X className="w-3 h-3" /> Cancelada
                             </span>
                           )}
                         </div>
-                        <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+                        <div className="absolute top-3 right-3 md:top-4 md:right-4 flex flex-col items-end gap-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               toggleComparison(property.id);
                             }}
-                            className={`bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border transition-colors flex items-center gap-2 ${
+                            className={`bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest shadow-sm border transition-colors flex items-center gap-1.5 md:gap-2 ${
                               comparisonIds.includes(property.id)
                                 ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/20'
                                 : 'border-slate-100 text-slate-500 hover:text-indigo-600'
                             }`}
                           >
                             {comparisonIds.includes(property.id) ? (
-                              <CheckSquare className="w-3.5 h-3.5" />
+                              <CheckSquare className="w-3 h-3 md:w-3.5 md:h-3.5" />
                             ) : (
-                              <Square className="w-3.5 h-3.5" />
+                              <Square className="w-3 h-3 md:w-3.5 md:h-3.5" />
                             )}
                             Comparar
                           </button>
-                          <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
+                          <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
                             {property.status}
                           </div>
                         {property.acquisitionReason && (
-                          <div className="bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
+                          <div className="bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
                             {property.acquisitionReason}
                           </div>
                         )}
                       </div>
                       {itinerary.settings.showPrices && (
-                        <div className="absolute bottom-4 left-4 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-black shadow-lg">
+                        <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 bg-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-black shadow-lg">
                           ${property.price.toLocaleString()}
                         </div>
                       )}
                     </div>
                     
-                    <div className="p-8 flex-1 flex flex-col">
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2 leading-tight">{property.title}</h3>
-                      <p className="text-slate-400 text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-6">
-                        <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
+                    <div className="p-5 md:p-8 flex-1 flex flex-col">
+                      <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight">{property.title}</h3>
+                      <p className="text-slate-400 text-[9px] md:text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-4 md:mb-6">
+                        <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" /> {property.address}
                       </p>
                       
-                      <div className="grid grid-cols-3 gap-3 mb-8">
-                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ambientes</span>
-                          <span className="font-black text-slate-800 text-lg">{property.environments}</span>
+                      <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6 md:mb-8">
+                        <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
+                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Ambientes</span>
+                          <span className="font-black text-slate-800 text-base md:text-lg">{property.environments}</span>
                         </div>
-                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Total</span>
-                          <span className="font-black text-slate-800 text-lg">{property.sqft} m²</span>
+                        <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
+                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Sup. Total</span>
+                          <span className="font-black text-slate-800 text-base md:text-lg">{property.sqft} m²</span>
                         </div>
-                        <div className="bg-slate-50 rounded-2xl p-3 text-center border border-slate-100">
-                          <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Baños</span>
+                        <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
+                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Baños</span>
+
                           <span className="font-black text-slate-800 text-lg">{property.bathrooms}</span>
                         </div>
                       </div>
@@ -1390,7 +1421,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       </main>
       {/* Comparison Floating Bar */}
       {comparisonIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+        <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300 w-[90%] md:w-auto justify-between md:justify-start">
           <div className="flex items-center gap-3">
             <div className="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs">
               {comparisonIds.length}
@@ -1415,8 +1446,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       {/* Comparison Modal */}
       {isComparisonOpen && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[100] overflow-y-auto">
-          <div className="min-h-screen p-4 md:p-8">
-            <div className="max-w-7xl mx-auto bg-white rounded-[3rem] p-8 shadow-2xl relative">
+          <div className="min-h-screen p-4 md:p-8 pb-24 md:pb-8">
+            <div className="max-w-7xl mx-auto bg-white rounded-[2rem] md:rounded-[3rem] p-5 md:p-8 shadow-2xl relative">
               <button
                 onClick={() => setIsComparisonOpen(false)}
                 className="absolute top-8 right-8 p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors z-50"
@@ -1436,7 +1467,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       {isRequestModalOpen && selectedPropertyForRequest && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+            <div className="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center">
               <h3 className="text-lg font-black text-slate-900 tracking-tight">Solicitar Visita</h3>
               <button 
                 onClick={() => setIsRequestModalOpen(false)}
@@ -1446,8 +1477,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
-              <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div className="p-5 md:p-6 space-y-4">
+              <div className="flex items-center gap-4 bg-slate-50 p-3 md:p-4 rounded-2xl border border-slate-100">
                 <img 
                   src={selectedPropertyForRequest.images[0]} 
                   className="w-16 h-16 rounded-xl object-cover" 
@@ -1477,7 +1508,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <div className="p-5 md:p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
               <button
                 onClick={() => setIsRequestModalOpen(false)}
                 className="px-6 py-3 rounded-xl text-xs font-black text-slate-500 hover:bg-slate-200 transition-colors uppercase tracking-widest"

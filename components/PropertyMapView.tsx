@@ -227,8 +227,8 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
 
         {/* Selected Property Card */}
         {selectedProperty && (
-          <div className="absolute bottom-10 left-10 right-10 lg:left-auto lg:right-10 lg:w-[450px] z-[1000] animate-in slide-in-from-bottom-12 duration-700">
-            <div className="bg-white/95 backdrop-blur-2xl p-6 rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white flex gap-6 items-center relative">
+          <div className="absolute bottom-4 left-4 right-4 md:bottom-10 md:left-10 md:right-10 lg:left-auto lg:right-10 lg:w-[450px] z-[1000] animate-in slide-in-from-bottom-12 duration-700">
+            <div className="bg-white/95 backdrop-blur-2xl p-4 md:p-6 rounded-[2rem] md:rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-white flex gap-4 md:gap-6 items-center relative">
               <button 
                 onClick={() => setSelectedProperty(null)}
                 className="absolute top-6 right-6 p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-all"
@@ -236,13 +236,13 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
                 <X className="w-4 h-4" />
               </button>
               
-              <div className="w-28 h-28 rounded-[2rem] overflow-hidden shrink-0 shadow-2xl ring-4 ring-white">
+              <div className="w-20 h-20 md:w-28 md:h-28 rounded-[1.5rem] md:rounded-[2rem] overflow-hidden shrink-0 shadow-2xl ring-4 ring-white">
                 <img src={selectedProperty.images[0]} className="w-full h-full object-cover" alt="" />
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Asset Highlight</p>
-                <h4 className="font-black text-slate-900 text-xl leading-tight truncate tracking-tight">{selectedProperty.title}</h4>
+                <p className="text-[8px] md:text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Asset Highlight</p>
+                <h4 className="font-black text-slate-900 text-base md:text-xl leading-tight truncate tracking-tight">{selectedProperty.title}</h4>
                 
                 <div className="flex items-center gap-5 mt-3">
                   <div className="flex items-center gap-1.5">

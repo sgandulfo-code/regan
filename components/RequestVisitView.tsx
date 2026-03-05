@@ -26,24 +26,24 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, v
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-5xl mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Pedir Visitas</h2>
+          <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">Pedir Visitas</h2>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Coordina tus visitas pendientes directamente con los agentes</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         {propertiesToRequest.map(property => (
-          <div key={property.id} className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-indigo-50 px-4 py-2 rounded-bl-2xl border-b border-l border-indigo-100 flex items-center gap-2">
+          <div key={property.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-indigo-50 px-3 py-1.5 md:px-4 md:py-2 rounded-bl-2xl border-b border-l border-indigo-100 flex items-center gap-2">
                <FolderOpen className="w-3 h-3 text-indigo-500" />
                <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">{getFolderName(property.folderId)}</span>
             </div>
 
-            <div className="flex gap-6 mt-6">
-              <div className="w-32 h-32 rounded-2xl overflow-hidden shrink-0 relative">
+            <div className="flex gap-4 md:gap-6 mt-4 md:mt-6">
+              <div className="w-24 h-24 md:w-32 md:h-32 rounded-2xl overflow-hidden shrink-0 relative">
                 <img 
                   src={property.images[0] || 'https://picsum.photos/seed/prop/200/200'} 
                   alt={property.title}
@@ -53,7 +53,7 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, v
               </div>
               
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <h3 className="font-black text-lg text-slate-900 truncate mb-1">{property.title}</h3>
+                <h3 className="font-black text-base md:text-lg text-slate-900 truncate mb-1">{property.title}</h3>
                 <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 mb-4">
                   <MapPin className="w-3 h-3" /> {property.address}
                 </p>
@@ -73,7 +73,7 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, v
               </div>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-50 flex justify-end">
+            <div className="mt-4 pt-4 md:mt-6 md:pt-6 border-t border-slate-50 flex justify-end">
               {property.agentWhatsapp ? (
                 <a 
                   href={`https://wa.me/${property.agentWhatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, soy ${user.name}. Me interesa visitar la propiedad: ${property.title} (${property.url || 'Link no disponible'}). `)}`}

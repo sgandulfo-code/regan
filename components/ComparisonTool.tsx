@@ -59,10 +59,10 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-8 animate-in fade-in duration-500 pb-20">
-      <div className="mb-8 flex justify-between items-start">
+    <div className="max-w-7xl mx-auto py-4 md:py-8 animate-in fade-in duration-500 pb-20">
+      <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Comparación de Propiedades</h2>
+          <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">Comparación de Propiedades</h2>
           <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">
             Selecciona hasta 4 propiedades para comparar sus atributos lado a lado.
           </p>
@@ -117,11 +117,11 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr>
-                  <th className="p-6 text-left bg-slate-50 border-b border-slate-100 w-48 sticky left-0 z-10">
+                  <th className="p-4 md:p-6 text-left bg-slate-50 border-b border-slate-100 w-32 md:w-48 sticky left-0 z-10">
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atributo</span>
                   </th>
                   {selectedProperties.map(p => (
-                    <th key={p.id} className="p-6 text-left border-b border-slate-100 min-w-[200px]">
+                    <th key={p.id} className="p-4 md:p-6 text-left border-b border-slate-100 min-w-[160px] md:min-w-[200px]">
                       <div className="relative h-32 rounded-2xl overflow-hidden mb-4 shadow-md">
                         <img src={p.images[0] || 'https://picsum.photos/seed/prop/400/300'} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-3">

@@ -48,15 +48,15 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
       </section>
 
       <section className="print:break-inside-avoid">
-        <div className="overflow-hidden border border-slate-200 rounded-[2rem] print:rounded-xl print:border-slate-300 shadow-sm">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto border border-slate-200 rounded-[2rem] print:rounded-xl print:border-slate-300 shadow-sm">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 print:bg-slate-100">
-                <th className="p-6 w-48 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 bg-slate-50/50 sticky left-0 z-10 print:static">
+                <th className="p-4 md:p-6 w-32 md:w-48 text-[10px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 bg-slate-50/50 sticky left-0 z-10 print:static">
                   PROPIEDAD
                 </th>
                 {properties.map((p) => (
-                  <th key={p.id} className="p-6 min-w-[200px] align-top border-r border-slate-200 last:border-r-0">
+                  <th key={p.id} className="p-4 md:p-6 min-w-[160px] md:min-w-[200px] align-top border-r border-slate-200 last:border-r-0">
                     <div className="space-y-4">
                       <div className="aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shadow-sm group relative">
                         {p.url ? (
