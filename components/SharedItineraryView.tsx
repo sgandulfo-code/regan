@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
@@ -27,6 +27,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   // Sorting State
   const [sortBy, setSortBy] = useState<'price' | 'pricePerSqft' | 'sqft' | 'rooms'>('price');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Filter State
+  const [filterPriceMin, setFilterPriceMin] = useState<number | ''>('');
+  const [filterPriceMax, setFilterPriceMax] = useState<number | ''>('');
+  const [filterBedrooms, setFilterBedrooms] = useState<number | ''>('');
+  const [filterMinSqft, setFilterMinSqft] = useState<number | ''>('');
+  const [showFilters, setShowFilters] = useState(false);
 
   // Comparison State
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
@@ -503,6 +510,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
     return sortOrder === 'asc' ? valA - valB : valB - valA;
   }) : [];
+
+  const filteredProperties = sortedProperties.filter((p: any) => {
+    if (filterPriceMin !== '' && p.price < Number(filterPriceMin)) return false;
+    if (filterPriceMax !== '' && p.price > Number(filterPriceMax)) return false;
+    if (filterBedrooms !== '' && p.rooms < Number(filterBedrooms)) return false;
+    if (filterMinSqft !== '' && p.sqft < Number(filterMinSqft)) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -1099,32 +1114,90 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
         {activeTab === 'properties' && (
           <div className="space-y-6">
-            <div className="flex justify-end gap-2">
-              <div className="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-                <select 
-                  value={sortBy} 
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="bg-transparent text-slate-600 text-[10px] font-black uppercase tracking-widest px-3 py-2 outline-none cursor-pointer"
-                >
-                  <option value="price">Precio</option>
-                  <option value="pricePerSqft">Valor m²</option>
-                  <option value="sqft">Superficie</option>
-                  <option value="rooms">Ambientes</option>
-                </select>
-                <div className="w-px h-4 bg-slate-200"></div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div className="flex justify-between items-center">
                 <button 
-                  onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                  className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
-                  title={sortOrder === 'asc' ? "Orden Ascendente" : "Orden Descendente"}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
                 >
-                  {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  <Filter className="w-4 h-4" /> Filtros {showFilters ? '(-)' : '(+)'}
                 </button>
+                
+                <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                  <select 
+                    value={sortBy} 
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="bg-transparent text-slate-600 text-[10px] font-black uppercase tracking-widest px-3 py-2 outline-none cursor-pointer"
+                  >
+                    <option value="price">Precio</option>
+                    <option value="pricePerSqft">Valor m²</option>
+                    <option value="sqft">Superficie</option>
+                    <option value="rooms">Ambientes</option>
+                  </select>
+                  <div className="w-px h-4 bg-slate-200"></div>
+                  <button 
+                    onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                    className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"
+                    title={sortOrder === 'asc' ? "Orden Ascendente" : "Orden Descendente"}
+                  >
+                    {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
+
+              {showFilters && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 animate-in slide-in-from-top-2">
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Mín</label>
+                    <input 
+                      type="number" 
+                      value={filterPriceMin}
+                      onChange={(e) => setFilterPriceMin(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Máx</label>
+                    <input 
+                      type="number" 
+                      value={filterPriceMax}
+                      onChange={(e) => setFilterPriceMax(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="Sin límite"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Dormitorios</label>
+                    <select 
+                      value={filterBedrooms}
+                      onChange={(e) => setFilterBedrooms(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value="">Cualquiera</option>
+                      <option value="1">1+</option>
+                      <option value="2">2+</option>
+                      <option value="3">3+</option>
+                      <option value="4">4+</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Mín (m²)</label>
+                    <input 
+                      type="number" 
+                      value={filterMinSqft}
+                      onChange={(e) => setFilterMinSqft(e.target.value ? Number(e.target.value) : '')}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {sortedProperties && sortedProperties.length > 0 ? (
-                sortedProperties.map((property: any) => {
+              {filteredProperties && filteredProperties.length > 0 ? (
+                filteredProperties.map((property: any) => {
                   const visit = visits.find((v: any) => v.propertyId === property.id);
                   let displayStatus = null;
                   
