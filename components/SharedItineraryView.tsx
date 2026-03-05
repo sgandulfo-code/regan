@@ -559,6 +559,11 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 <span className="md:hidden">Online</span>
               </div>
             )}
+            {agentProfile?.email && (
+              <a href={`mailto:${agentProfile.email}`} className="text-[9px] md:text-[10px] text-slate-400 font-medium hover:text-indigo-600 transition-colors">
+                {agentProfile.email}
+              </a>
+            )}
           </div>
         </div>
       </header>
@@ -1353,6 +1358,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
                            <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
+                         </div>
+                         <div className="flex justify-between items-center py-2 border-b border-slate-50">
+                           <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Valor m²</span>
+                           <span className="text-sm font-black text-slate-700">
+                             ${property.sqft > 0 ? Math.round(property.price / property.sqft).toLocaleString() : 'N/A'}
+                           </span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Antigüedad</span>
