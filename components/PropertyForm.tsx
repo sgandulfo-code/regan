@@ -469,25 +469,25 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {filteredLinks.map(link => (
-              <div key={link.id} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex items-center gap-4 group relative overflow-hidden">
+              <div key={link.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col gap-4 group relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-indigo-500 transition-colors"></div>
                 
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
                     <Monitor className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest max-w-[100px]">
+                  <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest">
                     {new URL(link.url).hostname.replace('www.', '')}
                   </p>
                 </div>
 
-                <div className="flex-1 min-w-0">
+                <div className="w-full min-w-0">
                   <p className="text-xs text-slate-500 break-all font-bold tracking-tight leading-relaxed">{link.url}</p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={() => startProcessing(link, 'ai')} className="bg-slate-900 text-white px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"><Cpu className="w-3.5 h-3.5" /> Neural</button>
-                  <button onClick={() => startProcessing(link, 'manual')} className="bg-slate-50 text-slate-500 px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-100 transition-all border border-slate-100"><Keyboard className="w-3.5 h-3.5" /> Manual</button>
+                <div className="flex items-center gap-2 w-full mt-auto pt-2 border-t border-slate-50">
+                  <button onClick={() => startProcessing(link, 'ai')} className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"><Cpu className="w-3.5 h-3.5" /> Neural</button>
+                  <button onClick={() => startProcessing(link, 'manual')} className="flex-1 bg-slate-50 text-slate-500 px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-100 transition-all border border-slate-100"><Keyboard className="w-3.5 h-3.5" /> Manual</button>
                   <div className="w-px h-8 bg-slate-100 mx-1"></div>
                   <button onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"><Trash2 className="w-4 h-4" /></button>
                 </div>
