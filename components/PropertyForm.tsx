@@ -492,9 +492,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         const diffTime = now.getTime() - date.getTime();
                         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                         const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-                        if (diffDays === 0) return `${dateStr} (Hoy)`;
-                        if (diffDays === 1) return `${dateStr} (Hace 1 día)`;
-                        return `${dateStr} (Hace ${diffDays} días)`;
+                        const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                        if (diffDays === 0) return `${dateStr} ${timeStr} (Hoy)`;
+                        if (diffDays === 1) return `${dateStr} ${timeStr} (Hace 1 día)`;
+                        return `${dateStr} ${timeStr} (Hace ${diffDays} días)`;
                       })()}
                     </span>
                   </div>
