@@ -8,6 +8,8 @@ export interface InboxLink {
   folder_id: string;
   user_id: string;
   created_at: string;
+  status?: string;
+  added_by_client?: boolean;
 }
 
 export const dataService = {
@@ -344,22 +346,35 @@ export const dataService = {
     return (data || []) as InboxLink[];
   },
 
-  async addInboxLinks(links: string[], userId: string, folderId: string | null) {
+  async addInboxLinks(links: string[], userId: string, folderId: string | null, addedByClient: boolean = false) {
     const toInsert = links.map(url => ({
       user_id: userId,
       folder_id: folderId,
       url: url,
-      status: 'enviado'
+      status: 'enviado',
+      added_by_client: addedByClient
     }));
     const { error } = await supabase.from('link_inbox').insert(toInsert);
     
     if (error && error.code === '42703') {
-      const fallbackInsert = links.map(url => ({
+      // Intentamos insertar solo con status si added_by_client falla
+      const fallbackInsert1 = links.map(url => ({
         user_id: userId,
         folder_id: folderId,
-        url: url
+        url: url,
+        status: 'enviado'
       }));
-      await supabase.from('link_inbox').insert(fallbackInsert);
+      const { error: error2 } = await supabase.from('link_inbox').insert(fallbackInsert1);
+      
+      if (error2 && error2.code === '42703') {
+        // Fallback final sin status ni added_by_client
+        const fallbackInsert2 = links.map(url => ({
+          user_id: userId,
+          folder_id: folderId,
+          url: url
+        }));
+        await supabase.from('link_inbox').insert(fallbackInsert2);
+      }
     }
   },
 

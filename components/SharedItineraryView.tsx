@@ -94,7 +94,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       const urls = linksText.split(/[\n,]+/).map(url => url.trim()).filter(url => url.length > 0);
       
       if (urls.length > 0) {
-        await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId);
+        await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId, true);
         setLinksText('');
         
         // Refresh links
@@ -1565,7 +1565,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             }
                           })()}
                         </p>
-                        <a href={link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 truncate block transition-colors">
+                        <a href={link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 break-all block transition-colors">
                           {link.url}
                         </a>
                       </div>

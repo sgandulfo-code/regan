@@ -476,9 +476,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
                     <Monitor className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest">
-                    {new URL(link.url).hostname.replace('www.', '')}
-                  </p>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest leading-none mb-1">
+                      {new URL(link.url).hostname.replace('www.', '')}
+                    </p>
+                    {link.added_by_client && (
+                      <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit">
+                        Solicitado por cliente
+                      </span>
+                    )}
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                      {(() => {
+                        const date = new Date(link.created_at);
+                        const now = new Date();
+                        const diffTime = now.getTime() - date.getTime();
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                        if (diffDays === 0) return `${dateStr} (Hoy)`;
+                        if (diffDays === 1) return `${dateStr} (Hace 1 día)`;
+                        return `${dateStr} (Hace ${diffDays} días)`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="w-full min-w-0">
