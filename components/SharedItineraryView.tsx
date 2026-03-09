@@ -73,7 +73,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           if (profile) setAgentProfile(profile);
           
           // Fetch inbox links for this folder
-          const links = await dataService.getInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
+          const links = await dataService.getAllInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
           setInboxLinks(links);
         }
       } catch (error) {
@@ -98,7 +98,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         setLinksText('');
         
         // Refresh links
-        const updatedLinks = await dataService.getInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
+        const updatedLinks = await dataService.getAllInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
         setInboxLinks(updatedLinks);
         
         alert('¡Links enviados con éxito! Tu consultor los revisará pronto.');
@@ -1569,8 +1569,19 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           {link.url}
                         </a>
                       </div>
-                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
-                        {new Date(link.created_at).toLocaleDateString()}
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                          {new Date(link.created_at).toLocaleDateString()}
+                        </div>
+                        <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                          link.status === 'procesado' ? 'bg-emerald-100 text-emerald-600' :
+                          link.status === 'rechazado' ? 'bg-rose-100 text-rose-600' :
+                          'bg-amber-100 text-amber-600'
+                        }`}>
+                          {link.status === 'procesado' ? 'Procesado' :
+                           link.status === 'rechazado' ? 'Rechazado' :
+                           'Enviado'}
+                        </div>
                       </div>
                     </div>
                   ))}

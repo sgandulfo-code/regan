@@ -322,6 +322,24 @@ export const dataService = {
   async getInboxLinks(userId: string, folderId: string | null) {
     let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
     if (folderId) query = query.eq('folder_id', folderId);
+    
+    // Intentamos filtrar por status='enviado' o NULL
+    const { data, error } = await query.or('status.eq.enviado,status.is.null').order('created_at', { ascending: false });
+    
+    if (error && error.code === '42703') {
+      // Si la columna status no existe, hacemos la consulta sin el filtro
+      let fallbackQuery = supabase.from('link_inbox').select('*').eq('user_id', userId);
+      if (folderId) fallbackQuery = fallbackQuery.eq('folder_id', folderId);
+      const { data: fallbackData } = await fallbackQuery.order('created_at', { ascending: false });
+      return (fallbackData || []) as InboxLink[];
+    }
+    
+    return (data || []) as InboxLink[];
+  },
+
+  async getAllInboxLinks(userId: string, folderId: string | null) {
+    let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
+    if (folderId) query = query.eq('folder_id', folderId);
     const { data, error } = await query.order('created_at', { ascending: false });
     return (data || []) as InboxLink[];
   },
@@ -330,13 +348,38 @@ export const dataService = {
     const toInsert = links.map(url => ({
       user_id: userId,
       folder_id: folderId,
-      url: url
+      url: url,
+      status: 'enviado'
     }));
-    await supabase.from('link_inbox').insert(toInsert);
+    const { error } = await supabase.from('link_inbox').insert(toInsert);
+    
+    if (error && error.code === '42703') {
+      const fallbackInsert = links.map(url => ({
+        user_id: userId,
+        folder_id: folderId,
+        url: url
+      }));
+      await supabase.from('link_inbox').insert(fallbackInsert);
+    }
   },
 
   async removeInboxLink(id: string) {
-    await supabase.from('link_inbox').delete().eq('id', id);
+    // Intenta actualizar el estado a 'rechazado'
+    const { error } = await supabase.from('link_inbox').update({ status: 'rechazado' }).eq('id', id);
+    if (error && error.code === '42703') { // Columna no existe
+      // Fallback: eliminar el link
+      await supabase.from('link_inbox').delete().eq('id', id);
+    }
+  },
+
+  async updateInboxLinkStatus(id: string, status: 'enviado' | 'procesado' | 'rechazado') {
+    const { error } = await supabase.from('link_inbox').update({ status }).eq('id', id);
+    if (error && error.code === '42703') {
+      // Si la columna no existe y el estado es procesado o rechazado, eliminamos el link
+      if (status === 'procesado' || status === 'rechazado') {
+        await supabase.from('link_inbox').delete().eq('id', id);
+      }
+    }
   },
 
   async clearInbox(userId: string, folderId: string | null) {

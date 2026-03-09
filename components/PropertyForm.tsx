@@ -366,7 +366,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       images: [finalImage],
       createdAt: new Date().toISOString(),
     });
-    await dataService.removeInboxLink(processingLink.id);
+    await dataService.updateInboxLinkStatus(processingLink.id, 'procesado');
     await fetchInbox();
     resetProcessing();
   };
