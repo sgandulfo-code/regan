@@ -13,7 +13,7 @@ interface SharedItineraryViewProps {
 }
 
 const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) => {
-  const [activeTab, setActiveTab] = useState<'timeline' | 'properties' | 'map'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'properties' | 'map' | 'leads'>('timeline');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,11 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [selectedPropertyForRequest, setSelectedPropertyForRequest] = useState<any>(null);
   const [requestMessage, setRequestMessage] = useState('');
   const [agentProfile, setAgentProfile] = useState<any>(null);
+
+  // Leads State
+  const [inboxLinks, setInboxLinks] = useState<any[]>([]);
+  const [linksText, setLinksText] = useState('');
+  const [isSubmittingLinks, setIsSubmittingLinks] = useState(false);
 
   // Sorting State
   const [sortBy, setSortBy] = useState<'price' | 'pricePerSqft' | 'sqft' | 'rooms'>('price');
@@ -66,6 +71,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         if (result?.itinerary?.folder?.userId) {
           const profile = await dataService.getProfile(result.itinerary.folder.userId);
           if (profile) setAgentProfile(profile);
+          
+          // Fetch inbox links for this folder
+          const links = await dataService.getInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
+          setInboxLinks(links);
         }
       } catch (error) {
         console.error('Error fetching shared itinerary:', error);
@@ -76,6 +85,31 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
     fetchSharedData();
   }, [sharedId]);
+
+  const handleSubmitLinks = async () => {
+    if (!linksText.trim() || !data?.itinerary?.folder?.userId) return;
+
+    setIsSubmittingLinks(true);
+    try {
+      const urls = linksText.split(/[\n,]+/).map(url => url.trim()).filter(url => url.length > 0);
+      
+      if (urls.length > 0) {
+        await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId);
+        setLinksText('');
+        
+        // Refresh links
+        const updatedLinks = await dataService.getInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
+        setInboxLinks(updatedLinks);
+        
+        alert('¡Links enviados con éxito! Tu consultor los revisará pronto.');
+      }
+    } catch (error) {
+      console.error('Error submitting links:', error);
+      alert('Hubo un error al enviar los links. Por favor, intenta de nuevo.');
+    } finally {
+      setIsSubmittingLinks(false);
+    }
+  };
 
   const handleClientChecklistUpdate = async (visitId: string, itemId: string, updates: any) => {
     const visit = data.visits.find((v: any) => v.id === visitId);
@@ -669,6 +703,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             >
               <MapIcon className="w-4 h-4" /> Mapa
             </button>
+            <button
+              onClick={() => setActiveTab('leads')}
+              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+                activeTab === 'leads' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              <Send className="w-4 h-4" /> Sugerencias
+            </button>
           </div>
         </div>
 
@@ -700,6 +742,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           >
             <MapIcon className={`w-6 h-6 ${activeTab === 'map' ? 'fill-current' : ''}`} />
             <span className="text-[9px] font-black uppercase tracking-widest">Mapa</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              activeTab === 'leads' ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            <Send className={`w-6 h-6 ${activeTab === 'leads' ? 'fill-current' : ''}`} />
+            <span className="text-[9px] font-black uppercase tracking-widest">Sugerencias</span>
           </button>
         </div>
 
@@ -1451,6 +1502,81 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                  if (p.url) window.open(p.url, '_blank');
               }} 
             />
+          </div>
+        )}
+
+        {activeTab === 'leads' && (
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-200 shadow-sm">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
+                  <Send className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Sugerir Propiedades</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Envía links para que tu consultor los analice</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <textarea
+                  value={linksText}
+                  onChange={(e) => setLinksText(e.target.value)}
+                  placeholder="Pega aquí los links de las propiedades que te interesan (uno por línea o separados por comas)..."
+                  className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
+                />
+                <button
+                  onClick={handleSubmitLinks}
+                  disabled={isSubmittingLinks || !linksText.trim()}
+                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmittingLinks ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" /> Enviar Links
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {inboxLinks.length > 0 && (
+              <div className="space-y-4">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 px-2">
+                  <History className="w-4 h-4 text-slate-400" /> Historial de Sugerencias
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {inboxLinks.map((link: any) => (
+                    <div key={link.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 group">
+                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-50 transition-colors">
+                        <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 truncate">
+                          {(() => {
+                            try {
+                              return new URL(link.url).hostname.replace('www.', '');
+                            } catch {
+                              return 'Link';
+                            }
+                          })()}
+                        </p>
+                        <a href={link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 truncate block transition-colors">
+                          {link.url}
+                        </a>
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
+                        {new Date(link.created_at).toLocaleDateString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
