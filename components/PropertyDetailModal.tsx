@@ -59,7 +59,10 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               </div>
               <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter leading-tight mb-4">{property.title}</h1>
               <div className="space-y-1">
-                <p className="flex items-center gap-2 text-slate-500 font-medium text-base md:text-lg"><MapPin className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />{property.address}</p>
+                <div className="flex items-start gap-2 text-slate-500 font-medium text-base md:text-lg leading-relaxed">
+                  <MapPin className="w-4 h-4 md:w-5 md:h-5 text-indigo-500 shrink-0 mt-1" />
+                  <p className="break-words">{property.address}</p>
+                </div>
               </div>
             </section>
 

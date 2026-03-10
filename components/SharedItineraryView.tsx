@@ -816,9 +816,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           <div className="flex justify-between items-start mb-4">
                             <div>
                               <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mb-1">{visit.property.title}</h3>
-                              <p className="text-slate-400 text-[10px] md:text-xs font-bold flex items-center gap-1.5 md:gap-2 uppercase tracking-widest">
-                                <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" /> {visit.property.address}
-                              </p>
+                              <div className="flex items-start gap-1.5 md:gap-2">
+                                <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                                <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed break-words">
+                                  {visit.property.address}
+                                </p>
+                              </div>
                             </div>
                             
                             {displayStatus === 'Pending' && (
@@ -1185,7 +1188,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         <img src={v.property.images[0]} className="w-full h-full object-cover" alt="" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-slate-800 truncate text-sm">{v.property.title}</h4>
+                        <h4 className="font-bold text-slate-800 text-sm leading-snug mb-1">{v.property.title}</h4>
                         <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status === 'Completed' ? 'Realizada' : 'Cancelada'}</p>
                         {(v.clientFeedback || v.rating) && (
                           <div className="flex items-center gap-2 mt-1">
@@ -1403,9 +1406,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     
                     <div className="p-5 md:p-8 flex-1 flex flex-col">
                       <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight">{property.title}</h3>
-                      <p className="text-slate-400 text-[9px] md:text-[10px] font-bold flex items-center gap-1.5 uppercase tracking-widest mb-4 md:mb-6">
-                        <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500" /> {property.address}
-                      </p>
+                      <div className="flex items-start gap-1.5 mb-4 md:mb-6">
+                        <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
+                        <p className="text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed break-words">
+                          {property.address}
+                        </p>
+                      </div>
                       
                       <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6 md:mb-8">
                         <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 text-center border transition-colors ${sortBy === 'rooms' ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>

@@ -56,15 +56,15 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
       {/* Main Info */}
       <div className="flex-1 min-w-0 w-full">
         <div className="flex justify-between items-start mb-1">
-            <h3 className="font-bold text-sm md:text-base text-slate-800 truncate pr-2 cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => onSelect(property)} title={property.title}>{property.title}</h3>
-             <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-600 transition-colors">
+            <h3 className="font-bold text-sm md:text-base text-slate-800 pr-2 cursor-pointer hover:text-indigo-600 transition-colors leading-snug" onClick={() => onSelect(property)} title={property.title}>{property.title}</h3>
+             <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-600 transition-colors shrink-0 mt-1">
                 <ExternalLink className="w-3.5 h-3.5" />
             </a>
         </div>
         
-        <div className="flex items-center gap-2 mb-2 text-slate-500">
-          <MapPin className="w-3 h-3 text-indigo-500 shrink-0" />
-          <p className="text-[9px] font-black uppercase tracking-widest truncate">{property.address}</p>
+        <div className="flex items-start gap-2 mb-2 text-slate-500">
+          <MapPin className="w-3 h-3 text-indigo-500 shrink-0 mt-0.5" />
+          <p className="text-[9px] font-black uppercase tracking-widest leading-relaxed break-words">{property.address}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 mb-2">
@@ -76,17 +76,23 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
             </span>
             {property.fees && property.fees > 0 && (
                 <span className="flex items-center gap-1 text-[8px] text-amber-600 font-black uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded-full">
-                <ShieldCheck className="w-3 h-3" /> ${property.fees}
+                <ShieldCheck className="w-3 h-3" /> Expensas: ${property.fees.toLocaleString()}
                 </span>
             )}
         </div>
 
-        <div className="flex items-center gap-3 text-[9px] text-slate-500 font-medium">
+        <div className="flex flex-wrap items-center gap-3 text-[9px] text-slate-500 font-medium mt-2">
             <span className="flex items-center gap-1"><span className="font-black text-slate-700">{property.environments}</span> Amb</span>
             <span className="w-px h-2.5 bg-slate-200"></span>
             <span className="flex items-center gap-1"><span className="font-black text-slate-700">{property.coveredSqft || property.sqft}</span> m²</span>
             <span className="w-px h-2.5 bg-slate-200"></span>
             <span className="flex items-center gap-1"><span className="font-black text-slate-700">{property.parking || 0}</span> Coch</span>
+            {property.floor && (
+              <>
+                <span className="w-px h-2.5 bg-slate-200"></span>
+                <span className="flex items-center gap-1">Piso <span className="font-black text-slate-700">{property.floor}</span></span>
+              </>
+            )}
              <span className="w-px h-2.5 bg-slate-200"></span>
              <span className="flex items-center gap-1"><span className="font-black text-slate-700">${Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
         </div>
