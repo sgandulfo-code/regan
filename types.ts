@@ -51,6 +51,14 @@ export enum DocCategory {
   OTHER = 'Other'
 }
 
+export enum FunnelStage {
+  SEARCH = 'Búsqueda',
+  VISITS = 'Visitas',
+  RESERVATION = 'Reserva',
+  AGREEMENT = 'Boleto',
+  DEED = 'Escritura'
+}
+
 export interface SearchFolder {
   id: string;
   name: string;
@@ -65,6 +73,7 @@ export interface SearchFolder {
   isShared?: boolean;
   permission?: SharePermission;
   welcomeMessage?: string;
+  funnelStage?: FunnelStage;
 }
 
 export interface RenovationItem {

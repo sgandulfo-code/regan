@@ -1,12 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
-import { FeedbackItem } from '../types';
+import { FeedbackItem, FunnelStage } from '../types';
 
 import SharedPropertyRow from './SharedPropertyRow';
+import ClientProgressBar from './ClientProgressBar';
 
 interface SharedItineraryViewProps {
   sharedId: string;
@@ -559,6 +560,20 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     return true;
   });
 
+  // Calculate current stage for the roadmap
+  let currentStage = 0; // Default to Search
+  if (itinerary?.folder?.funnelStage) {
+    const stages = [FunnelStage.SEARCH, FunnelStage.VISITS, FunnelStage.RESERVATION, FunnelStage.AGREEMENT, FunnelStage.DEED];
+    currentStage = Math.max(0, stages.indexOf(itinerary.folder.funnelStage as FunnelStage));
+  } else {
+    // Infer from data
+    if (itinerary?.properties?.some((p: any) => p.status === 'Offered')) {
+      currentStage = 2; // Reservation
+    } else if (itinerary?.visits?.length > 0) {
+      currentStage = 1; // Visits
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
@@ -676,6 +691,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
         </div>
 
+        {/* Progress Bar */}
+        <ClientProgressBar />
+
         {/* Desktop Navigation (Hidden on Mobile) */}
         <div className="hidden md:flex justify-center mb-8">
           <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 inline-flex">
@@ -715,15 +733,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-3 md:hidden z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-3 md:hidden z-50 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] pb-safe">
           <button
             onClick={() => setActiveTab('timeline')}
             className={`flex flex-col items-center gap-1 transition-colors ${
               activeTab === 'timeline' ? 'text-indigo-600' : 'text-slate-400'
             }`}
           >
-            <Calendar className={`w-6 h-6 ${activeTab === 'timeline' ? 'fill-current' : ''}`} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Agenda</span>
+            <Calendar className={`w-5 h-5 ${activeTab === 'timeline' ? 'fill-current' : ''}`} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Agenda</span>
           </button>
           <button
             onClick={() => setActiveTab('properties')}
@@ -731,8 +749,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               activeTab === 'properties' ? 'text-indigo-600' : 'text-slate-400'
             }`}
           >
-            <LayoutGrid className={`w-6 h-6 ${activeTab === 'properties' ? 'fill-current' : ''}`} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Propiedades</span>
+            <LayoutGrid className={`w-5 h-5 ${activeTab === 'properties' ? 'fill-current' : ''}`} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Props</span>
           </button>
           <button
             onClick={() => setActiveTab('map')}
@@ -740,8 +758,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               activeTab === 'map' ? 'text-indigo-600' : 'text-slate-400'
             }`}
           >
-            <MapIcon className={`w-6 h-6 ${activeTab === 'map' ? 'fill-current' : ''}`} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Mapa</span>
+            <MapIcon className={`w-5 h-5 ${activeTab === 'map' ? 'fill-current' : ''}`} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Mapa</span>
           </button>
           <button
             onClick={() => setActiveTab('leads')}
@@ -749,8 +767,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               activeTab === 'leads' ? 'text-indigo-600' : 'text-slate-400'
             }`}
           >
-            <Send className={`w-6 h-6 ${activeTab === 'leads' ? 'fill-current' : ''}`} />
-            <span className="text-[9px] font-black uppercase tracking-widest">Sugerencias</span>
+            <Send className={`w-5 h-5 ${activeTab === 'leads' ? 'fill-current' : ''}`} />
+            <span className="text-[8px] font-black uppercase tracking-widest">Sugerir</span>
           </button>
         </div>
 
