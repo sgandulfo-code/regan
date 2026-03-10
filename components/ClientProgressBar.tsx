@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Check, ChevronRight, FileText, DollarSign, Info, X } from 'lucide-react';
+import { TransactionType } from '../types';
 
 interface StageInfo {
   id: string;
@@ -12,7 +13,7 @@ interface StageInfo {
   };
 }
 
-const STAGES: StageInfo[] = [
+const STAGES_COMPRA: StageInfo[] = [
   {
     id: 'busqueda',
     title: 'Búsqueda',
@@ -65,14 +66,87 @@ const STAGES: StageInfo[] = [
   }
 ];
 
-export default function ClientProgressBar() {
+const STAGES_VENTA: StageInfo[] = [
+  {
+    id: 'tasacion',
+    title: 'Tasación',
+    status: 'completed',
+    description: 'Evaluación profesional del valor de tu propiedad en el mercado actual.',
+    requirements: {
+      docs: ['Título de propiedad', 'Plano de la propiedad (opcional)'],
+      money: []
+    }
+  },
+  {
+    id: 'autorizacion',
+    title: 'Autorización',
+    status: 'completed',
+    description: 'Firma de la autorización de venta y preparación del material de marketing (fotos, videos).',
+    requirements: {
+      docs: ['DNI de los titulares', 'Autorización firmada'],
+      money: []
+    }
+  },
+  {
+    id: 'comercializacion',
+    title: 'Comercialización',
+    status: 'current',
+    description: 'Publicación en portales, difusión en la red y realización de visitas con clientes interesados.',
+    requirements: {
+      docs: [],
+      money: []
+    }
+  },
+  {
+    id: 'reserva',
+    title: 'Reserva',
+    status: 'upcoming',
+    description: 'Recepción de una oferta formal por parte de un comprador interesado.',
+    requirements: {
+      docs: [],
+      money: []
+    }
+  },
+  {
+    id: 'boleto',
+    title: 'Boleto',
+    status: 'upcoming',
+    description: 'Firma del compromiso de compraventa. El comprador entrega un refuerzo.',
+    requirements: {
+      docs: ['Documentación personal', 'Estado parcelario', 'Libre deuda de impuestos y expensas'],
+      money: ['Cobro del refuerzo (usualmente 30% del valor)', 'Pago de honorarios inmobiliarios']
+    }
+  },
+  {
+    id: 'escritura',
+    title: 'Escritura',
+    status: 'upcoming',
+    description: 'Firma final ante escribano, cobro del saldo y entrega de llaves al nuevo dueño.',
+    requirements: {
+      docs: ['DNI / Pasaporte', 'Título de propiedad original'],
+      money: ['Cobro del saldo restante', 'Pago de gastos de escrituración correspondientes al vendedor']
+    }
+  }
+];
+
+interface ClientProgressBarProps {
+  transactionType?: TransactionType;
+}
+
+export default function ClientProgressBar({ transactionType = TransactionType.COMPRA }: ClientProgressBarProps) {
   const [selectedStage, setSelectedStage] = useState<StageInfo | null>(null);
+  
+  const STAGES = transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
 
   return (
     <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-200 shadow-sm mb-8 relative overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">Tu proceso de compra</h2>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">
+            {transactionType === TransactionType.VENTA ? 'Tu proceso de venta' : 
+             transactionType === TransactionType.ALQUILER || transactionType === TransactionType.ALQUILER_TEMPORARIO ? 'Tu proceso de alquiler' : 
+             'Tu proceso de compra'}
+          </h2>
           <p className="text-sm text-slate-500 mt-1">Hacé clic en los próximos pasos para ver qué vas a necesitar.</p>
         </div>
       </div>

@@ -692,7 +692,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         </div>
 
         {/* Progress Bar */}
-        <ClientProgressBar />
+        <ClientProgressBar transactionType={itinerary.folder.transactionType} />
 
         {/* Desktop Navigation (Hidden on Mobile) */}
         <div className="hidden md:flex justify-center mb-8">
