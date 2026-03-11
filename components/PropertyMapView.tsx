@@ -154,13 +154,13 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
       <div className="w-full lg:w-96 border-b lg:border-b-0 lg:border-r border-slate-100 flex flex-col h-[40%] lg:h-full bg-slate-50/30 shrink-0">
         <div className="p-4 lg:p-6 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-10">
           <div className="flex justify-between items-center mb-1">
-            <h3 className="text-[10px] lg:text-xs font-black text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
+            <h3 className="text-[10px] lg:text-xs font-bold text-slate-900 uppercase tracking-[0.2em] flex items-center gap-2">
               <Navigation className="w-3 h-3 lg:w-4 lg:h-4 text-indigo-600" />
               BluePin Explorer
             </h3>
             {isGeocoding && <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />}
           </div>
-          <p className="text-[9px] lg:text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          <p className="text-xs lg:text-[10px] text-slate-400 font-bold uppercase tracking-wider">
             {geocodedProperties.filter(p => !p.geocodeFailed).length} Assets Mapped
           </p>
         </div>
@@ -181,10 +181,10 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 bg-indigo-600 text-white rounded-md flex items-center justify-center text-[9px] font-black">
+                  <span className="w-5 h-5 bg-indigo-600 text-white rounded-md flex items-center justify-center text-xs font-bold">
                     {index + 1}
                   </span>
-                  <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest ${
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
                     selectedProperty?.id === p.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-500'
                   }`}>
                     ${p.price.toLocaleString()}
@@ -193,13 +193,13 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
                 {p.geocodeFailed ? (
                   <AlertTriangle className="w-4 h-4 text-rose-500" />
                 ) : (
-                  <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-black">
+                  <div className="flex items-center gap-1.5 text-amber-500 text-[10px] font-bold">
                     <Star className={`w-3.5 h-3.5 ${p.rating >= 4 ? 'fill-current' : ''}`} />
                     {p.rating}.0
                   </div>
                 )}
               </div>
-              <h4 className="font-black text-slate-800 text-sm leading-snug group-hover:text-indigo-600 transition-colors">{p.title}</h4>
+              <h4 className="font-bold text-slate-800 text-sm leading-snug group-hover:text-indigo-600 transition-colors">{p.title}</h4>
               <div className="flex items-center gap-2 mt-3 text-slate-400">
                 <MapPin className="w-3 h-3 shrink-0" />
                 <p className="text-[10px] font-bold truncate uppercase tracking-tight">
@@ -219,7 +219,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
         <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-3">
           <div className="bg-slate-900/90 backdrop-blur-xl text-white px-4 py-2.5 rounded-2xl shadow-2xl border border-white/10 flex items-center gap-3">
             <div className={`w-2.5 h-2.5 rounded-full ${selectedProperty ? 'bg-indigo-400 animate-pulse' : 'bg-emerald-400'}`}></div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
               {selectedProperty ? 'Proprietary Pin Selected' : 'Folder Overview'}
             </span>
           </div>
@@ -241,24 +241,24 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
               </div>
               
               <div className="flex-1 min-w-0">
-                <p className="text-[8px] md:text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1">Asset Highlight</p>
-                <h4 className="font-black text-slate-900 text-base md:text-xl leading-tight truncate tracking-tight">{selectedProperty.title}</h4>
+                <p className="text-[10px] md:text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Asset Highlight</p>
+                <h4 className="font-bold text-slate-900 text-base md:text-xl leading-tight truncate tracking-tight">{selectedProperty.title}</h4>
                 
                 <div className="flex items-center gap-5 mt-3">
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-indigo-600" />
-                    <span className="text-sm font-black text-slate-900">${selectedProperty.price.toLocaleString()}</span>
+                    <span className="text-sm font-bold text-slate-900">${selectedProperty.price.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Home className="w-3.5 h-3.5 text-indigo-600" />
-                    <span className="text-sm font-black text-slate-900">{selectedProperty.sqft}m²</span>
+                    <span className="text-sm font-bold text-slate-900">{selectedProperty.sqft}m²</span>
                   </div>
                 </div>
 
                 <div className="flex gap-3 mt-5">
                   <button 
                     onClick={() => onSelectProperty(selectedProperty)}
-                    className="flex-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest py-3.5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2"
+                    className="flex-1 bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider py-3.5 rounded-2xl hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center justify-center gap-2"
                   >
                     <Info className="w-3.5 h-3.5" /> Analysis
                   </button>

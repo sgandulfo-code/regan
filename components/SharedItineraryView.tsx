@@ -547,7 +547,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center text-white animate-bounce shadow-xl mb-4">
           <Home className="w-8 h-8" />
         </div>
-        <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">Cargando tu itinerario personalizado...</p>
+        <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">Cargando tu itinerario personalizado...</p>
       </div>
     );
   }
@@ -558,7 +558,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-6">
           <Calendar className="w-10 h-10" />
         </div>
-        <h1 className="text-2xl font-black text-slate-800 mb-2">Itinerario no encontrado</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-2">Itinerario no encontrado</h1>
         <p className="text-slate-500 max-w-xs mx-auto">El link es inválido o el itinerario ya no está activo. Por favor, contacta a tu consultor.</p>
       </div>
     );
@@ -623,8 +623,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <Home className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <div>
-              <h1 className="text-lg md:text-xl font-black text-slate-900 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">{itinerary.folder.name}</h1>
-              <p className="text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest mt-0.5 md:mt-1">Portal del Cliente</p>
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight leading-none truncate max-w-[200px] md:max-w-none">{itinerary.folder.name}</h1>
+              <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider mt-0.5 md:mt-1">Portal del Cliente</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -633,21 +633,21 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 href={`https://wa.me/${agentProfile.whatsappNumber}?text=${encodeURIComponent(`Hola ${agentProfile.name}, `)}`}
                 target="_blank"
                 rel="noreferrer"
-                className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5 md:gap-2 hover:bg-emerald-100 transition-colors cursor-pointer"
+                className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border border-emerald-100 flex items-center gap-1.5 md:gap-2 hover:bg-emerald-100 transition-colors cursor-pointer"
               >
                 <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                 <span className="hidden md:inline">En Vivo</span>
                 <span className="md:hidden">Chat</span>
               </a>
             ) : (
-              <div className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5 md:gap-2">
+              <div className="bg-emerald-50 text-emerald-600 px-2 py-1 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider border border-emerald-100 flex items-center gap-1.5 md:gap-2">
                 <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                 <span className="hidden md:inline">En Vivo</span>
                 <span className="md:hidden">Online</span>
               </div>
             )}
             {agentProfile?.email && (
-              <a href={`mailto:${agentProfile.email}`} className="text-[9px] md:text-[10px] text-slate-400 font-medium hover:text-indigo-600 transition-colors">
+              <a href={`mailto:${agentProfile.email}`} className="text-[10px] md:text-xs text-slate-400 font-medium hover:text-indigo-600 transition-colors">
                 {agentProfile.email}
               </a>
             )}
@@ -659,7 +659,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {/* Intro / Folder Details */}
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-xl md:text-2xl font-black mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
             
             {itinerary.folder.welcomeMessage && (
               <div className="bg-indigo-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 shadow-sm mb-6">
@@ -674,9 +674,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <div className="w-5 h-5 md:w-6 md:h-6 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
                     <DollarSign className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Presupuesto</span>
+                  <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Presupuesto</span>
                 </div>
-                <p className="text-base md:text-lg font-black text-slate-800">${itinerary.folder.budget?.toLocaleString() || 'N/A'}</p>
+                <p className="text-base md:text-lg font-bold text-slate-800">${itinerary.folder.budget?.toLocaleString() || 'N/A'}</p>
               </div>
               
               <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
@@ -684,9 +684,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <div className="w-5 h-5 md:w-6 md:h-6 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
                     <ArrowLeftRight className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Operación</span>
+                  <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Operación</span>
                 </div>
-                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.transactionType || 'N/A'}</p>
+                <p className="text-base md:text-lg font-bold text-slate-800">{itinerary.folder.transactionType || 'N/A'}</p>
               </div>
 
               <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
@@ -694,9 +694,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <div className="w-5 h-5 md:w-6 md:h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
                     <Activity className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Estado</span>
+                  <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</span>
                 </div>
-                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.status || 'N/A'}</p>
+                <p className="text-base md:text-lg font-bold text-slate-800">{itinerary.folder.status || 'N/A'}</p>
               </div>
 
               <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
@@ -704,9 +704,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <div className="w-5 h-5 md:w-6 md:h-6 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
                     <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
-                  <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest">Fecha Inicio</span>
+                  <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Fecha Inicio</span>
                 </div>
-                <p className="text-base md:text-lg font-black text-slate-800">{itinerary.folder.startDate ? new Date(itinerary.folder.startDate).toLocaleDateString() : 'N/A'}</p>
+                <p className="text-base md:text-lg font-bold text-slate-800">{itinerary.folder.startDate ? new Date(itinerary.folder.startDate).toLocaleDateString() : 'N/A'}</p>
               </div>
             </div>
 
@@ -714,7 +714,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <div className="bg-slate-50 rounded-xl md:rounded-2xl p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-2">
                   <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Observaciones</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Observaciones</span>
                 </div>
                 <div 
                   className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed prose prose-sm max-w-none"
@@ -737,7 +737,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-100 inline-flex">
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
                 activeTab === 'timeline' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -745,7 +745,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             </button>
             <button
               onClick={() => setActiveTab('properties')}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
                 activeTab === 'properties' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -753,7 +753,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             </button>
             <button
               onClick={() => setActiveTab('map')}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
                 activeTab === 'map' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -761,7 +761,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             </button>
             <button
               onClick={() => setActiveTab('leads')}
-              className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${
+              className={`px-6 py-3 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 transition-all ${
                 activeTab === 'leads' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
@@ -779,7 +779,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             }`}
           >
             <Calendar className={`w-5 h-5 ${activeTab === 'timeline' ? 'fill-current' : ''}`} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Agenda</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Agenda</span>
           </button>
           <button
             onClick={() => setActiveTab('properties')}
@@ -788,7 +788,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             }`}
           >
             <LayoutGrid className={`w-5 h-5 ${activeTab === 'properties' ? 'fill-current' : ''}`} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Props</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Props</span>
           </button>
           <button
             onClick={() => setActiveTab('map')}
@@ -797,7 +797,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             }`}
           >
             <MapIcon className={`w-5 h-5 ${activeTab === 'map' ? 'fill-current' : ''}`} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Mapa</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Mapa</span>
           </button>
           <button
             onClick={() => setActiveTab('leads')}
@@ -806,7 +806,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             }`}
           >
             <Send className={`w-5 h-5 ${activeTab === 'leads' ? 'fill-current' : ''}`} />
-            <span className="text-[8px] font-black uppercase tracking-widest">Sugerir</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">Sugerir</span>
           </button>
         </div>
 
@@ -836,7 +836,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   return (
                     <div key={visit.id} className={`bg-white rounded-[2rem] md:rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-5 md:p-8 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
                       {isToday && (
-                        <div className="absolute top-0 right-0 bg-indigo-600 text-white px-6 py-2 rounded-bl-3xl text-[10px] font-black uppercase tracking-widest animate-pulse">
+                        <div className="absolute top-0 right-0 bg-indigo-600 text-white px-6 py-2 rounded-bl-3xl text-[10px] font-bold uppercase tracking-wider animate-pulse">
                           Visita Hoy
                         </div>
                       )}
@@ -846,22 +846,22 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           <img src={visit.property.images[0] || 'https://picsum.photos/seed/prop/400/400'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                           <div className="absolute top-3 left-3 z-10">
                             {displayStatus === 'Pending' && (
-                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" /> A Confirmar
                               </span>
                             )}
                             {displayStatus === 'Confirmed' && (
-                              <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Confirmada
                               </span>
                             )}
                             {displayStatus === 'Completed' && (
-                              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Realizada
                               </span>
                             )}
                             {displayStatus === 'Cancelled' && (
-                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <X className="w-3 h-3" /> Cancelada
                               </span>
                             )}
@@ -871,10 +871,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         <div className="flex-1">
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight mb-1">{visit.property.title}</h3>
+                              <h3 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight mb-1">{visit.property.title}</h3>
                               <div className="flex items-start gap-1.5 md:gap-2">
                                 <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                                <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed break-words">
+                                <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider leading-relaxed break-words">
                                   {visit.property.address}
                                 </p>
                               </div>
@@ -882,7 +882,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             
                             {displayStatus === 'Pending' && (
                               <div className="flex items-center gap-2">
-                                <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100 flex items-center gap-1.5">
+                                <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-amber-100 flex items-center gap-1.5">
                                   <Clock className="w-3 h-3" /> A Confirmar
                                 </span>
                                 <button 
@@ -902,17 +902,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               </div>
                             )}
                             {displayStatus === 'Confirmed' && (
-                              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-indigo-100 flex items-center gap-1.5">
+                              <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-indigo-100 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Confirmada
                               </span>
                             )}
                             {displayStatus === 'Completed' && (
-                              <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-100 flex items-center gap-1.5">
+                              <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-emerald-100 flex items-center gap-1.5">
                                 <CheckCircle2 className="w-3 h-3" /> Realizada
                               </span>
                             )}
                             {displayStatus === 'Cancelled' && (
-                              <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-slate-200 flex items-center gap-1.5">
+                              <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-slate-200 flex items-center gap-1.5">
                                 <X className="w-3 h-3" /> Cancelada
                               </span>
                             )}
@@ -920,8 +920,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
                             <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
-                              <p className="text-xs md:text-sm font-black text-slate-700">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Fecha</p>
+                              <p className="text-xs md:text-sm font-bold text-slate-700">
                                 {new Date(visit.date + 'T00:00:00').toLocaleDateString('es-ES', {
                                   year: 'numeric',
                                   month: '2-digit',
@@ -930,22 +930,22 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               </p>
                             </div>
                             <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hora</p>
-                              <p className="text-xs md:text-sm font-black text-slate-700">{visit.time} HS</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Hora</p>
+                              <p className="text-xs md:text-sm font-bold text-slate-700">{visit.time} HS</p>
                             </div>
                             <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Contacto</p>
-                              <p className="text-xs md:text-sm font-black text-slate-700 truncate">{visit.contactName || 'N/A'}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Contacto</p>
+                              <p className="text-xs md:text-sm font-bold text-slate-700 truncate">{visit.contactName || 'N/A'}</p>
                             </div>
                             <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
-                              <p className="text-xs md:text-sm font-black text-indigo-600">{visit.contactPhone || 'N/A'}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
+                              <p className="text-xs md:text-sm font-bold text-indigo-600">{visit.contactPhone || 'N/A'}</p>
                             </div>
                           </div>
 
                           {itinerary.settings.showChecklist && visit.checklist && visit.checklist.length > 0 && (
                             <div className="space-y-3 mb-8">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                                 <CheckSquare className="w-3.5 h-3.5" /> Checklist de Inspección
                               </p>
                               <div className="flex flex-wrap gap-2">
@@ -960,7 +960,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           )}
 
                           {itinerary.settings.showPrices && (
-                            <p className="text-indigo-600 font-black text-lg mb-4">
+                            <p className="text-indigo-600 font-bold text-lg mb-4">
                               ${visit.property.price.toLocaleString()}
                             </p>
                           )}
@@ -970,7 +970,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               href={visit.property.url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                              className="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-600 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
                             >
                               <ExternalLink className="w-3 h-3" /> Ver Ficha
                             </a>
@@ -978,7 +978,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(visit.property.address)}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                              className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
                             >
                               <MapPin className="w-3 h-3" /> Cómo llegar
                             </a>
@@ -987,7 +987,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           {/* Client Checklist Section */}
                           {visit.clientChecklist && visit.clientChecklist.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-slate-100">
-                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 mb-4">
                                 <CheckSquare className="w-3.5 h-3.5 text-emerald-600" /> 
                                 Tu Evaluación
                               </h4>
@@ -1006,7 +1006,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                           }`}
                                         >
                                           <Check className="w-3.5 h-3.5" />
-                                          <span className="text-[9px] font-black uppercase tracking-widest">Sí</span>
+                                          <span className="text-xs font-bold uppercase tracking-wider">Sí</span>
                                         </button>
                                         <button
                                           onClick={() => handleClientChecklistUpdate(visit.id, item.id, { response: 'no' })}
@@ -1017,7 +1017,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                           }`}
                                         >
                                           <X className="w-3.5 h-3.5" />
-                                          <span className="text-[9px] font-black uppercase tracking-widest">No</span>
+                                          <span className="text-xs font-bold uppercase tracking-wider">No</span>
                                         </button>
                                         <button
                                           onClick={() => handleClientChecklistUpdate(visit.id, item.id, { response: 'maybe' })}
@@ -1028,7 +1028,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                           }`}
                                         >
                                           <AlertCircle className="w-3.5 h-3.5" />
-                                          <span className="text-[9px] font-black uppercase tracking-widest">Quizás</span>
+                                          <span className="text-xs font-bold uppercase tracking-wider">Quizás</span>
                                         </button>
                                       </div>
                                     </div>
@@ -1078,7 +1078,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           {/* Feedback Section */}
                           <div className="mt-6 pt-6 border-t border-slate-100">
                             <div className="flex justify-between items-center mb-4">
-                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                                 <MessageSquare className="w-3.5 h-3.5 text-indigo-600" /> 
                                 Feedback & Notas
                               </h4>
@@ -1141,7 +1141,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                     ) : (
                                       <>
                                         <div className="flex justify-between items-start mb-2 gap-4">
-                                          <span className={`text-[9px] font-bold uppercase tracking-widest ${
+                                          <span className={`text-xs font-bold uppercase tracking-wider ${
                                             item.author === 'agent' ? 'text-indigo-200' : 'text-slate-400'
                                           }`}>
                                             {item.author === 'agent' ? 'Agente' : 'Tú'} • {new Date(item.createdAt).toLocaleDateString()}
@@ -1227,14 +1227,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               ) : (
                 <div className="bg-white rounded-[3rem] p-20 text-center border-2 border-dashed border-slate-100">
                   <Calendar className="w-16 h-16 text-slate-100 mx-auto mb-6" />
-                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No tienes visitas pendientes.</p>
+                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">No tienes visitas pendientes.</p>
                 </div>
               )}
             </div>
 
             {pastVisits.length > 0 && (
               <div className="space-y-6">
-                <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 pt-10 border-t border-slate-100">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 pt-10 border-t border-slate-100">
                   <History className="w-4 h-4" /> Historial de Visitas
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1245,7 +1245,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-slate-800 text-sm leading-snug mb-1">{v.property.title}</h4>
-                        <p className="text-[10px] font-black text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status === 'Completed' ? 'Realizada' : 'Cancelada'}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">{new Date(v.date).toLocaleDateString()} - {v.status === 'Completed' ? 'Realizada' : 'Cancelada'}</p>
                         {(v.clientFeedback || v.rating) && (
                           <div className="flex items-center gap-2 mt-1">
                             {v.rating && <div className="flex text-amber-400"><Star className="w-3 h-3 fill-current" /> <span className="text-[10px] font-bold ml-1 text-slate-500">{v.rating}</span></div>}
@@ -1282,7 +1282,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <div className="flex justify-between items-center">
                 <button 
                   onClick={() => setShowFilters(!showFilters)}
-                  className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors"
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-indigo-600 transition-colors"
                 >
                   <Filter className="w-4 h-4" /> Filtros {showFilters ? '(-)' : '(+)'}
                 </button>
@@ -1291,7 +1291,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <select 
                     value={sortBy} 
                     onChange={(e) => setSortBy(e.target.value as any)}
-                    className="bg-transparent text-slate-600 text-[10px] font-black uppercase tracking-widest px-3 py-2 outline-none cursor-pointer"
+                    className="bg-transparent text-slate-600 text-[10px] font-bold uppercase tracking-wider px-3 py-2 outline-none cursor-pointer"
                   >
                     <option value="price">Precio</option>
                     <option value="pricePerSqft">Valor m²</option>
@@ -1329,7 +1329,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               {showFilters && (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 animate-in slide-in-from-top-2">
                   <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Mín</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Precio Mín</label>
                     <input 
                       type="number" 
                       value={filterPriceMin}
@@ -1339,7 +1339,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio Máx</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Precio Máx</label>
                     <input 
                       type="number" 
                       value={filterPriceMax}
@@ -1349,7 +1349,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     />
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Dormitorios</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Dormitorios</label>
                     <select 
                       value={filterBedrooms}
                       onChange={(e) => setFilterBedrooms(e.target.value ? Number(e.target.value) : '')}
@@ -1363,7 +1363,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Mín (m²)</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Sup. Mín (m²)</label>
                     <input 
                       type="number" 
                       value={filterMinSqft}
@@ -1376,7 +1376,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   {/* Custom Field Filters */}
                   {existingCustomFieldKeys.length > 0 && (
                     <div className="col-span-2 md:col-span-4 pt-4 mt-2 border-t border-slate-100">
-                      <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1">
+                      <h4 className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1">
                         <Star className="w-3 h-3" /> Filtros por Criterios Propios
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1391,7 +1391,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           
                           return (
                             <div key={key}>
-                              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate" title={key}>{key}</label>
+                              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 truncate" title={key}>{key}</label>
                               <select 
                                 value={customFilters[key] || ''}
                                 onChange={(e) => setCustomFilters(prev => ({ ...prev, [key]: e.target.value }))}
@@ -1454,22 +1454,22 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         />
                         <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
                           {displayStatus === 'Pending' && (
-                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                               <Clock className="w-3 h-3" /> A Confirmar
                             </span>
                           )}
                           {displayStatus === 'Confirmed' && (
-                            <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-indigo-600/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                               <CheckCircle2 className="w-3 h-3" /> Confirmada
                             </span>
                           )}
                           {displayStatus === 'Completed' && (
-                            <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-emerald-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                               <CheckCircle2 className="w-3 h-3" /> Realizada
                             </span>
                           )}
                           {displayStatus === 'Cancelled' && (
-                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                               <X className="w-3 h-3" /> Cancelada
                             </span>
                           )}
@@ -1480,7 +1480,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                               e.stopPropagation();
                               toggleComparison(property.id);
                             }}
-                            className={`bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest shadow-sm border transition-colors flex items-center gap-1.5 md:gap-2 ${
+                            className={`bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border transition-colors flex items-center gap-1.5 md:gap-2 ${
                               comparisonIds.includes(property.id)
                                 ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/20'
                                 : 'border-slate-100 text-slate-500 hover:text-indigo-600'
@@ -1493,85 +1493,85 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             )}
                             Comparar
                           </button>
-                          <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
+                          <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100">
                             {property.status}
                           </div>
                         {property.acquisitionReason && (
-                          <div className="bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest shadow-sm border border-white/10">
+                          <div className="bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/10">
                             {property.acquisitionReason}
                           </div>
                         )}
                       </div>
                       {itinerary.settings.showPrices && (
-                        <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 bg-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-black shadow-lg">
+                        <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 bg-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold shadow-lg">
                           ${property.price.toLocaleString()}
                         </div>
                       )}
                     </div>
                     
                     <div className="p-5 md:p-8 flex-1 flex flex-col">
-                      <h3 className="text-lg md:text-xl font-black text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight">{property.title}</h3>
+                      <h3 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight">{property.title}</h3>
                       <div className="flex items-start gap-1.5 mb-4 md:mb-6">
                         <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                        <p className="text-slate-400 text-[9px] md:text-[10px] font-bold uppercase tracking-widest leading-relaxed break-words">
+                        <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider leading-relaxed break-words">
                           {property.address}
                         </p>
                       </div>
                       
                       <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6 md:mb-8">
                         <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 text-center border transition-colors ${sortBy === 'rooms' ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>
-                          <span className={`block text-[8px] md:text-[9px] font-black uppercase tracking-widest mb-0.5 md:mb-1 ${sortBy === 'rooms' ? 'text-indigo-600' : 'text-slate-400'}`}>Ambientes</span>
-                          <span className={`font-black text-base md:text-lg ${sortBy === 'rooms' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.environments}</span>
+                          <span className={`block text-[10px] md:text-xs font-bold uppercase tracking-wider mb-0.5 md:mb-1 ${sortBy === 'rooms' ? 'text-indigo-600' : 'text-slate-400'}`}>Ambientes</span>
+                          <span className={`font-bold text-base md:text-lg ${sortBy === 'rooms' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.environments}</span>
                         </div>
                         <div className={`rounded-xl md:rounded-2xl p-2 md:p-3 text-center border transition-colors ${sortBy === 'sqft' ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>
-                          <span className={`block text-[8px] md:text-[9px] font-black uppercase tracking-widest mb-0.5 md:mb-1 ${sortBy === 'sqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Sup. Total</span>
-                          <span className={`font-black text-base md:text-lg ${sortBy === 'sqft' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.sqft} m²</span>
+                          <span className={`block text-[10px] md:text-xs font-bold uppercase tracking-wider mb-0.5 md:mb-1 ${sortBy === 'sqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Sup. Total</span>
+                          <span className={`font-bold text-base md:text-lg ${sortBy === 'sqft' ? 'text-indigo-900' : 'text-slate-800'}`}>{property.sqft} m²</span>
                         </div>
                         <div className="bg-slate-50 rounded-xl md:rounded-2xl p-2 md:p-3 text-center border border-slate-100">
-                          <span className="block text-[8px] md:text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1">Baños</span>
+                          <span className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5 md:mb-1">Baños</span>
 
-                          <span className="font-black text-slate-800 text-lg">{property.bathrooms}</span>
+                          <span className="font-bold text-slate-800 text-lg">{property.bathrooms}</span>
                         </div>
                       </div>
 
                       <div className="space-y-3 mb-8 flex-1">
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>
-                           <span className="text-sm font-black text-slate-700">{property.rooms}</span>
+                           <span className="text-sm font-bold text-slate-700">{property.rooms}</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Toilettes</span>
-                           <span className="text-sm font-black text-slate-700">{property.toilets || 0}</span>
+                           <span className="text-sm font-bold text-slate-700">{property.toilets || 0}</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cocheras</span>
-                           <span className="text-sm font-black text-slate-700">{property.parking || 0}</span>
+                           <span className="text-sm font-bold text-slate-700">{property.parking || 0}</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Cubierta</span>
-                           <span className="text-sm font-black text-slate-700">{property.coveredSqft || 0} m²</span>
+                           <span className="text-sm font-bold text-slate-700">{property.coveredSqft || 0} m²</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Sup. Descubierta</span>
-                           <span className="text-sm font-black text-slate-700">{property.uncoveredSqft || 0} m²</span>
+                           <span className="text-sm font-bold text-slate-700">{property.uncoveredSqft || 0} m²</span>
                          </div>
                          <div className={`flex justify-between items-center py-2 border-b transition-colors ${sortBy === 'pricePerSqft' ? 'border-indigo-100 bg-indigo-50/50 -mx-5 px-5 md:-mx-8 md:px-8' : 'border-slate-50'}`}>
                            <span className={`text-xs font-bold uppercase tracking-wide ${sortBy === 'pricePerSqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Valor m²</span>
-                           <span className={`text-sm font-black ${sortBy === 'pricePerSqft' ? 'text-indigo-700' : 'text-slate-700'}`}>
+                           <span className={`text-sm font-bold ${sortBy === 'pricePerSqft' ? 'text-indigo-700' : 'text-slate-700'}`}>
                              ${property.sqft > 0 ? Math.round(property.price / property.sqft).toLocaleString() : 'N/A'}
                            </span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Antigüedad</span>
-                           <span className="text-sm font-black text-slate-700">{property.age || 0} años</span>
+                           <span className="text-sm font-bold text-slate-700">{property.age || 0} años</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expensas</span>
-                           <span className="text-sm font-black text-slate-700">${property.fees?.toLocaleString() || 0}</span>
+                           <span className="text-sm font-bold text-slate-700">${property.fees?.toLocaleString() || 0}</span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
-                           <span className="text-sm font-black text-slate-700">{property.floor || '-'}</span>
+                           <span className="text-sm font-bold text-slate-700">{property.floor || '-'}</span>
                          </div>
                          
                          {/* Custom Fields */}
@@ -1580,7 +1580,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide flex items-center gap-1">
                                <Star className="w-3 h-3" /> {key}
                              </span>
-                             <span className="text-sm font-black text-indigo-700">{String(value)}</span>
+                             <span className="text-sm font-bold text-indigo-700">{String(value)}</span>
                            </div>
                          ))}
                       </div>
@@ -1593,13 +1593,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             setCustomFieldValue('');
                             setIsCustomFieldModalOpen(true);
                           }}
-                          className="w-full bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 border border-indigo-100"
+                          className="w-full bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 border border-indigo-100"
                         >
                           <Plus className="w-4 h-4" /> Agregar Criterio
                         </button>
                         <button 
                           onClick={() => handleRequestVisit(property)}
-                          className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
+                          className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"
                         >
                           <Calendar className="w-4 h-4" /> Pedir Visita
                         </button>
@@ -1607,7 +1607,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           href={property.url} 
                           target="_blank" 
                           rel="noreferrer"
-                          className="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
+                          className="w-full bg-white border border-slate-200 text-slate-600 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider hover:bg-slate-50 hover:text-indigo-600 transition-all flex items-center justify-center gap-2"
                         >
                           <ExternalLink className="w-4 h-4" /> Ver Ficha Completa
                         </a>
@@ -1619,7 +1619,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               ) : (
                 <div className="col-span-full text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-100">
                   <Home className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">No hay propiedades en esta carpeta.</p>
+                  <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wider">No hay propiedades en esta carpeta.</p>
                 </div>
               )}
             </div>
@@ -1645,8 +1645,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <Send className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Sugerir Propiedades</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Envía links para que tu consultor los analice</p>
+                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">Sugerir Propiedades</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Envía links para que tu consultor los analice</p>
                 </div>
               </div>
 
@@ -1660,7 +1660,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 <button
                   onClick={handleSubmitLinks}
                   disabled={isSubmittingLinks || !linksText.trim()}
-                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmittingLinks ? (
                     <>
@@ -1678,7 +1678,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
             {inboxLinks.length > 0 && (
               <div className="space-y-4">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 px-2">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 px-2">
                   <History className="w-4 h-4 text-slate-400" /> Historial de Sugerencias
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1688,7 +1688,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 truncate">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">
                           {(() => {
                             try {
                               return new URL(link.url).hostname.replace('www.', '');
@@ -1702,10 +1702,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         </a>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                           {new Date(link.created_at).toLocaleDateString()}
                         </div>
-                        <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                        <div className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
                           link.status === 'procesado' ? 'bg-emerald-100 text-emerald-600' :
                           link.status === 'rechazado' ? 'bg-rose-100 text-rose-600' :
                           'bg-amber-100 text-amber-600'
@@ -1725,10 +1725,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
         {/* Footer Info */}
         <div className="text-center space-y-4 pt-10">
-          <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-indigo-600 font-black mx-auto shadow-sm">
+          <div className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-indigo-600 font-bold mx-auto shadow-sm">
             PB
           </div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
             Powered by PropBi Intelligence
           </p>
         </div>
@@ -1737,14 +1737,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       {comparisonIds.length > 0 && (
         <div className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-6 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300 w-[90%] md:w-auto justify-between md:justify-start">
           <div className="flex items-center gap-3">
-            <div className="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs">
+            <div className="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs">
               {comparisonIds.length}
             </div>
-            <span className="text-xs font-bold uppercase tracking-widest">Seleccionadas</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Seleccionadas</span>
           </div>
           <button
             onClick={() => setIsComparisonOpen(true)}
-            className="bg-white text-slate-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+            className="bg-white text-slate-900 px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-50 transition-colors"
           >
             Ver Comparación
           </button>
@@ -1782,7 +1782,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
             <div className="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">Solicitar Visita</h3>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Solicitar Visita</h3>
               <button 
                 onClick={() => setIsRequestModalOpen(false)}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors"
@@ -1805,7 +1805,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Mensaje para tu consultor
                 </label>
                 <textarea
@@ -1825,13 +1825,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="p-5 md:p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
               <button
                 onClick={() => setIsRequestModalOpen(false)}
-                className="px-6 py-3 rounded-xl text-xs font-black text-slate-500 hover:bg-slate-200 transition-colors uppercase tracking-widest"
+                className="px-6 py-3 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-200 transition-colors uppercase tracking-wider"
               >
                 Cancelar
               </button>
               <button
                 onClick={submitVisitRequest}
-                className="px-6 py-3 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-widest shadow-lg shadow-indigo-200 flex items-center gap-2"
+                className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-wider shadow-lg shadow-indigo-200 flex items-center gap-2"
               >
                 <Send className="w-3.5 h-3.5" /> Enviar Solicitud
               </button>
@@ -1845,7 +1845,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="text-lg font-black text-slate-800">Agregar Criterio</h3>
+              <h3 className="text-lg font-bold text-slate-800">Agregar Criterio</h3>
               <button onClick={() => setIsCustomFieldModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
               </button>
@@ -1888,14 +1888,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
               <button
                 onClick={() => setIsCustomFieldModalOpen(false)}
-                className="flex-1 bg-white border border-slate-200 text-slate-600 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors"
+                className="flex-1 bg-white border border-slate-200 text-slate-600 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveCustomField}
                 disabled={!customFieldName.trim() || !customFieldValue.trim()}
-                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Guardar
               </button>

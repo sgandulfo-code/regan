@@ -62,15 +62,15 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
     <div className="max-w-7xl mx-auto py-4 md:py-8 animate-in fade-in duration-500 pb-20">
       <div className="mb-6 md:mb-8 flex justify-between items-start">
         <div>
-          <h2 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">Comparación de Propiedades</h2>
-          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">
+          <h2 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">Comparación de Propiedades</h2>
+          <p className="text-slate-400 font-bold uppercase text-[10px] tracking-wider mt-1">
             Selecciona hasta 4 propiedades para comparar sus atributos lado a lado.
           </p>
         </div>
         {selectedProperties.length > 0 && (
           <button 
             onClick={() => setIsReportOpen(true)}
-            className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
+            className="bg-white border border-slate-200 text-indigo-600 px-6 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
           >
             <Printer className="w-4 h-4" /> <span className="hidden sm:inline">Informe PDF</span>
           </button>
@@ -97,7 +97,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   {isSelected ? <Check className="w-5 h-5" /> : <Building className="w-5 h-5 text-slate-400" />}
                 </div>
                 <div className="overflow-hidden">
-                  <p className={`text-xs font-black truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{property.title}</p>
+                  <p className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{property.title}</p>
                   <p className={`text-[10px] font-bold truncate ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{property.address}</p>
                 </div>
               </button>
@@ -109,7 +109,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
       {selectedProperties.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
           <Building className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Selecciona propiedades para comenzar la comparación</p>
+          <p className="text-slate-400 font-bold uppercase text-xs tracking-wider">Selecciona propiedades para comenzar la comparación</p>
         </div>
       ) : (
         <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
@@ -118,14 +118,14 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
               <thead>
                 <tr>
                   <th className="p-4 md:p-6 text-left bg-slate-50 border-b border-slate-100 w-32 md:w-48 sticky left-0 z-10">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atributo</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Atributo</span>
                   </th>
                   {selectedProperties.map(p => (
                     <th key={p.id} className="p-4 md:p-6 text-left border-b border-slate-100 min-w-[160px] md:min-w-[200px]">
                       <div className="relative h-32 rounded-2xl overflow-hidden mb-4 shadow-md">
                         <img src={p.images[0] || 'https://picsum.photos/seed/prop/400/300'} className="w-full h-full object-cover" alt="" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-3">
-                          <p className="text-white font-black text-sm truncate">{p.title}</p>
+                          <p className="text-white font-bold text-sm truncate">{p.title}</p>
                           <p className="text-white/80 text-[10px] font-bold truncate">{p.address}</p>
                         </div>
                       </div>
@@ -136,7 +136,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
               <tbody className="divide-y divide-slate-100">
                 {/* Price Section */}
                 <tr className="bg-slate-50/50">
-                  <td className="p-4 pl-6 font-black text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
+                  <td className="p-4 pl-6 font-bold text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-emerald-500" /> Precio y Valores
                   </td>
                   <td colSpan={selectedProperties.length}></td>
@@ -146,7 +146,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   {selectedProperties.map(p => (
                     <td key={p.id} className="p-4">
                       <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${isBest(p, 'price', 'min') ? 'bg-emerald-100 text-emerald-700' : 'text-slate-700'}`}>
-                        <span className="font-black text-lg">{formatCurrency(p.price)}</span>
+                        <span className="font-bold text-lg">{formatCurrency(p.price)}</span>
                         {isBest(p, 'price', 'min') && <Trophy className="w-3 h-3 fill-emerald-700" />}
                       </div>
                     </td>
@@ -189,7 +189,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
 
                 {/* Dimensions Section */}
                 <tr className="bg-slate-50/50">
-                  <td className="p-4 pl-6 font-black text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
+                  <td className="p-4 pl-6 font-bold text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
                     <Ruler className="w-4 h-4 text-indigo-500" /> Superficies
                   </td>
                   <td colSpan={selectedProperties.length}></td>
@@ -224,7 +224,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
 
                 {/* Features Section */}
                 <tr className="bg-slate-50/50">
-                  <td className="p-4 pl-6 font-black text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
+                  <td className="p-4 pl-6 font-bold text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-500" /> Características
                   </td>
                   <td colSpan={selectedProperties.length}></td>
@@ -291,7 +291,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   return (
                     <>
                       <tr className="bg-slate-50/50">
-                        <td className="p-4 pl-6 font-black text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
+                        <td className="p-4 pl-6 font-bold text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
                           <Layers className="w-4 h-4 text-indigo-500" /> Criterios del Cliente
                         </td>
                         <td colSpan={selectedProperties.length}></td>

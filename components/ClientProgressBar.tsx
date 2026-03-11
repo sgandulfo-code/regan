@@ -155,7 +155,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
     <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-200 shadow-sm mb-8 relative overflow-hidden">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
             {transactionType === TransactionType.VENTA ? 'Tu proceso de venta' : 
              transactionType === TransactionType.ALQUILER || transactionType === TransactionType.ALQUILER_TEMPORARIO ? 'Tu proceso de alquiler' : 
              'Tu proceso de compra'}
@@ -191,7 +191,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
                         <span className="text-sm font-bold">{index + 1}</span>
                       )}
                     </div>
-                    <span className={`mt-3 text-[10px] md:text-xs font-bold uppercase tracking-widest text-center transition-colors ${
+                    <span className={`mt-3 text-[10px] md:text-xs font-bold uppercase tracking-wider text-center transition-colors ${
                       stage.status === 'completed' || stage.status === 'current'
                         ? 'text-slate-900'
                         : 'text-slate-400 group-hover:text-indigo-600'
@@ -222,7 +222,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
             <div className="p-5 md:p-6 border-b border-slate-100 flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                     selectedStage.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
                     selectedStage.status === 'current' ? 'bg-indigo-100 text-indigo-700' :
                     'bg-slate-100 text-slate-500'
@@ -231,7 +231,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
                      selectedStage.status === 'current' ? 'Etapa Actual' : 'Próximo Paso'}
                   </span>
                 </div>
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">{selectedStage.title}</h3>
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">{selectedStage.title}</h3>
               </div>
               <button 
                 onClick={() => setSelectedStage(null)}
@@ -248,7 +248,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
 
               {(selectedStage.requirements.docs.length > 0 || selectedStage.requirements.money.length > 0) && (
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
                     ¿Qué vas a necesitar?
                   </h4>
                   
@@ -290,7 +290,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
 
               <button
                 onClick={() => setSelectedStage(null)}
-                className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
+                className="w-full bg-slate-100 text-slate-700 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-200 transition-colors"
               >
                 Entendido
               </button>
