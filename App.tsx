@@ -285,6 +285,15 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
+  const handleUpdateVisitStatus = async (visitId: string, status: string) => {
+    if (!user) return;
+    setIsSyncing(true);
+    await dataService.updateVisit(visitId, { status });
+    const v = await dataService.getVisits(user.id, activeFolderId);
+    setVisits(v);
+    setIsSyncing(false);
+  };
+
   const handleFeedbackUpdate = async (visitId: string, feedback: string, photos: string[], rating?: number) => {
     if (!user) return;
     setIsSyncing(true);
@@ -837,7 +846,13 @@ const App: React.FC = () => {
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} folder={activeFolder} />}
 
         {activeTab === 'request-visits' && user && (
-          <RequestVisitView properties={properties} user={user} visits={visits} folders={folders} />
+          <RequestVisitView 
+            properties={properties} 
+            user={user} 
+            visits={visits} 
+            folders={folders} 
+            onUpdateVisitStatus={handleUpdateVisitStatus}
+          />
         )}
 
         {activeTab === 'visits' && (

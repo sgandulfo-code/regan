@@ -86,7 +86,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
 
   const sortedVisits = [...visits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const activeVisits = sortedVisits.filter(v => v.status === 'Pending' || v.status === 'Confirmed');
+  const activeVisits = sortedVisits.filter(v => v.status === 'Pending' || v.status === 'Confirmed' || v.status === 'Requested');
   const pastVisits = sortedVisits.filter(v => v.status === 'Completed' || v.status === 'Cancelled');
 
   const VisitCard = ({ visit }: { visit: Visit }) => {
@@ -146,16 +146,18 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   value={visit.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className={`text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl border outline-none cursor-pointer transition-all ${
-                    visit.status === 'Pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                    visit.status === 'Pending' ? 'bg-slate-50 text-slate-600 border-slate-200' :
+                    visit.status === 'Requested' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                     visit.status === 'Confirmed' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
                     visit.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                    'bg-slate-50 text-slate-500 border-slate-200'
+                    'bg-rose-50 text-rose-500 border-rose-200'
                   }`}
                 >
-                  <option value="Pending">A Confirmar</option>
+                  <option value="Pending">Pedido del Cliente</option>
+                  <option value="Requested">Pedida a Inmob.</option>
                   <option value="Confirmed">Confirmada</option>
                   <option value="Completed">Realizada</option>
-                  <option value="Cancelled">Eliminada</option>
+                  <option value="Cancelled">Cancelada</option>
                 </select>
 
                 {onEditVisit && (
@@ -517,7 +519,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               className="w-4 h-4 opacity-0 absolute inset-0 cursor-pointer"
               title="Cambiar Estado"
             >
-              <option value="Pending">A Confirmar</option>
+              <option value="Pending">Pedido del Cliente</option>
+              <option value="Requested">Pedida a Inmob.</option>
               <option value="Confirmed">Confirmada</option>
               <option value="Completed">Realizada</option>
               <option value="Cancelled">Cancelada</option>
@@ -530,7 +533,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
 
   const KanbanView = () => {
     const columns = [
-      { id: 'Pending', title: 'A Confirmar', color: 'amber', icon: Clock, bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
+      { id: 'Pending', title: 'Pedido del Cliente', color: 'slate', icon: Clock, bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' },
+      { id: 'Requested', title: 'Pedida a Inmob.', color: 'amber', icon: Clock, bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-100' },
       { id: 'Confirmed', title: 'Confirmada', color: 'indigo', icon: CheckCircle2, bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-100' },
       { id: 'Completed', title: 'Realizada', color: 'emerald', icon: CheckSquare, bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' },
       { id: 'Cancelled', title: 'Cancelada', color: 'rose', icon: AlertCircle, bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-100' },

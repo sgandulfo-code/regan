@@ -180,7 +180,7 @@ export interface Visit {
   checklist: VisitChecklistItem[];
   clientChecklist?: ClientChecklistItem[];
   notes: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Confirmed';
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'Pending' | 'Confirmed' | 'Requested';
   clientFeedback?: string;
   rating?: number;
   photos?: string[];

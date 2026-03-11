@@ -567,7 +567,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const { itinerary, visits, properties } = data;
   
   const sortedVisits = [...(visits || [])].sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const activeVisits = sortedVisits.filter((v: any) => v.status === 'Scheduled' || v.status === 'Pending' || v.status === 'Confirmed');
+  const activeVisits = sortedVisits.filter((v: any) => v.status === 'Scheduled' || v.status === 'Pending' || v.status === 'Confirmed' || v.status === 'Requested');
   const pastVisits = sortedVisits.filter((v: any) => v.status === 'Completed' || v.status === 'Cancelled');
 
   const sortedProperties = properties ? [...properties].sort((a: any, b: any) => {
@@ -825,6 +825,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   let displayStatus = 'Pending';
                   if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
                     displayStatus = 'Pending';
+                  } else if (visit.status === 'Requested') {
+                    displayStatus = 'Requested';
                   } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
                     displayStatus = 'Confirmed';
                   } else if (visit.status === 'Completed') {
@@ -846,8 +848,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           <img src={visit.property.images[0] || 'https://picsum.photos/seed/prop/400/400'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                           <div className="absolute top-3 left-3 z-10">
                             {displayStatus === 'Pending' && (
-                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                                 <Clock className="w-3 h-3" /> A Confirmar
+                              </span>
+                            )}
+                            {displayStatus === 'Requested' && (
+                              <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
+                                <Clock className="w-3 h-3" /> En Gestión
                               </span>
                             )}
                             {displayStatus === 'Confirmed' && (
@@ -882,8 +889,29 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             
                             {displayStatus === 'Pending' && (
                               <div className="flex items-center gap-2">
-                                <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-amber-100 flex items-center gap-1.5">
+                                <span className="bg-slate-50 text-slate-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-slate-200 flex items-center gap-1.5">
                                   <Clock className="w-3 h-3" /> A Confirmar
+                                </span>
+                                <button 
+                                  onClick={() => handleEditVisitRequest(visit)}
+                                  className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                  title="Modificar Solicitud"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteVisitRequest(visit.id)}
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                  title="Cancelar Solicitud"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            )}
+                            {displayStatus === 'Requested' && (
+                              <div className="flex items-center gap-2">
+                                <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-amber-100 flex items-center gap-1.5">
+                                  <Clock className="w-3 h-3" /> En Gestión
                                 </span>
                                 <button 
                                   onClick={() => handleEditVisitRequest(visit)}
@@ -1271,8 +1299,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 <Lightbulb className="w-6 h-6 text-indigo-600" />
               </div>
               <div>
-                <h4 className="text-base md:text-lg font-bold text-indigo-900 mb-1.5">Tip: Califica y compara</h4>
-                <p className="text-sm md:text-base text-indigo-700/80 font-medium leading-relaxed">
+                <h4 className="text-lg md:text-xl font-bold text-indigo-900 mb-1.5">Tip: Califica y compara</h4>
+                <p className="text-base md:text-lg text-indigo-700/80 font-medium leading-relaxed">
                   Usa el botón <strong>"+ Agregar Criterio"</strong> en cada propiedad para crear tus propias etiquetas (ej. "Luz Natural", "Nivel de Ruido" o "Potencial de reforma"). Luego podrás usar los filtros para encontrar exactamente lo que buscas.
                 </p>
               </div>
@@ -1421,6 +1449,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   if (visit) {
                     if (visit.status === 'Pending' || (visit.status === 'Scheduled' && visit.notes?.includes('(Horario a coordinar)'))) {
                       displayStatus = 'Pending';
+                    } else if (visit.status === 'Requested') {
+                      displayStatus = 'Requested';
                     } else if (visit.status === 'Confirmed' || visit.status === 'Scheduled') {
                       displayStatus = 'Confirmed';
                     } else if (visit.status === 'Completed') {
@@ -1454,8 +1484,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         />
                         <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10">
                           {displayStatus === 'Pending' && (
-                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
+                            <span className="bg-slate-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
                               <Clock className="w-3 h-3" /> A Confirmar
+                            </span>
+                          )}
+                          {displayStatus === 'Requested' && (
+                            <span className="bg-amber-500/90 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/20 flex items-center gap-1.5">
+                              <Clock className="w-3 h-3" /> En Gestión
                             </span>
                           )}
                           {displayStatus === 'Confirmed' && (

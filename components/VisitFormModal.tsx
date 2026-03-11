@@ -194,6 +194,7 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as Visit['status'] })}
                 >
                   <option value="Pending">A Confirmar</option>
+                  <option value="Requested">Pedida</option>
                   <option value="Confirmed">Confirmada</option>
                   <option value="Completed">Realizada</option>
                   <option value="Cancelled">Eliminada</option>
