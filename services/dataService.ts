@@ -219,6 +219,7 @@ export const dataService = {
       agentName: p.agent_name,
       agentWhatsapp: p.agent_whatsapp,
       isPublic: p.is_public !== undefined ? p.is_public : true,
+      clientCustomFields: p.client_custom_fields || {},
       renovationCosts: (p.renovations || []).map((r: any) => ({
         id: r.id,
         category: r.category,
@@ -290,7 +291,8 @@ export const dataService = {
         images: property.images,
         real_estate_agency: property.realEstateAgency,
         agent_name: property.agentName,
-        agent_whatsapp: property.agentWhatsapp
+        agent_whatsapp: property.agentWhatsapp,
+        client_custom_fields: property.clientCustomFields
       })
       .eq('id', id)
       .select()
@@ -308,6 +310,10 @@ export const dataService = {
 
   async togglePropertyVisibility(id: string, isPublic: boolean) {
     await supabase.from('properties').update({ is_public: isPublic }).eq('id', id);
+  },
+
+  async updatePropertyCustomFields(id: string, clientCustomFields: Record<string, any>) {
+    await supabase.from('properties').update({ client_custom_fields: clientCustomFields }).eq('id', id);
   },
 
   async updateRenovations(propertyId: string, items: RenovationItem[], userId: string) {

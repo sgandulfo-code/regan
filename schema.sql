@@ -113,7 +113,8 @@ CREATE POLICY "Public can update visits via shared itinerary" ON visits
     )
   );
 
--- 11. Storage Bucket para Fotos de Visitas
+-- 12. Campos personalizados del cliente
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS client_custom_fields JSONB DEFAULT '{}'::jsonb;
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('visit-photos', 'visit-photos', true)
 ON CONFLICT (id) DO NOTHING;

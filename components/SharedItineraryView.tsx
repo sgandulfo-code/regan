@@ -1475,9 +1475,49 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
                            <span className="text-sm font-black text-slate-700">{property.floor || '-'}</span>
                          </div>
+                         
+                         {/* Custom Fields */}
+                         {property.clientCustomFields && Object.entries(property.clientCustomFields).map(([key, value]) => (
+                           <div key={key} className="flex justify-between items-center py-2 border-b border-slate-50">
+                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide flex items-center gap-1">
+                               <Star className="w-3 h-3" /> {key}
+                             </span>
+                             <span className="text-sm font-black text-indigo-700">{String(value)}</span>
+                           </div>
+                         ))}
                       </div>
 
                       <div className="flex flex-col gap-3 mt-auto">
+                        <button 
+                          onClick={() => {
+                            const fieldName = window.prompt('Nombre del criterio (ej. Luz Natural, Ruido):');
+                            if (!fieldName) return;
+                            const fieldValue = window.prompt(`Valor para "${fieldName}" (ej. Alta, Bajo, 5 estrellas):`);
+                            if (!fieldValue) return;
+                            
+                            const updatedFields = {
+                              ...(property.clientCustomFields || {}),
+                              [fieldName]: fieldValue
+                            };
+                            
+                            // Optimistic update
+                            setData((prev: any) => ({
+                              ...prev,
+                              properties: prev.properties.map((p: any) => 
+                                p.id === property.id ? { ...p, clientCustomFields: updatedFields } : p
+                              )
+                            }));
+                            
+                            // Save to DB
+                            dataService.updatePropertyCustomFields(property.id, updatedFields).catch(err => {
+                              console.error('Error saving custom field:', err);
+                              alert('Error al guardar el criterio.');
+                            });
+                          }}
+                          className="w-full bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 border border-indigo-100"
+                        >
+                          <Plus className="w-4 h-4" /> Agregar Criterio
+                        </button>
                         <button 
                           onClick={() => handleRequestVisit(property)}
                           className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"

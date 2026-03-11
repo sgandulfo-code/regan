@@ -279,6 +279,38 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                     </td>
                   ))}
                 </tr>
+
+                {/* Custom Fields Section */}
+                {(() => {
+                  const allCustomKeys = Array.from(new Set(
+                    selectedProperties.flatMap(p => Object.keys(p.clientCustomFields || {}))
+                  ));
+                  
+                  if (allCustomKeys.length === 0) return null;
+                  
+                  return (
+                    <>
+                      <tr className="bg-slate-50/50">
+                        <td className="p-4 pl-6 font-black text-slate-900 text-xs uppercase tracking-wide sticky left-0 bg-slate-50/50 z-10 flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-indigo-500" /> Criterios del Cliente
+                        </td>
+                        <td colSpan={selectedProperties.length}></td>
+                      </tr>
+                      {allCustomKeys.map(key => (
+                        <tr key={key}>
+                          <td className="p-4 pl-6 text-xs font-bold text-slate-500 sticky left-0 bg-white z-10">{key}</td>
+                          {selectedProperties.map(p => (
+                            <td key={p.id} className="p-4">
+                              <span className="font-medium text-indigo-600">
+                                {p.clientCustomFields?.[key] ? String(p.clientCustomFields[key]) : '-'}
+                              </span>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </>
+                  );
+                })()}
               </tbody>
             </table>
           </div>

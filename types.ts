@@ -122,6 +122,7 @@ export interface Property {
   agentName?: string;
   agentWhatsapp?: string;
   isPublic?: boolean;
+  clientCustomFields?: Record<string, any>;
 }
 
 export interface User {
