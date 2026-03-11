@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
@@ -1265,6 +1265,19 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
         {activeTab === 'properties' && (
           <div className="space-y-6">
+            {/* Tip Banner */}
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
+              <div className="bg-indigo-100 p-2 rounded-xl shrink-0">
+                <Lightbulb className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-indigo-900 mb-1">Tip: Califica y compara</h4>
+                <p className="text-xs text-indigo-700/80 font-medium leading-relaxed">
+                  Usa el botón <strong>"+ Agregar Criterio"</strong> en cada propiedad para crear tus propias etiquetas (ej. "Luz Natural", "Nivel de Ruido" o "Potencial de reforma"). Luego podrás usar los filtros para encontrar exactamente lo que buscas.
+                </p>
+              </div>
+            </div>
+
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
               <div className="flex justify-between items-center">
                 <button 
@@ -1838,9 +1851,6 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </button>
             </div>
             <div className="p-6 space-y-4">
-              <p className="text-sm text-slate-500 font-medium">
-                Crea tus propias etiquetas para evaluar y comparar las propiedades. Por ejemplo: "Luz Natural", "Nivel de Ruido" o "Potencial de reforma".
-              </p>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Nombre del Criterio</label>
                 {allSuggestedKeys.length > 0 && (
