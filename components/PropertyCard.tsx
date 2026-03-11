@@ -167,6 +167,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
           </div>
         </div>
 
+        {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
+          <div className="mb-6 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100/50">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Criterios del Cliente</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(property.clientCustomFields).map(([key, value]) => (
+                <div key={key} className="bg-white px-2.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm flex flex-col">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{key}</span>
+                  <span className="text-[10px] font-black text-indigo-700">{String(value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Project Cost</p>

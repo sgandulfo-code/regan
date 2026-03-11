@@ -85,6 +85,16 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, onSelect, on
              <span className="w-px h-2.5 bg-slate-200"></span>
              <span className="flex items-center gap-1"><span className="font-black text-slate-700">${Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
         </div>
+
+        {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+            {Object.entries(property.clientCustomFields).map(([key, value]) => (
+              <span key={key} className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                <span className="text-indigo-400">{key}:</span> {String(value)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Agency & Agent (Hidden on small screens if needed, or compact) */}
