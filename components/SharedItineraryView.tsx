@@ -42,11 +42,18 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [filterPriceMax, setFilterPriceMax] = useState<number | ''>('');
   const [filterBedrooms, setFilterBedrooms] = useState<number | ''>('');
   const [filterMinSqft, setFilterMinSqft] = useState<number | ''>('');
+  const [customFilters, setCustomFilters] = useState<Record<string, string>>({});
   const [showFilters, setShowFilters] = useState(false);
 
   // Comparison State
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  // Custom Fields State
+  const [isCustomFieldModalOpen, setIsCustomFieldModalOpen] = useState(false);
+  const [selectedPropertyForCustomField, setSelectedPropertyForCustomField] = useState<any>(null);
+  const [customFieldName, setCustomFieldName] = useState('');
+  const [customFieldValue, setCustomFieldValue] = useState('');
 
   const toggleComparison = (id: string) => {
     if (comparisonIds.includes(id)) {
@@ -498,6 +505,39 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
   };
 
+  const existingCustomFieldKeys = Array.from<string>(new Set(
+    (data?.properties || []).flatMap((p: any) => Object.keys(p.clientCustomFields || {}))
+  ));
+
+  const handleSaveCustomField = async () => {
+    if (!selectedPropertyForCustomField || !customFieldName.trim() || !customFieldValue.trim()) return;
+
+    const property = selectedPropertyForCustomField;
+    const updatedFields = {
+      ...(property.clientCustomFields || {}),
+      [customFieldName.trim()]: customFieldValue.trim()
+    };
+
+    // Optimistic update
+    setData((prev: any) => ({
+      ...prev,
+      properties: prev.properties.map((p: any) => 
+        p.id === property.id ? { ...p, clientCustomFields: updatedFields } : p
+      )
+    }));
+
+    setIsCustomFieldModalOpen(false);
+    setCustomFieldName('');
+    setCustomFieldValue('');
+
+    try {
+      await dataService.updatePropertyCustomFields(property.id, updatedFields);
+    } catch (err) {
+      console.error('Error saving custom field:', err);
+      alert('Error al guardar el criterio.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
@@ -557,6 +597,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     if (filterPriceMax !== '' && p.price > Number(filterPriceMax)) return false;
     if (filterBedrooms !== '' && p.rooms < Number(filterBedrooms)) return false;
     if (filterMinSqft !== '' && p.sqft < Number(filterMinSqft)) return false;
+    
+    // Custom filters
+    for (const [key, value] of Object.entries(customFilters)) {
+      if (value && p.clientCustomFields?.[key] !== value) return false;
+    }
+    
     return true;
   });
 
@@ -1310,6 +1356,42 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       placeholder="0"
                     />
                   </div>
+                  
+                  {/* Custom Field Filters */}
+                  {existingCustomFieldKeys.length > 0 && (
+                    <div className="col-span-2 md:col-span-4 pt-4 mt-2 border-t border-slate-100">
+                      <h4 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1">
+                        <Star className="w-3 h-3" /> Filtros por Criterios Propios
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {existingCustomFieldKeys.map(key => {
+                          const uniqueValues = Array.from(new Set(
+                            (data?.properties || [])
+                              .map((p: any) => p.clientCustomFields?.[key])
+                              .filter(Boolean)
+                          ));
+                          
+                          if (uniqueValues.length === 0) return null;
+                          
+                          return (
+                            <div key={key}>
+                              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate" title={key}>{key}</label>
+                              <select 
+                                value={customFilters[key] || ''}
+                                onChange={(e) => setCustomFilters(prev => ({ ...prev, [key]: e.target.value }))}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
+                              >
+                                <option value="">Cualquiera</option>
+                                {uniqueValues.map(val => (
+                                  <option key={String(val)} value={String(val)}>{String(val)}</option>
+                                ))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1490,29 +1572,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       <div className="flex flex-col gap-3 mt-auto">
                         <button 
                           onClick={() => {
-                            const fieldName = window.prompt('Nombre del criterio (ej. Luz Natural, Ruido):');
-                            if (!fieldName) return;
-                            const fieldValue = window.prompt(`Valor para "${fieldName}" (ej. Alta, Bajo, 5 estrellas):`);
-                            if (!fieldValue) return;
-                            
-                            const updatedFields = {
-                              ...(property.clientCustomFields || {}),
-                              [fieldName]: fieldValue
-                            };
-                            
-                            // Optimistic update
-                            setData((prev: any) => ({
-                              ...prev,
-                              properties: prev.properties.map((p: any) => 
-                                p.id === property.id ? { ...p, clientCustomFields: updatedFields } : p
-                              )
-                            }));
-                            
-                            // Save to DB
-                            dataService.updatePropertyCustomFields(property.id, updatedFields).catch(err => {
-                              console.error('Error saving custom field:', err);
-                              alert('Error al guardar el criterio.');
-                            });
+                            setSelectedPropertyForCustomField(property);
+                            setCustomFieldName('');
+                            setCustomFieldValue('');
+                            setIsCustomFieldModalOpen(true);
                           }}
                           className="w-full bg-indigo-50 text-indigo-600 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 border border-indigo-100"
                         >
@@ -1755,6 +1818,70 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 className="px-6 py-3 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-widest shadow-lg shadow-indigo-200 flex items-center gap-2"
               >
                 <Send className="w-3.5 h-3.5" /> Enviar Solicitud
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Field Modal */}
+      {isCustomFieldModalOpen && selectedPropertyForCustomField && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-black text-slate-800">Agregar Criterio</h3>
+              <button onClick={() => setIsCustomFieldModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Nombre del Criterio</label>
+                {existingCustomFieldKeys.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {existingCustomFieldKeys.map((key: string) => (
+                      <button
+                        key={key}
+                        onClick={() => setCustomFieldName(key)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${customFieldName === key ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                      >
+                        {key}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="text"
+                  value={customFieldName}
+                  onChange={(e) => setCustomFieldName(e.target.value)}
+                  placeholder="Ej. Luz Natural, Ruido, Potencial..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Valor</label>
+                <input
+                  type="text"
+                  value={customFieldValue}
+                  onChange={(e) => setCustomFieldValue(e.target.value)}
+                  placeholder="Ej. Alta, Bajo, 5 estrellas..."
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                />
+              </div>
+            </div>
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={() => setIsCustomFieldModalOpen(false)}
+                className="flex-1 bg-white border border-slate-200 text-slate-600 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveCustomField}
+                disabled={!customFieldName.trim() || !customFieldValue.trim()}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Guardar
               </button>
             </div>
           </div>
