@@ -110,7 +110,8 @@ export const dataService = {
       createdAt: f.created_at,
       isShared: f.user_id !== userId,
       permission: f.permission || SharePermission.ADMIN,
-      welcomeMessage: f.welcome_message
+      welcomeMessage: f.welcome_message,
+      stageId: f.stage_id
     }));
   },
 
@@ -127,7 +128,8 @@ export const dataService = {
         budget: folder.budget || 0,
         start_date: folder.startDate || new Date().toISOString(),
         status_updated_at: new Date().toISOString(),
-        welcome_message: folder.welcomeMessage
+        welcome_message: folder.welcomeMessage,
+        stage_id: folder.stageId
       }])
       .select()
       .single();
@@ -144,7 +146,8 @@ export const dataService = {
       transaction_type: folder.transactionType,
       budget: folder.budget,
       start_date: folder.startDate,
-      welcome_message: folder.welcomeMessage
+      welcome_message: folder.welcomeMessage,
+      stage_id: folder.stageId
     };
 
     if (folder.status && currentFolder && folder.status !== currentFolder.status) {

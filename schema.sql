@@ -12,7 +12,8 @@ END $$;
 -- 2. Actualizar la tabla folders
 ALTER TABLE folders 
 ADD COLUMN IF NOT EXISTS budget NUMERIC DEFAULT 0,
-ADD COLUMN IF NOT EXISTS transaction_type transaction_type DEFAULT 'Compra'::transaction_type;
+ADD COLUMN IF NOT EXISTS transaction_type transaction_type DEFAULT 'Compra'::transaction_type,
+ADD COLUMN IF NOT EXISTS stage_id TEXT;
 
 -- 3. Tabla de Visitas
 CREATE TABLE IF NOT EXISTS visits (

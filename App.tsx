@@ -47,6 +47,7 @@ import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
 import FinancialAnalysisView from './components/FinancialAnalysisView';
 import Auth from './components/Auth';
+import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
@@ -163,6 +164,13 @@ const App: React.FC = () => {
   const handleUpdateStatus = async (id: string, status: PropertyStatus) => {
     setIsSyncing(true);
     await dataService.updatePropertyStatus(id, status);
+    await loadData();
+    setIsSyncing(false);
+  };
+
+  const handleUpdateStage = async (folderId: string, stageId: string) => {
+    setIsSyncing(true);
+    await dataService.updateFolder(folderId, { stageId });
     await loadData();
     setIsSyncing(false);
   };
@@ -475,6 +483,22 @@ const App: React.FC = () => {
                   <div className="flex flex-col">
                     <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">Momentum</span>
                     <span className="text-xs font-black text-white leading-none">{calculateDays(activeFolder.startDate)} Días Activa</span>
+                  </div>
+                </div>
+                <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600"><ArrowRight className="w-3.5 h-3.5" /></div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Etapa del Cliente</span>
+                    <select
+                      value={activeFolder.stageId || ''}
+                      onChange={(e) => handleUpdateStage(activeFolder.id, e.target.value)}
+                      className="text-xs font-black text-slate-700 leading-none uppercase bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
+                    >
+                      <option value="">Seleccionar Etapa</option>
+                      {(activeFolder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA).map(stage => (
+                        <option key={stage.id} value={stage.id}>{stage.title}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

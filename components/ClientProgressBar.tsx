@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Check, ChevronRight, FileText, DollarSign, Info, X } from 'lucide-react';
 import { TransactionType } from '../types';
 
-interface StageInfo {
+export interface StageInfo {
   id: string;
   title: string;
   status: 'completed' | 'current' | 'upcoming';
@@ -13,7 +13,7 @@ interface StageInfo {
   };
 }
 
-const STAGES_COMPRA: StageInfo[] = [
+export const STAGES_COMPRA: StageInfo[] = [
   {
     id: 'busqueda',
     title: 'Búsqueda',
@@ -66,7 +66,7 @@ const STAGES_COMPRA: StageInfo[] = [
   }
 ];
 
-const STAGES_VENTA: StageInfo[] = [
+export const STAGES_VENTA: StageInfo[] = [
   {
     id: 'tasacion',
     title: 'Tasación',
@@ -131,12 +131,25 @@ const STAGES_VENTA: StageInfo[] = [
 
 interface ClientProgressBarProps {
   transactionType?: TransactionType;
+  currentStageId?: string;
 }
 
-export default function ClientProgressBar({ transactionType = TransactionType.COMPRA }: ClientProgressBarProps) {
+export default function ClientProgressBar({ transactionType = TransactionType.COMPRA, currentStageId }: ClientProgressBarProps) {
   const [selectedStage, setSelectedStage] = useState<StageInfo | null>(null);
   
-  const STAGES = transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+  const baseStages = transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+  
+  // Find the index of the current stage. If not found, default to 0.
+  const currentIndex = currentStageId 
+    ? baseStages.findIndex(s => s.id === currentStageId)
+    : 0;
+    
+  const activeIndex = currentIndex >= 0 ? currentIndex : 0;
+
+  const STAGES = baseStages.map((stage, index) => ({
+    ...stage,
+    status: index < activeIndex ? 'completed' : index === activeIndex ? 'current' : 'upcoming'
+  })) as StageInfo[];
 
   return (
     <div className="bg-white rounded-[2rem] p-6 md:p-8 border border-slate-200 shadow-sm mb-8 relative overflow-hidden">

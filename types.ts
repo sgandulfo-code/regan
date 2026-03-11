@@ -74,6 +74,7 @@ export interface SearchFolder {
   permission?: SharePermission;
   welcomeMessage?: string;
   funnelStage?: FunnelStage;
+  stageId?: string;
 }
 
 export interface RenovationItem {

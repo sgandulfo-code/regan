@@ -560,20 +560,6 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     return true;
   });
 
-  // Calculate current stage for the roadmap
-  let currentStage = 0; // Default to Search
-  if (itinerary?.folder?.funnelStage) {
-    const stages = [FunnelStage.SEARCH, FunnelStage.VISITS, FunnelStage.RESERVATION, FunnelStage.AGREEMENT, FunnelStage.DEED];
-    currentStage = Math.max(0, stages.indexOf(itinerary.folder.funnelStage as FunnelStage));
-  } else {
-    // Infer from data
-    if (itinerary?.properties?.some((p: any) => p.status === 'Offered')) {
-      currentStage = 2; // Reservation
-    } else if (itinerary?.visits?.length > 0) {
-      currentStage = 1; // Visits
-    }
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Header */}
@@ -692,7 +678,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         </div>
 
         {/* Progress Bar */}
-        <ClientProgressBar transactionType={itinerary.folder.transactionType} />
+        <ClientProgressBar 
+          transactionType={itinerary.folder.transactionType} 
+          currentStageId={itinerary.folder.stageId}
+        />
 
         {/* Desktop Navigation (Hidden on Mobile) */}
         <div className="hidden md:flex justify-center mb-8">
