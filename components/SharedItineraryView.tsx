@@ -509,6 +509,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     (data?.properties || []).flatMap((p: any) => Object.keys(p.clientCustomFields || {}))
   ));
 
+  const defaultSuggestions = ['Luz Natural', 'Nivel de Ruido', 'Estado General', 'Espacio Verde', 'Potencial de Reforma'];
+  const allSuggestedKeys = Array.from(new Set([...existingCustomFieldKeys, ...defaultSuggestions]));
+
   const handleSaveCustomField = async () => {
     if (!selectedPropertyForCustomField || !customFieldName.trim() || !customFieldValue.trim()) return;
 
@@ -1835,11 +1838,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </button>
             </div>
             <div className="p-6 space-y-4">
+              <p className="text-sm text-slate-500 font-medium">
+                Crea tus propias etiquetas para evaluar y comparar las propiedades. Por ejemplo: "Luz Natural", "Nivel de Ruido" o "Potencial de reforma".
+              </p>
               <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Nombre del Criterio</label>
-                {existingCustomFieldKeys.length > 0 && (
+                {allSuggestedKeys.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {existingCustomFieldKeys.map((key: string) => (
+                    {allSuggestedKeys.map((key: string) => (
                       <button
                         key={key}
                         onClick={() => setCustomFieldName(key)}

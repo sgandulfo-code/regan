@@ -691,7 +691,10 @@ export const dataService = {
         rating: v.rating,
         photos: v.photos,
         propertyId: v.property_id,
-        property: v.property,
+        property: v.property ? {
+          ...v.property,
+          clientCustomFields: v.property.client_custom_fields || {}
+        } : undefined,
         checklist: itinerary.settings.showChecklist ? v.checklist : [],
         clientChecklist: v.client_checklist || []
       })),
@@ -715,7 +718,8 @@ export const dataService = {
         uncoveredSqft: p.uncovered_sqft,
         age: p.age,
         floor: p.floor,
-        acquisitionReason: p.acquisition_reason
+        acquisitionReason: p.acquisition_reason,
+        clientCustomFields: p.client_custom_fields || {}
       }))
     };
   },
