@@ -1266,13 +1266,13 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {activeTab === 'properties' && (
           <div className="space-y-6">
             {/* Tip Banner */}
-            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm">
-              <div className="bg-indigo-100 p-2 rounded-xl shrink-0">
-                <Lightbulb className="w-5 h-5 text-indigo-600" />
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 md:p-5 flex items-start gap-3 md:gap-4 shadow-sm">
+              <div className="bg-indigo-100 p-2.5 rounded-xl shrink-0">
+                <Lightbulb className="w-6 h-6 text-indigo-600" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-indigo-900 mb-1">Tip: Califica y compara</h4>
-                <p className="text-xs text-indigo-700/80 font-medium leading-relaxed">
+                <h4 className="text-base md:text-lg font-bold text-indigo-900 mb-1.5">Tip: Califica y compara</h4>
+                <p className="text-sm md:text-base text-indigo-700/80 font-medium leading-relaxed">
                   Usa el botón <strong>"+ Agregar Criterio"</strong> en cada propiedad para crear tus propias etiquetas (ej. "Luz Natural", "Nivel de Ruido" o "Potencial de reforma"). Luego podrás usar los filtros para encontrar exactamente lo que buscas.
                 </p>
               </div>
