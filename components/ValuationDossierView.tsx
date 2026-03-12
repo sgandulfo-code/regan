@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { ValuationDossier, Property } from '../types';
-import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target } from 'lucide-react';
+import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target, Map } from 'lucide-react';
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import DossierComparablesMap from './DossierComparablesMap';
+import DossierComparisonTable from './DossierComparisonTable';
 
 interface ValuationDossierViewProps {
   dossier: ValuationDossier;
@@ -125,56 +127,86 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
           </div>
         </div>
 
-        <div className="h-[400px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-              <XAxis 
-                type="number" 
-                dataKey="sqft" 
-                name="Superficie" 
-                unit="m²" 
-                tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
-                axisLine={false}
-                tickLine={false}
-                domain={['auto', 'auto']}
-              />
-              <YAxis 
-                type="number" 
-                dataKey="price" 
-                name="Precio" 
-                unit="$" 
-                tickFormatter={(value) => `$${(value / 1000)}k`}
-                tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
-                axisLine={false}
-                tickLine={false}
-                domain={['auto', 'auto']}
-              />
-              <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-              <Scatter name="Propiedades" data={chartData}>
-                {chartData.map((entry, index) => {
-                  let color = '#94a3b8'; // default
-                  if (entry.type === 'subject') color = '#4f46e5'; // indigo-600
-                  else if (entry.type === 'sold') color = '#10b981'; // emerald-500
-                  else if (entry.type === 'active') color = '#f59e0b'; // amber-500
-                  
-                  return <Cell key={`cell-${index}`} fill={color} />;
-                })}
-              </Scatter>
-            </ScatterChart>
-          </ResponsiveContainer>
+        {/* Map View */}
+        <div className="mb-10">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Map className="w-4 h-4 text-indigo-600" /> Ubicación
+          </h3>
+          <DossierComparablesMap 
+            subjectProperty={subjectProperty} 
+            comparables={dossier.comparables} 
+            allProperties={allProperties} 
+          />
         </div>
 
-        <div className="flex flex-wrap justify-center gap-6 mt-6">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
-            <div className="w-3 h-3 rounded-full bg-indigo-600"></div> Tu Propiedad
+        {/* Scatter Chart */}
+        <div className="mb-10">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-indigo-600" /> Dispersión de Precios
+          </h3>
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis 
+                  type="number" 
+                  dataKey="sqft" 
+                  name="Superficie" 
+                  unit="m²" 
+                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={['auto', 'auto']}
+                />
+                <YAxis 
+                  type="number" 
+                  dataKey="price" 
+                  name="Precio" 
+                  unit="$" 
+                  tickFormatter={(value) => `$${(value / 1000)}k`}
+                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                  domain={['auto', 'auto']}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+                <Scatter name="Propiedades" data={chartData}>
+                  {chartData.map((entry, index) => {
+                    let color = '#94a3b8'; // default
+                    if (entry.type === 'subject') color = '#4f46e5'; // indigo-600
+                    else if (entry.type === 'sold') color = '#10b981'; // emerald-500
+                    else if (entry.type === 'active') color = '#f59e0b'; // amber-500
+                    
+                    return <Cell key={`cell-${index}`} fill={color} />;
+                  })}
+                </Scatter>
+              </ScatterChart>
+            </ResponsiveContainer>
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
-            <div className="w-3 h-3 rounded-full bg-emerald-500"></div> Vendidos (Realidad)
+
+          <div className="flex flex-wrap justify-center gap-6 mt-6">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
+              <div className="w-3 h-3 rounded-full bg-indigo-600"></div> Tu Propiedad
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
+              <div className="w-3 h-3 rounded-full bg-emerald-500"></div> Vendidos (Realidad)
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
+              <div className="w-3 h-3 rounded-full bg-amber-500"></div> En Venta (Competencia)
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-widest">
-            <div className="w-3 h-3 rounded-full bg-amber-500"></div> En Venta (Competencia)
-          </div>
+        </div>
+
+        {/* Comparison Table */}
+        <div>
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Target className="w-4 h-4 text-indigo-600" /> Comparación Detallada
+          </h3>
+          <DossierComparisonTable 
+            subjectProperty={subjectProperty} 
+            comparables={dossier.comparables} 
+            allProperties={allProperties} 
+          />
         </div>
       </div>
 
