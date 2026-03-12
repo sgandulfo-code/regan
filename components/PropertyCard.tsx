@@ -105,6 +105,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
           </p>
         </div>
 
+        {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
+          <div className="mb-4 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100/50">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Criterios del Cliente</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(property.clientCustomFields).map(([key, value]) => (
+                <div key={key} className="bg-white px-2.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm flex flex-col">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{key}</span>
+                  <span className="text-[10px] font-black text-indigo-700">{String(value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {isEditable && (property.realEstateAgency || property.agentName) && (
           <div className="mb-4 p-3 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
             {property.realEstateAgency && (
@@ -166,23 +183,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
             <span className="font-bold text-slate-800 text-[10px] md:text-xs">{property.parking || 0}</span>
           </div>
         </div>
-
-        {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
-          <div className="mb-6 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100/50">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Layers className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Criterios del Cliente</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(property.clientCustomFields).map(([key, value]) => (
-                <div key={key} className="bg-white px-2.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm flex flex-col">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{key}</span>
-                  <span className="text-[10px] font-black text-indigo-700">{String(value)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center justify-between mb-6">
           <div>

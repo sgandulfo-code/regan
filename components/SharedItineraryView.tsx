@@ -1470,6 +1470,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         onCompare={toggleComparison}
                         isCompared={comparisonIds.includes(property.id)}
                         onRequestVisit={handleRequestVisit}
+                        onAddCustomField={(p) => {
+                          setSelectedPropertyForCustomField(p);
+                          setCustomFieldName('');
+                          setCustomFieldValue('');
+                          setIsCustomFieldModalOpen(true);
+                        }}
                       />
                     );
                   }
@@ -1570,6 +1576,16 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </div>
 
                       <div className="space-y-3 mb-8 flex-1">
+                         {/* Custom Fields */}
+                         {property.clientCustomFields && Object.entries(property.clientCustomFields).map(([key, value]) => (
+                           <div key={key} className="flex justify-between items-center py-2 border-b border-indigo-50 bg-indigo-50/30 -mx-5 px-5 md:-mx-8 md:px-8">
+                             <span className="text-xs font-bold text-indigo-500 uppercase tracking-wide flex items-center gap-1.5">
+                               <Star className="w-3.5 h-3.5" /> {key}
+                             </span>
+                             <span className="text-sm font-bold text-indigo-700">{String(value)}</span>
+                           </div>
+                         ))}
+                         
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>
                            <span className="text-sm font-bold text-slate-700">{property.rooms}</span>
@@ -1608,16 +1624,6 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Piso</span>
                            <span className="text-sm font-bold text-slate-700">{property.floor || '-'}</span>
                          </div>
-                         
-                         {/* Custom Fields */}
-                         {property.clientCustomFields && Object.entries(property.clientCustomFields).map(([key, value]) => (
-                           <div key={key} className="flex justify-between items-center py-2 border-b border-slate-50">
-                             <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide flex items-center gap-1">
-                               <Star className="w-3 h-3" /> {key}
-                             </span>
-                             <span className="text-sm font-bold text-indigo-700">{String(value)}</span>
-                           </div>
-                         ))}
                       </div>
 
                       <div className="flex flex-col gap-3 mt-auto">
