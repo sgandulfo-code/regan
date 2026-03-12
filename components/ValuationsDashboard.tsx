@@ -1,63 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SearchFolder, Property, ValuationDossier } from '../types';
-import { TrendingUp, Plus, FileText, MapPin, DollarSign, Calendar, Target, ArrowRight } from 'lucide-react';
+import { TrendingUp, Plus, FileText, MapPin, DollarSign, Calendar, Target, ArrowRight, Loader2 } from 'lucide-react';
 import ValuationDossierView from './ValuationDossierView';
+import ValuationDossierForm from './ValuationDossierForm';
+import { dataService } from '../services/dataService';
 
 interface ValuationsDashboardProps {
   folders: SearchFolder[];
   properties: Property[];
-  onSelectDossier: (dossierId: string) => void;
-  onCreateDossier: () => void;
 }
 
-const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, properties, onSelectDossier, onCreateDossier }) => {
+const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, properties }) => {
   const [dossiers, setDossiers] = useState<ValuationDossier[]>([]);
   const [selectedDossierId, setSelectedDossierId] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize mock dossier when properties load
-  React.useEffect(() => {
-    if (properties.length > 0 && dossiers.length === 0) {
-      // Find a subject property and some comparables
-      const subject = properties[0];
-      const comparables = properties.slice(1, 4).map((p, i) => ({
-        id: `comp-${i}`,
-        propertyId: p.id,
-        type: i % 2 === 0 ? 'active' : 'sold' as 'active' | 'sold',
-        soldPrice: i % 2 !== 0 ? p.price * 0.95 : undefined,
-        soldDate: i % 2 !== 0 ? new Date().toISOString() : undefined,
-        daysOnMarket: Math.floor(Math.random() * 60) + 15
-      }));
-
-      setDossiers([
-        {
-          id: 'mock-dossier-1',
-          folderId: subject.folderId,
-          propertyId: subject.id,
-          suggestedPriceMin: subject.price * 0.95,
-          suggestedPriceMax: subject.price * 1.05,
-          targetPrice: subject.price,
-          estimatedDaysOnMarket: 45,
-          comparables,
-          marketingPlan: [
-            { id: 'm1', title: 'Fotografía Profesional', description: 'Sesión de fotos HDR y video con dron para destacar los mejores ángulos.', completed: true },
-            { id: 'm2', title: 'Tour Virtual 360°', description: 'Creación de un recorrido inmersivo para filtrar curiosos y atraer compradores reales.', completed: false },
-            { id: 'm3', title: 'Publicación Destacada', description: 'Posicionamiento premium en los principales portales inmobiliarios (Zonaprop, Argenprop).', completed: false },
-            { id: 'm4', title: 'Campaña en Redes Sociales', description: 'Anuncios segmentados en Instagram y Facebook apuntando a compradores calificados.', completed: false }
-          ],
-          sellerCosts: {
-            commissionPercentage: 3,
-            taxPercentage: 1.5,
-            notaryFees: 1200,
-            otherCosts: 500
-          },
-          notes: 'Propiedad en excelente estado, lista para publicar.',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isPublished: true
-        }
-      ]);
+  const loadDossiers = async () => {
+    setIsLoading(true);
+    try {
+      const data = await dataService.getValuationDossiers();
+      setDossiers(data);
+    } catch (error) {
+      console.error('Error loading dossiers:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, [properties]);
+  };
+
+  useEffect(() => {
+    loadDossiers();
+  }, []);
 
   // Helper to find property details
   const getProperty = (id: string) => properties.find(p => p.id === id);
@@ -91,7 +64,7 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
           <p className="text-sm text-slate-500 font-medium">Gestiona tus captaciones y presentaciones de precio (Smart CMA).</p>
         </div>
         <button 
-          onClick={onCreateDossier}
+          onClick={() => setIsFormOpen(true)}
           className="bg-indigo-600 text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200"
         >
           <Plus className="w-4 h-4" />
@@ -99,7 +72,11 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
         </button>
       </div>
 
-      {dossiers.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+        </div>
+      ) : dossiers.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center flex flex-col items-center justify-center min-h-[400px]">
           <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
             <TrendingUp className="w-10 h-10 text-indigo-500" />
@@ -109,7 +86,7 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
             Crea tu primer Dossier de Tasación Interactivo para sorprender a los propietarios y justificar el precio de mercado con datos reales.
           </p>
           <button 
-            onClick={onCreateDossier}
+            onClick={() => setIsFormOpen(true)}
             className="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -167,6 +144,18 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
             );
           })}
         </div>
+      )}
+
+      {isFormOpen && (
+        <ValuationDossierForm 
+          folders={folders}
+          properties={properties}
+          onClose={() => setIsFormOpen(false)}
+          onSaved={() => {
+            setIsFormOpen(false);
+            loadDossiers();
+          }}
+        />
       )}
     </div>
   );

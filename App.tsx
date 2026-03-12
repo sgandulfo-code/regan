@@ -848,8 +848,6 @@ const App: React.FC = () => {
           <ValuationsDashboard 
             folders={folders} 
             properties={properties} 
-            onSelectDossier={(id) => console.log('Select dossier', id)} 
-            onCreateDossier={() => console.log('Create dossier')} 
           />
         )}
 

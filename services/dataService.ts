@@ -784,5 +784,84 @@ export const dataService = {
       // Fail silently if table doesn't exist or other error
       console.warn('Could not record view:', error);
     }
+  },
+
+  // Valuation Dossiers
+  async getValuationDossiers() {
+    const { data, error } = await supabase
+      .from('valuation_dossiers')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return (data || []).map(d => ({
+      id: d.id,
+      folderId: d.folder_id,
+      propertyId: d.property_id,
+      suggestedPriceMin: d.suggested_price_min,
+      suggestedPriceMax: d.suggested_price_max,
+      targetPrice: d.target_price,
+      estimatedDaysOnMarket: d.estimated_days_on_market,
+      comparables: d.comparables || [],
+      marketingPlan: d.marketing_plan || [],
+      sellerCosts: d.seller_costs || { commissionPercentage: 0, taxPercentage: 0, notaryFees: 0, otherCosts: 0 },
+      notes: d.notes || '',
+      isPublished: d.is_published,
+      createdAt: d.created_at,
+      updatedAt: d.updated_at
+    }));
+  },
+
+  async createValuationDossier(dossier: any) {
+    const { data, error } = await supabase
+      .from('valuation_dossiers')
+      .insert([{
+        folder_id: dossier.folderId,
+        property_id: dossier.propertyId,
+        suggested_price_min: dossier.suggestedPriceMin,
+        suggested_price_max: dossier.suggestedPriceMax,
+        target_price: dossier.targetPrice,
+        estimated_days_on_market: dossier.estimatedDaysOnMarket,
+        comparables: dossier.comparables,
+        marketing_plan: dossier.marketingPlan,
+        seller_costs: dossier.sellerCosts,
+        notes: dossier.notes,
+        is_published: dossier.isPublished
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async updateValuationDossier(id: string, updates: any) {
+    const dbUpdates: any = { updated_at: new Date().toISOString() };
+    if (updates.suggestedPriceMin !== undefined) dbUpdates.suggested_price_min = updates.suggestedPriceMin;
+    if (updates.suggestedPriceMax !== undefined) dbUpdates.suggested_price_max = updates.suggestedPriceMax;
+    if (updates.targetPrice !== undefined) dbUpdates.target_price = updates.targetPrice;
+    if (updates.estimatedDaysOnMarket !== undefined) dbUpdates.estimated_days_on_market = updates.estimatedDaysOnMarket;
+    if (updates.comparables !== undefined) dbUpdates.comparables = updates.comparables;
+    if (updates.marketingPlan !== undefined) dbUpdates.marketing_plan = updates.marketingPlan;
+    if (updates.sellerCosts !== undefined) dbUpdates.seller_costs = updates.sellerCosts;
+    if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
+    if (updates.isPublished !== undefined) dbUpdates.is_published = updates.isPublished;
+
+    const { error } = await supabase
+      .from('valuation_dossiers')
+      .update(dbUpdates)
+      .eq('id', id);
+      
+    if (error) throw error;
+  },
+
+  async deleteValuationDossier(id: string) {
+    const { error } = await supabase
+      .from('valuation_dossiers')
+      .delete()
+      .eq('id', id);
+      
+    if (error) throw error;
   }
 };
