@@ -48,7 +48,11 @@ const Auth: React.FC = () => {
         }
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "An authentication error occurred.");
+      if (err.message === 'Failed to fetch') {
+        setErrorMsg("Error de conexión. Verifica que tu proyecto de Supabase esté activo y la URL sea correcta.");
+      } else {
+        setErrorMsg(err.message || "An authentication error occurred.");
+      }
       console.error(err);
     } finally {
       setIsLoading(false);

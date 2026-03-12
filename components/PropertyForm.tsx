@@ -158,8 +158,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
     setAddressStatus('validating');
     try {
-      const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
-      const data = await response.json();
+      let data;
+      try {
+        const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
+        data = await response.json();
+      } catch (e) {
+        // Fallback to Nominatim if Photon fails
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
+        const nomData = await response.json();
+        if (nomData && nomData.length > 0) {
+          data = {
+            features: [{
+              properties: {
+                name: nomData[0].display_name.split(',')[0],
+                city: nomData[0].display_name.split(',')[1] || '',
+                country: nomData[0].display_name.split(',').pop() || ''
+              }
+            }]
+          };
+        } else {
+          data = { features: [] };
+        }
+      }
       
       if (data.features && data.features.length > 0) {
         const feature = data.features[0];

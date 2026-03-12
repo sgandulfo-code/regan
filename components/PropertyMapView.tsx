@@ -57,10 +57,19 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
           const query = p.exactAddress || p.address;
           if (!query) return { ...p, lat: 0, lng: 0, geocodeFailed: true };
 
-          const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
-          const data = await response.json();
+          let data;
+          try {
+            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
+            data = await response.json();
+          } catch (e) {
+            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
+            const nomData = await response.json();
+            if (nomData && nomData.length > 0) {
+              data = { features: [{ geometry: { coordinates: [parseFloat(nomData[0].lon), parseFloat(nomData[0].lat)] } }] };
+            }
+          }
           
-          if (data.features && data.features.length > 0) {
+          if (data && data.features && data.features.length > 0) {
             const [lng, lat] = data.features[0].geometry.coordinates;
             if (Number.isFinite(lat) && Number.isFinite(lng)) {
               return { ...p, lat, lng };

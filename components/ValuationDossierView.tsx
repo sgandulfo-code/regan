@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ValuationDossier, Property } from '../types';
-import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target, Map, Edit2, Trash2 } from 'lucide-react';
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
+import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target, Map, Edit2, Trash2, ArrowRightLeft } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import DossierComparablesMap from './DossierComparablesMap';
 import DossierComparisonTable from './DossierComparisonTable';
 
@@ -16,6 +16,7 @@ interface ValuationDossierViewProps {
 
 const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, subjectProperty, allProperties, onBack, onEdit, onDelete }) => {
   const [simulatedPrice, setSimulatedPrice] = useState(dossier.targetPrice);
+  const [chartMetric, setChartMetric] = useState<'pricePerSqft' | 'price'>('pricePerSqft');
 
   // 1. Calculate Net Sheet
   const commission = simulatedPrice * (dossier.sellerCosts.commissionPercentage / 100);
@@ -28,26 +29,34 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
     const data = dossier.comparables.map(comp => {
       const prop = allProperties.find(p => p.id === comp.propertyId);
       if (!prop) return null;
+      const sqft = prop.coveredSqft || prop.sqft;
+      const price = comp.type === 'sold' && comp.soldPrice ? comp.soldPrice : prop.price;
       return {
         id: comp.id,
         name: prop.title,
-        sqft: prop.coveredSqft || prop.sqft,
-        price: comp.type === 'sold' ? comp.soldPrice : prop.price,
+        shortName: prop.title.substring(0, 15) + '...',
+        sqft: sqft,
+        price: price,
+        pricePerSqft: sqft > 0 ? Math.round(price / sqft) : 0,
         type: comp.type, // 'active' or 'sold'
       };
     }).filter(Boolean) as any[];
 
     // Add subject property
+    const subjectSqft = subjectProperty.coveredSqft || subjectProperty.sqft;
     data.push({
       id: 'subject',
       name: 'Tu Propiedad',
-      sqft: subjectProperty.coveredSqft || subjectProperty.sqft,
+      shortName: 'Tu Propiedad',
+      sqft: subjectSqft,
       price: dossier.targetPrice,
+      pricePerSqft: subjectSqft > 0 ? Math.round(dossier.targetPrice / subjectSqft) : 0,
       type: 'subject'
     });
 
-    return data;
-  }, [dossier, allProperties, subjectProperty]);
+    // Sort by the selected metric descending
+    return data.sort((a, b) => b[chartMetric] - a[chartMetric]);
+  }, [dossier, allProperties, subjectProperty, chartMetric]);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -55,7 +64,8 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
       return (
         <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
           <p className="font-bold mb-1">{data.name}</p>
-          <p className="text-slate-300">Precio: <span className="text-white font-bold">${data.price?.toLocaleString()}</span></p>
+          <p className="text-slate-300">Precio Total: <span className="text-white font-bold">${data.price?.toLocaleString()}</span></p>
+          <p className="text-slate-300">Valor m²: <span className="text-white font-bold">${data.pricePerSqft?.toLocaleString()}</span></p>
           <p className="text-slate-300">Superficie: <span className="text-white font-bold">{data.sqft} m²</span></p>
           <p className="text-slate-300 mt-1 uppercase tracking-widest text-[9px] font-black">
             {data.type === 'subject' ? 'Tu Propiedad' : data.type === 'sold' ? 'Vendido' : 'En Venta'}
@@ -161,38 +171,57 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
           />
         </div>
 
-        {/* Scatter Chart */}
+        {/* Bar Chart */}
         <div className="mb-10">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-indigo-600" /> Dispersión de Precios
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-indigo-600" /> Comparativa de Precios
+            </h3>
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              <button
+                onClick={() => setChartMetric('pricePerSqft')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                  chartMetric === 'pricePerSqft' 
+                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Valor m²
+              </button>
+              <button
+                onClick={() => setChartMetric('price')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                  chartMetric === 'price' 
+                    ? 'bg-white text-indigo-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Precio Total
+              </button>
+            </div>
+          </div>
+          
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 20, bottom: 60, left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
-                  type="number" 
-                  dataKey="sqft" 
-                  name="Superficie" 
-                  unit="m²" 
-                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+                  dataKey="shortName" 
+                  tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
                   axisLine={false}
                   tickLine={false}
-                  domain={['auto', 'auto']}
+                  angle={-45}
+                  textAnchor="end"
+                  height={60}
                 />
                 <YAxis 
-                  type="number" 
-                  dataKey="price" 
-                  name="Precio" 
-                  unit="$" 
-                  tickFormatter={(value) => `$${(value / 1000)}k`}
+                  tickFormatter={(value) => chartMetric === 'price' ? `$${(value / 1000)}k` : `$${value}`}
                   tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
                   axisLine={false}
                   tickLine={false}
-                  domain={['auto', 'auto']}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter name="Propiedades" data={chartData}>
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                <Bar dataKey={chartMetric} radius={[6, 6, 0, 0]} maxBarSize={60}>
                   {chartData.map((entry, index) => {
                     let color = '#94a3b8'; // default
                     if (entry.type === 'subject') color = '#4f46e5'; // indigo-600
@@ -201,8 +230,8 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
                     
                     return <Cell key={`cell-${index}`} fill={color} />;
                   })}
-                </Scatter>
-              </ScatterChart>
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
 
