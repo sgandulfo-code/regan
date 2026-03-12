@@ -46,6 +46,7 @@ import ShareItineraryModal from './components/ShareItineraryModal';
 import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
 import FinancialAnalysisView from './components/FinancialAnalysisView';
+import ValuationsDashboard from './components/ValuationsDashboard';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -842,6 +843,15 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'financials' && <FinancialAnalysisView properties={properties} folders={folders} />}
+
+        {activeTab === 'valuations' && (
+          <ValuationsDashboard 
+            folders={folders} 
+            properties={properties} 
+            onSelectDossier={(id) => console.log('Select dossier', id)} 
+            onCreateDossier={() => console.log('Create dossier')} 
+          />
+        )}
 
         {activeTab === 'comparison' && <ComparisonTool properties={displayProperties} folder={activeFolder} />}
 

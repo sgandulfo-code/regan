@@ -201,3 +201,42 @@ export interface SharedItinerary {
   createdAt: string;
   expiresAt?: string;
 }
+
+export interface ValuationComparable {
+  id: string;
+  propertyId: string;
+  type: 'active' | 'sold';
+  soldPrice?: number;
+  soldDate?: string;
+  daysOnMarket?: number;
+}
+
+export interface MarketingAction {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  dueDate?: string;
+}
+
+export interface ValuationDossier {
+  id: string;
+  folderId: string;
+  propertyId: string; // The subject property being valued
+  suggestedPriceMin: number;
+  suggestedPriceMax: number;
+  targetPrice: number;
+  estimatedDaysOnMarket: number;
+  comparables: ValuationComparable[];
+  marketingPlan: MarketingAction[];
+  sellerCosts: {
+    commissionPercentage: number;
+    taxPercentage: number;
+    notaryFees: number;
+    otherCosts: number;
+  };
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+  isPublished: boolean;
+}
