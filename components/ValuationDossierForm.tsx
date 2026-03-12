@@ -8,27 +8,28 @@ interface ValuationDossierFormProps {
   properties: Property[];
   onClose: () => void;
   onSaved: () => void;
+  dossierToEdit?: ValuationDossier | null;
 }
 
-const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, properties, onClose, onSaved }) => {
+const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, properties, onClose, onSaved, dossierToEdit }) => {
   const [step, setStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
 
   // Form State
-  const [folderId, setFolderId] = useState<string>('');
-  const [propertyId, setPropertyId] = useState<string>('');
-  const [targetPrice, setTargetPrice] = useState<number>(0);
-  const [suggestedPriceMin, setSuggestedPriceMin] = useState<number>(0);
-  const [suggestedPriceMax, setSuggestedPriceMax] = useState<number>(0);
-  const [estimatedDaysOnMarket, setEstimatedDaysOnMarket] = useState<number>(30);
+  const [folderId, setFolderId] = useState<string>(dossierToEdit?.folderId || '');
+  const [propertyId, setPropertyId] = useState<string>(dossierToEdit?.propertyId || '');
+  const [targetPrice, setTargetPrice] = useState<number>(dossierToEdit?.targetPrice || 0);
+  const [suggestedPriceMin, setSuggestedPriceMin] = useState<number>(dossierToEdit?.suggestedPriceMin || 0);
+  const [suggestedPriceMax, setSuggestedPriceMax] = useState<number>(dossierToEdit?.suggestedPriceMax || 0);
+  const [estimatedDaysOnMarket, setEstimatedDaysOnMarket] = useState<number>(dossierToEdit?.estimatedDaysOnMarket || 30);
   
-  const [comparables, setComparables] = useState<ValuationComparable[]>([]);
-  const [marketingPlan, setMarketingPlan] = useState<MarketingAction[]>([
+  const [comparables, setComparables] = useState<ValuationComparable[]>(dossierToEdit?.comparables || []);
+  const [marketingPlan, setMarketingPlan] = useState<MarketingAction[]>(dossierToEdit?.marketingPlan || [
     { id: 'm1', title: 'Fotografía Profesional', description: 'Sesión de fotos HDR y video con dron.', completed: false },
     { id: 'm2', title: 'Tour Virtual 360°', description: 'Creación de un recorrido inmersivo.', completed: false },
     { id: 'm3', title: 'Publicación Destacada', description: 'Posicionamiento premium en portales.', completed: false },
   ]);
-  const [sellerCosts, setSellerCosts] = useState({
+  const [sellerCosts, setSellerCosts] = useState(dossierToEdit?.sellerCosts || {
     commissionPercentage: 3,
     taxPercentage: 1.5,
     notaryFees: 1000,
@@ -71,7 +72,7 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
     if (!folderId || !propertyId) return;
     setIsSaving(true);
     try {
-      await dataService.createValuationDossier({
+      const dossierData = {
         folderId,
         propertyId,
         targetPrice,
@@ -81,9 +82,15 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
         comparables,
         marketingPlan,
         sellerCosts,
-        notes: '',
-        isPublished: false
-      });
+        notes: dossierToEdit?.notes || '',
+        isPublished: dossierToEdit?.isPublished || false
+      };
+
+      if (dossierToEdit) {
+        await dataService.updateValuationDossier(dossierToEdit.id, dossierData);
+      } else {
+        await dataService.createValuationDossier(dossierData);
+      }
       onSaved();
     } catch (error) {
       console.error('Error saving dossier:', error);
@@ -100,7 +107,9 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
         {/* Header */}
         <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
-            <h2 className="text-xl font-black text-slate-800 tracking-tight">Crear Dossier de Tasación</h2>
+            <h2 className="text-xl font-black text-slate-800 tracking-tight">
+              {dossierToEdit ? 'Editar Dossier de Tasación' : 'Crear Dossier de Tasación'}
+            </h2>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
               Paso {step} de 3
             </p>
@@ -119,7 +128,8 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                 <select 
                   value={folderId} 
                   onChange={(e) => { setFolderId(e.target.value); setPropertyId(''); setComparables([]); }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                  disabled={!!dossierToEdit}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Seleccionar carpeta...</option>
                   {folders.map(f => (
@@ -135,8 +145,8 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                     {folderProperties.map(p => (
                       <div 
                         key={p.id}
-                        onClick={() => setPropertyId(p.id)}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex gap-4 ${propertyId === p.id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-100 hover:border-indigo-200 bg-white'}`}
+                        onClick={() => !dossierToEdit && setPropertyId(p.id)}
+                        className={`p-4 rounded-2xl border-2 transition-all flex gap-4 ${propertyId === p.id ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-100 hover:border-indigo-200 bg-white'} ${dossierToEdit ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                       >
                         <img src={p.images[0]} alt="" className="w-16 h-16 rounded-xl object-cover" />
                         <div className="flex-1 min-w-0">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SearchFolder, Property, ValuationDossier } from '../types';
-import { TrendingUp, Plus, FileText, MapPin, DollarSign, Calendar, Target, ArrowRight, Loader2 } from 'lucide-react';
+import { TrendingUp, Plus, FileText, MapPin, DollarSign, Calendar, Target, ArrowRight, Loader2, Edit2, Trash2 } from 'lucide-react';
 import ValuationDossierView from './ValuationDossierView';
 import ValuationDossierForm from './ValuationDossierForm';
 import { dataService } from '../services/dataService';
@@ -14,6 +14,7 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
   const [dossiers, setDossiers] = useState<ValuationDossier[]>([]);
   const [selectedDossierId, setSelectedDossierId] = useState<string | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingDossier, setEditingDossier] = useState<ValuationDossier | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadDossiers = async () => {
@@ -35,6 +36,25 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
   // Helper to find property details
   const getProperty = (id: string) => properties.find(p => p.id === id);
 
+  const handleEdit = (dossier: ValuationDossier) => {
+    setEditingDossier(dossier);
+    setIsFormOpen(true);
+    setSelectedDossierId(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este dossier de tasación? Esta acción no se puede deshacer.')) {
+      try {
+        await dataService.deleteValuationDossier(id);
+        setSelectedDossierId(null);
+        loadDossiers();
+      } catch (error) {
+        console.error('Error deleting dossier:', error);
+        alert('Error al eliminar el dossier');
+      }
+    }
+  };
+
   if (selectedDossierId) {
     const dossier = dossiers.find(d => d.id === selectedDossierId);
     const subjectProperty = getProperty(dossier?.propertyId || '');
@@ -47,6 +67,8 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
             subjectProperty={subjectProperty} 
             allProperties={properties}
             onBack={() => setSelectedDossierId(null)}
+            onEdit={() => handleEdit(dossier)}
+            onDelete={() => handleDelete(dossier.id)}
           />
         </div>
       );
@@ -64,7 +86,10 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
           <p className="text-sm text-slate-500 font-medium">Gestiona tus captaciones y presentaciones de precio (Smart CMA).</p>
         </div>
         <button 
-          onClick={() => setIsFormOpen(true)}
+          onClick={() => {
+            setEditingDossier(null);
+            setIsFormOpen(true);
+          }}
           className="bg-indigo-600 text-white px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-lg shadow-indigo-200"
         >
           <Plus className="w-4 h-4" />
@@ -86,7 +111,10 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
             Crea tu primer Dossier de Tasación Interactivo para sorprender a los propietarios y justificar el precio de mercado con datos reales.
           </p>
           <button 
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => {
+              setEditingDossier(null);
+              setIsFormOpen(true);
+            }}
             className="bg-slate-900 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -135,9 +163,28 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
                       <Calendar className="w-4 h-4" />
                       <span>{new Date(dossier.updatedAt).toLocaleDateString()}</span>
                     </div>
-                    <button className="text-indigo-600 hover:text-indigo-700 text-xs font-bold uppercase tracking-widest flex items-center gap-1">
-                      Ver Dossier <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(dossier);
+                        }}
+                        className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(dossier.id);
+                        }}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -150,9 +197,14 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
         <ValuationDossierForm 
           folders={folders}
           properties={properties}
-          onClose={() => setIsFormOpen(false)}
+          dossierToEdit={editingDossier}
+          onClose={() => {
+            setIsFormOpen(false);
+            setEditingDossier(null);
+          }}
           onSaved={() => {
             setIsFormOpen(false);
+            setEditingDossier(null);
             loadDossiers();
           }}
         />
