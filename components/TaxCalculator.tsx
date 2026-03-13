@@ -65,7 +65,7 @@ const TaxCalculator: React.FC = () => {
     <div className="max-w-7xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
-          <Calculator className="w-8 h-8 text-[#08415c]" />
+          <Calculator className="w-8 h-8 text-indigo-600" />
           Calculadora de Impuestos y Costos de Escritura
         </h1>
         <p className="text-slate-500 text-lg">
@@ -74,8 +74,8 @@ const TaxCalculator: React.FC = () => {
       </div>
 
       {/* Main Input Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-[#E9AFA3]/50 overflow-hidden mb-8 relative">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E9AFA3] to-[#E2A79A]"></div>
+      <div className="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden mb-8 relative">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-400 to-indigo-600"></div>
         <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
           <div className="flex-1">
             <label className="block text-sm font-bold text-slate-900 uppercase tracking-widest mb-2">
@@ -91,12 +91,12 @@ const TaxCalculator: React.FC = () => {
                 value={priceUSD}
                 onChange={(e) => setPriceUSD(e.target.value ? Number(e.target.value) : '')}
                 placeholder="Ej: 120000"
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:outline-none focus:border-[#E9AFA3] focus:ring-4 focus:ring-[#E9AFA3]/20 transition-all"
+                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all"
               />
             </div>
           </div>
 
-          <div className="w-full md:w-auto bg-[#fff0ed] p-6 rounded-xl border border-[#E9AFA3]/30">
+          <div className="w-full md:w-auto bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
             <div className="mb-4">
               <p className="text-sm font-medium text-slate-600 mb-1">Tipo de cambio aplicable (Dólar Blue):</p>
               <div className="flex items-center gap-2">
@@ -105,7 +105,7 @@ const TaxCalculator: React.FC = () => {
                   type="number"
                   value={exchangeRate}
                   onChange={(e) => setExchangeRate(Number(e.target.value))}
-                  className="w-32 px-3 py-2 border border-slate-300 rounded-lg bg-white text-base font-bold focus:outline-none focus:border-[#E9AFA3]"
+                  className="w-32 px-3 py-2 border border-slate-300 rounded-lg bg-white text-base font-bold focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -121,8 +121,8 @@ const TaxCalculator: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* SELLER COLUMN */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-          <div className="bg-[#08415c] px-6 py-4 border-b border-slate-200">
-            <h3 className="font-bold text-white uppercase tracking-wider">Cálculo del Vendedor</h3>
+          <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+            <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Vendedor</h3>
           </div>
           
           <div className="flex-1">
@@ -146,7 +146,7 @@ const TaxCalculator: React.FC = () => {
                     type="checkbox"
                     checked={sellerViviendaUnica}
                     onChange={(e) => setSellerViviendaUnica(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-[#E9AFA3] rounded border-slate-300 focus:ring-[#E9AFA3]"
+                    className="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                   />
                   <span className="text-sm text-slate-700">
                     <strong className="block mb-1">Deducción por vivienda única</strong>
@@ -176,7 +176,7 @@ const TaxCalculator: React.FC = () => {
                     type="checkbox"
                     checked={sellerTracto}
                     onChange={(e) => setSellerTracto(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-[#E9AFA3] rounded border-slate-300 focus:ring-[#E9AFA3]"
+                    className="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                   />
                   <span className="text-sm text-slate-700">
                     <strong className="block mb-1">Tracto abreviado</strong>
@@ -199,7 +199,7 @@ const TaxCalculator: React.FC = () => {
                         type="number"
                         value={sellerPurchasePriceUSD}
                         onChange={(e) => setSellerPurchasePriceUSD(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-[#E9AFA3] focus:ring-2 focus:ring-[#E9AFA3]/20"
+                        className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                       />
                     </div>
                   </div>
@@ -209,7 +209,7 @@ const TaxCalculator: React.FC = () => {
                 </div>
                 <div className="text-right whitespace-nowrap">
                   <p className="text-sm font-bold text-slate-500 uppercase mb-1">Costos</p>
-                  <p className="text-xl font-black text-[#08415c]">${formatCurrency(sellerITI)}</p>
+                  <p className="text-xl font-black text-indigo-900">${formatCurrency(sellerITI)}</p>
                 </div>
               </div>
 
@@ -220,7 +220,7 @@ const TaxCalculator: React.FC = () => {
                       type="checkbox"
                       checked={sellerBoughtBefore2018}
                       onChange={(e) => setSellerBoughtBefore2018(e.target.checked)}
-                      className="mt-1 w-4 h-4 text-[#E9AFA3] rounded border-slate-300 focus:ring-[#E9AFA3]"
+                      className="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                     />
                     <span className="text-sm text-slate-700">
                       <strong className="block mb-1">Exención por fecha de compra</strong>
@@ -234,7 +234,7 @@ const TaxCalculator: React.FC = () => {
                       type="checkbox"
                       checked={sellerViviendaUnica}
                       onChange={(e) => setSellerViviendaUnica(e.target.checked)}
-                      className="mt-1 w-4 h-4 text-[#E9AFA3] rounded border-slate-300 focus:ring-[#E9AFA3]"
+                      className="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                     />
                     <span className="text-sm text-slate-700">
                       <strong className="block mb-1">Exención por vivienda única</strong>
@@ -247,22 +247,22 @@ const TaxCalculator: React.FC = () => {
           </div>
 
           {/* Totals Seller */}
-          <div className="p-6 bg-[#fff0ed] border-t border-[#E9AFA3]/30 mt-auto">
+          <div className="p-6 bg-indigo-50/50 border-t border-indigo-100 mt-auto">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-slate-900 uppercase text-sm">Total Impuestos y Costos:</span>
-              <span className="text-xl font-black text-[#08415c]">${formatCurrency(sellerTotalPesos)}</span>
+              <span className="text-xl font-black text-indigo-600">${formatCurrency(sellerTotalPesos)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-bold text-slate-900 uppercase text-sm">Total Reflejado en Dólares:</span>
-              <span className="text-xl font-black text-[#08415c]">US$ {formatCurrency(sellerTotalUSD)}</span>
+              <span className="text-xl font-black text-indigo-600">US$ {formatCurrency(sellerTotalUSD)}</span>
             </div>
           </div>
         </div>
 
         {/* BUYER COLUMN */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-          <div className="bg-[#08415c] px-6 py-4 border-b border-slate-200">
-            <h3 className="font-bold text-white uppercase tracking-wider">Cálculo del Comprador</h3>
+          <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+            <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Comprador</h3>
           </div>
           
           <div className="flex-1">
@@ -286,7 +286,7 @@ const TaxCalculator: React.FC = () => {
                     type="checkbox"
                     checked={buyerViviendaUnica}
                     onChange={(e) => setBuyerViviendaUnica(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-[#E9AFA3] rounded border-slate-300 focus:ring-[#E9AFA3]"
+                    className="mt-1 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
                   />
                   <span className="text-sm text-slate-700">
                     <strong className="block mb-1">Deducción por vivienda única</strong>
@@ -327,14 +327,14 @@ const TaxCalculator: React.FC = () => {
           </div>
 
           {/* Totals Buyer */}
-          <div className="p-6 bg-[#fff0ed] border-t border-[#E9AFA3]/30 mt-auto">
+          <div className="p-6 bg-indigo-50/50 border-t border-indigo-100 mt-auto">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold text-slate-900 uppercase text-sm">Total Impuestos y Costos:</span>
-              <span className="text-xl font-black text-[#08415c]">${formatCurrency(buyerTotalPesos)}</span>
+              <span className="text-xl font-black text-indigo-600">${formatCurrency(buyerTotalPesos)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-bold text-slate-900 uppercase text-sm">Total Reflejado en Dólares:</span>
-              <span className="text-xl font-black text-[#08415c]">US$ {formatCurrency(buyerTotalUSD)}</span>
+              <span className="text-xl font-black text-indigo-600">US$ {formatCurrency(buyerTotalUSD)}</span>
             </div>
           </div>
         </div>
@@ -344,7 +344,7 @@ const TaxCalculator: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-100">
           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Info className="w-5 h-5 text-[#08415c]" />
+            <Info className="w-5 h-5 text-indigo-600" />
             Notas y Aclaraciones
           </h3>
         </div>
