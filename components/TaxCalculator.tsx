@@ -62,7 +62,7 @@ const TaxCalculator: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-7xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2 flex items-center gap-3">
           <Calculator className="w-8 h-8 text-indigo-600" />
@@ -76,13 +76,13 @@ const TaxCalculator: React.FC = () => {
       {/* Main Input Card */}
       <div className="bg-white rounded-2xl shadow-sm border border-rose-200 overflow-hidden mb-8 relative">
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-rose-300 to-rose-200"></div>
-        <div className="p-6 md:p-8">
-          <div className="mb-6">
+        <div className="p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start md:items-center justify-between">
+          <div className="flex-1">
             <label className="block text-sm font-bold text-slate-900 uppercase tracking-widest mb-2">
               Ingresá el precio en dólares del inmueble
             </label>
             <p className="text-sm text-slate-500 mb-4">
-              Luego, seleccioná si sos vendedor o comprador. El sistema te va a guiar para que completes la información necesaria a fin de obtener una estimación automática de los impuestos y gastos asociados a la operación.
+              Ingresá el valor para obtener una estimación automática de los impuestos y gastos asociados a la operación.
             </p>
             <div className="relative max-w-md">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-500">US$</span>
@@ -96,65 +96,43 @@ const TaxCalculator: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 p-1 bg-white border border-rose-200 rounded-full max-w-md">
-            <button
-              onClick={() => setMode('seller')}
-              className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all ${
-                mode === 'seller'
-                  ? 'bg-[#E2A79A] text-white shadow-md translate-y-[-1px]'
-                  : 'bg-[#F7C0B5] text-white hover:bg-[#F2AD9B]'
-              }`}
-            >
-              Soy vendedor
-            </button>
-            <button
-              onClick={() => setMode('buyer')}
-              className={`flex-1 py-3 px-6 rounded-full font-bold text-sm transition-all ${
-                mode === 'buyer'
-                  ? 'bg-[#E2A79A] text-white shadow-md translate-y-[-1px]'
-                  : 'bg-[#F7C0B5] text-white hover:bg-[#F2AD9B]'
-              }`}
-            >
-              Soy comprador
-            </button>
+          <div className="w-full md:w-auto bg-rose-50/50 p-6 rounded-xl border border-rose-100">
+            <div className="mb-4">
+              <p className="text-sm font-medium text-slate-600 mb-1">Tipo de cambio aplicable (Dólar Blue):</p>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-bold">$</span>
+                <input
+                  type="number"
+                  value={exchangeRate}
+                  onChange={(e) => setExchangeRate(Number(e.target.value))}
+                  className="w-32 px-3 py-2 border border-slate-300 rounded-lg bg-white text-base font-bold focus:outline-none focus:border-rose-300"
+                />
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-600 mb-1">Precio convertido a pesos:</p>
+              <p className="text-2xl font-black text-slate-900">${formatCurrency(pricePesos)}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Results Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-        <div className="p-6 bg-rose-50/50 border-b border-rose-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-slate-600">Tipo de cambio aplicable (Dólar Blue):</p>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-slate-500 font-bold">$</span>
-              <input
-                type="number"
-                value={exchangeRate}
-                onChange={(e) => setExchangeRate(Number(e.target.value))}
-                className="w-24 px-2 py-1 border border-slate-300 rounded bg-white text-sm font-bold"
-              />
-            </div>
+      {/* Results Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* SELLER COLUMN */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+            <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Vendedor</h3>
           </div>
-          <div className="text-right">
-            <p className="text-sm font-medium text-slate-600">Precio convertido a pesos:</p>
-            <p className="text-xl font-black text-slate-900">${formatCurrency(pricePesos)}</p>
-          </div>
-        </div>
-
-        {mode === 'seller' && (
-          <div>
-            <div className="bg-slate-100 px-6 py-4 border-b border-rose-200">
-              <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Vendedor</h3>
-            </div>
-            
+          
+          <div className="flex-1">
             {/* Sellos */}
-            <div className="p-6 border-b border-rose-100">
+            <div className="p-6 border-b border-slate-100">
               <div className="flex justify-between items-start mb-4">
                 <div className="pr-8">
                   <h4 className="font-bold text-slate-900 uppercase mb-2">Impuesto a Sellos</h4>
                   <p className="text-sm text-slate-600 mb-1">
-                    Impuesto aplicable: 1,75% sobre el precio del inmueble (de un total impositivo del 3,5% que paga mitad cada parte), menos la deducción correspondiente por mínimo no imponible, en caso de aplicar.
+                    1,75% sobre el precio del inmueble, menos la deducción por mínimo no imponible si aplica.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -171,20 +149,20 @@ const TaxCalculator: React.FC = () => {
                     className="mt-1 w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500"
                   />
                   <span className="text-sm text-slate-700">
-                    <strong className="block mb-1">Deducción por mínimo no imponible para adquisición de vivienda única</strong>
-                    Si el comprador del inmueble lo destinará a vivienda única, familiar y de uso permanente, marcá esta casilla. En este caso, la alícuota se aplicará únicamente sobre el monto que exceda el mínimo no imponible de $205.332.000 (actualización de enero 2025).
+                    <strong className="block mb-1">Deducción por vivienda única</strong>
+                    Aplica la deducción del mínimo no imponible ($205.332.000).
                   </span>
                 </label>
               </div>
             </div>
 
             {/* Escritura */}
-            <div className="p-6 border-b border-rose-100">
+            <div className="p-6 border-b border-slate-100">
               <div className="flex justify-between items-start mb-4">
                 <div className="pr-8">
                   <h4 className="font-bold text-slate-900 uppercase mb-2">Gastos de Escritura</h4>
                   <p className="text-sm text-slate-600 mb-1">
-                    Estimación orientativa de gastos varios de escritura: 0,8% del precio de venta del inmueble.
+                    Estimación orientativa: 0,8% del precio de venta.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -201,22 +179,10 @@ const TaxCalculator: React.FC = () => {
                     className="mt-1 w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500"
                   />
                   <span className="text-sm text-slate-700">
-                    <strong className="block mb-1">Costo adicional por tracto abreviado</strong>
-                    Marcá si la venta incluye el trámite de Tracto Abreviado (herencia con declaratoria de herederos, no registrada aún en el Registro de la Propiedad Inmueble). Suma un 0,4% al costo de escritura.
+                    <strong className="block mb-1">Tracto abreviado</strong>
+                    Suma un 0,4% al costo de escritura.
                   </span>
                 </label>
-              </div>
-            </div>
-
-            {/* Totals Seller */}
-            <div className="p-6 bg-rose-50/30 border-b border-rose-200">
-              <div className="flex justify-between items-center mb-4">
-                <span className="font-bold text-slate-900 uppercase">Estimación Total de Impuestos y Costos de Venta:</span>
-                <span className="text-xl font-black text-rose-600">${formatCurrency(sellerTotalPesos)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-900 uppercase">Estimación Total Reflejada en Dólares:</span>
-                <span className="text-xl font-black text-rose-600">US$ {formatCurrency(sellerTotalUSD)}</span>
               </div>
             </div>
 
@@ -224,21 +190,21 @@ const TaxCalculator: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-start mb-6">
                 <div className="pr-8">
-                  <h4 className="font-bold text-slate-900 uppercase mb-2">Impuesto Cedular (EX ITI) - DDJJ Aparte</h4>
+                  <h4 className="font-bold text-slate-900 uppercase mb-2">Impuesto Cedular (EX ITI)</h4>
                   <div className="mb-4">
-                    <label className="block text-sm text-slate-700 mb-2">Indicá primero el valor de adquisición del inmueble en dólares:</label>
+                    <label className="block text-sm text-slate-700 mb-2">Valor de adquisición (US$):</label>
                     <div className="relative max-w-xs">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-slate-500">US$</span>
                       <input
                         type="number"
                         value={sellerPurchasePriceUSD}
                         onChange={(e) => setSellerPurchasePriceUSD(e.target.value ? Number(e.target.value) : '')}
-                        className="w-full pl-10 pr-3 py-2 border-2 border-rose-200 rounded-lg font-bold focus:outline-none focus:border-rose-400"
+                        className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
                       />
                     </div>
                   </div>
                   <p className="text-sm text-slate-600">
-                    Tasa aplicable: 15% sobre la ganancia neta obtenida (diferencial entre el precio de compra y el precio de venta). Excepto exenciones aplicables.
+                    15% sobre la ganancia neta obtenida.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -258,7 +224,7 @@ const TaxCalculator: React.FC = () => {
                     />
                     <span className="text-sm text-slate-700">
                       <strong className="block mb-1">Exención por fecha de compra</strong>
-                      Marcá si el inmueble que vendés fue adquirido antes del 1 de enero de 2018 (no aplica el impuesto).
+                      Adquirido antes del 1 de enero de 2018.
                     </span>
                   </label>
                 </div>
@@ -272,28 +238,41 @@ const TaxCalculator: React.FC = () => {
                     />
                     <span className="text-sm text-slate-700">
                       <strong className="block mb-1">Exención por vivienda única</strong>
-                      Marcá si el inmueble que estás vendiendo se trata de tu vivienda única, familiar y de uso permanente (no aplica el impuesto).
+                      Vivienda única, familiar y de uso permanente.
                     </span>
                   </label>
                 </div>
               </div>
             </div>
           </div>
-        )}
 
-        {mode === 'buyer' && (
-          <div>
-            <div className="bg-slate-100 px-6 py-4 border-b border-rose-200">
-              <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Comprador</h3>
+          {/* Totals Seller */}
+          <div className="p-6 bg-rose-50/50 border-t border-rose-200 mt-auto">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-slate-900 uppercase text-sm">Total Impuestos y Costos:</span>
+              <span className="text-xl font-black text-rose-600">${formatCurrency(sellerTotalPesos)}</span>
             </div>
-            
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-slate-900 uppercase text-sm">Total Reflejado en Dólares:</span>
+              <span className="text-xl font-black text-rose-600">US$ {formatCurrency(sellerTotalUSD)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* BUYER COLUMN */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+          <div className="bg-slate-100 px-6 py-4 border-b border-slate-200">
+            <h3 className="font-bold text-slate-800 uppercase tracking-wider">Cálculo del Comprador</h3>
+          </div>
+          
+          <div className="flex-1">
             {/* Sellos */}
-            <div className="p-6 border-b border-rose-100">
+            <div className="p-6 border-b border-slate-100">
               <div className="flex justify-between items-start mb-4">
                 <div className="pr-8">
                   <h4 className="font-bold text-slate-900 uppercase mb-2">Impuesto a Sellos</h4>
                   <p className="text-sm text-slate-600 mb-1">
-                    Impuesto aplicable: 1,75% sobre el precio del inmueble (de un total impositivo del 3,5% que paga mitad cada parte), menos la deducción correspondiente por mínimo no imponible, en caso de aplicar.
+                    1,75% sobre el precio del inmueble, menos la deducción por mínimo no imponible si aplica.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -310,21 +289,22 @@ const TaxCalculator: React.FC = () => {
                     className="mt-1 w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-500"
                   />
                   <span className="text-sm text-slate-700">
-                    <strong className="block mb-1">Deducción por mínimo no imponible para adquisición de vivienda única</strong>
-                    Marcá si la propiedad será tu vivienda única, familiar y de uso permanente. En este caso, la alícuota se aplicará únicamente sobre el monto que exceda el mínimo no imponible de $205.332.000 (actualización de enero 2025).
+                    <strong className="block mb-1">Deducción por vivienda única</strong>
+                    Aplica la deducción del mínimo no imponible ($205.332.000).
                   </span>
                 </label>
               </div>
             </div>
 
             {/* Gastos de Escritura */}
-            <div className="p-6 border-b border-rose-100">
+            <div className="p-6">
               <h4 className="font-bold text-slate-900 uppercase mb-4">Gastos de Escritura</h4>
               
-              <div className="flex justify-between items-start mb-4">
+              <div className="flex justify-between items-start mb-6">
                 <div className="pr-8">
+                  <p className="text-sm font-bold text-slate-700 mb-1">Honorarios del Escribano</p>
                   <p className="text-sm text-slate-600">
-                    Honorarios del Escribano: en torno al 2% del precio de venta.
+                    En torno al 2% del precio de venta.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -334,8 +314,9 @@ const TaxCalculator: React.FC = () => {
               
               <div className="flex justify-between items-start">
                 <div className="pr-8">
+                  <p className="text-sm font-bold text-slate-700 mb-1">Gastos varios de escritura</p>
                   <p className="text-sm text-slate-600">
-                    Estimación orientativa de gastos varios de escritura: 0,8% del precio de venta del inmueble.
+                    Estimación orientativa: 0,8% del precio de venta.
                   </p>
                 </div>
                 <div className="text-right whitespace-nowrap">
@@ -343,20 +324,20 @@ const TaxCalculator: React.FC = () => {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Totals Buyer */}
-            <div className="p-6 bg-rose-50/30">
-              <div className="flex justify-between items-center mb-4">
-                <span className="font-bold text-slate-900 uppercase">Estimación Total de Impuestos y Costos de Compra:</span>
-                <span className="text-xl font-black text-rose-600">${formatCurrency(buyerTotalPesos)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-900 uppercase">Estimación Total Reflejada en Dólares:</span>
-                <span className="text-xl font-black text-rose-600">US$ {formatCurrency(buyerTotalUSD)}</span>
-              </div>
+          {/* Totals Buyer */}
+          <div className="p-6 bg-rose-50/50 border-t border-rose-200 mt-auto">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-slate-900 uppercase text-sm">Total Impuestos y Costos:</span>
+              <span className="text-xl font-black text-rose-600">${formatCurrency(buyerTotalPesos)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-slate-900 uppercase text-sm">Total Reflejado en Dólares:</span>
+              <span className="text-xl font-black text-rose-600">US$ {formatCurrency(buyerTotalUSD)}</span>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Notes / Accordion */}
