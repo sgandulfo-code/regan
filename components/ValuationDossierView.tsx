@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ValuationDossier, Property } from '../types';
-import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target, Map, Edit2, Trash2, ArrowRightLeft } from 'lucide-react';
+import { ArrowLeft, TrendingUp, MapPin, CheckCircle2, Circle, DollarSign, Calculator, BarChart3, Info, Target, Map, Edit2, Trash2, ArrowRightLeft, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import DossierComparablesMap from './DossierComparablesMap';
 import DossierComparisonTable from './DossierComparisonTable';
@@ -19,10 +19,46 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
   const [chartMetric, setChartMetric] = useState<'pricePerSqft' | 'price'>('pricePerSqft');
 
   // 1. Calculate Net Sheet
+  const exchangeRate = dossier.sellerCosts.exchangeRate || 1000;
+  const priceInPesos = simulatedPrice * exchangeRate;
+  const minimoNoImponible = 205332000;
+  
+  // Honorarios
   const commission = simulatedPrice * (dossier.sellerCosts.commissionPercentage / 100);
-  const taxes = simulatedPrice * (dossier.sellerCosts.taxPercentage / 100);
-  const fixedCosts = dossier.sellerCosts.notaryFees + dossier.sellerCosts.otherCosts;
-  const netInPocket = simulatedPrice - commission - taxes - fixedCosts;
+  
+  // Impuesto de Sellos
+  let taxesInPesos = 0;
+  if (dossier.sellerCosts.isViviendaUnica) {
+    const baseImponible = priceInPesos - minimoNoImponible;
+    if (baseImponible > 0) {
+      taxesInPesos = baseImponible * (dossier.sellerCosts.taxPercentage / 100);
+    }
+  } else {
+    taxesInPesos = priceInPesos * (dossier.sellerCosts.taxPercentage / 100);
+  }
+  const taxes = taxesInPesos / exchangeRate;
+
+  // ITI / Ganancias
+  let iti = 0;
+  if (!dossier.sellerCosts.boughtBefore2018 && !dossier.sellerCosts.isViviendaUnica) {
+    const purchasePrice = dossier.sellerCosts.originalPurchasePrice || 0;
+    if (purchasePrice > 0) {
+      const ganancia = simulatedPrice - purchasePrice;
+      if (ganancia > 0) {
+        iti = ganancia * ((dossier.sellerCosts.itiPercentage || 15) / 100);
+      }
+    }
+  }
+
+  // Gastos de Escrituración
+  let notaryPercentage = dossier.sellerCosts.notaryFeePercentage || 0.8;
+  if (dossier.sellerCosts.hasTractoAbreviado) {
+    notaryPercentage += 0.4;
+  }
+  const notaryPercentageFee = simulatedPrice * (notaryPercentage / 100);
+  
+  const fixedCosts = dossier.sellerCosts.notaryFees + dossier.sellerCosts.otherCosts + notaryPercentageFee;
+  const netInPocket = simulatedPrice - commission - taxes - iti - fixedCosts;
 
   // 2. Prepare Chart Data
   const chartData = useMemo(() => {
@@ -77,9 +113,9 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-5xl mx-auto pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500 print:pb-0 print:max-w-none">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 print:hidden">
         <button 
           onClick={onBack}
           className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold text-sm uppercase tracking-wider"
@@ -87,6 +123,12 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
           <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
         </button>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => window.print()}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 font-bold text-xs uppercase tracking-widest transition-colors"
+          >
+            <Download className="w-4 h-4" /> Exportar PDF
+          </button>
           {onEdit && (
             <button 
               onClick={onEdit}
@@ -107,7 +149,7 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
       </div>
 
       {/* Section 1: Executive Summary (Hero) */}
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden mb-8">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden mb-8 print:break-inside-avoid">
         <div className="h-64 md:h-80 relative">
           <img src={subjectProperty.images[0]} alt={subjectProperty.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
@@ -148,7 +190,7 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
       </div>
 
       {/* Section 2: Market Analysis (Comparables) */}
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10 mb-8">
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10 mb-8 print:break-inside-avoid">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
             <BarChart3 className="w-6 h-6" />
@@ -261,9 +303,9 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 print:block print:space-y-8">
         {/* Section 3: Seller Net Sheet */}
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10">
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10 print:break-inside-avoid">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
               <Calculator className="w-6 h-6" />
@@ -287,9 +329,9 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
                 step={1000}
                 value={simulatedPrice}
                 onChange={(e) => setSimulatedPrice(Number(e.target.value))}
-                className="flex-1 accent-emerald-500"
+                className="flex-1 accent-emerald-500 print:hidden"
               />
-              <span className="text-xl font-black text-slate-800 min-w-[100px] text-right">
+              <span className="text-xl font-black text-slate-800 min-w-[100px] text-right print:text-left print:w-full">
                 {simulatedPrice.toLocaleString()}
               </span>
             </div>
@@ -305,13 +347,34 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
               <span className="font-bold text-rose-500">-${commission.toLocaleString()}</span>
             </div>
             <div className="flex justify-between items-center text-sm">
-              <span className="font-medium text-slate-500">Impuestos Estimados ({dossier.sellerCosts.taxPercentage}%)</span>
-              <span className="font-bold text-rose-500">-${taxes.toLocaleString()}</span>
+              <span className="font-medium text-slate-500">
+                Impuesto de Sellos ({dossier.sellerCosts.taxPercentage}%)
+                {dossier.sellerCosts.isViviendaUnica && <span className="text-[10px] block text-slate-400">Con deducción vivienda única</span>}
+              </span>
+              <span className="font-bold text-rose-500">-${taxes.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
             </div>
+            {iti > 0 && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-slate-500">
+                  ITI / Impuesto Cedular ({dossier.sellerCosts.itiPercentage || 15}%)
+                  <span className="text-[10px] block text-slate-400">Sobre ganancia estimada</span>
+                </span>
+                <span className="font-bold text-rose-500">-${iti.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center text-sm">
-              <span className="font-medium text-slate-500">Gastos Administrativos / Escribanía</span>
-              <span className="font-bold text-rose-500">-${fixedCosts.toLocaleString()}</span>
+              <span className="font-medium text-slate-500">
+                Gastos de Escrituración ({dossier.sellerCosts.notaryFeePercentage || 0.8}%)
+                {dossier.sellerCosts.hasTractoAbreviado && <span className="text-[10px] block text-slate-400">+0.4% Tracto Abreviado</span>}
+              </span>
+              <span className="font-bold text-rose-500">-${notaryPercentageFee.toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
             </div>
+            {(dossier.sellerCosts.notaryFees > 0 || dossier.sellerCosts.otherCosts > 0) && (
+              <div className="flex justify-between items-center text-sm">
+                <span className="font-medium text-slate-500">Gastos Fijos (Escribanía / Otros)</span>
+                <span className="font-bold text-rose-500">-${(dossier.sellerCosts.notaryFees + dossier.sellerCosts.otherCosts).toLocaleString()}</span>
+              </div>
+            )}
           </div>
 
           <div className="pt-6 border-t border-slate-200">
@@ -321,14 +384,17 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
                 <p className="text-sm font-medium text-slate-500">Dinero limpio en mano</p>
               </div>
               <span className="text-4xl font-black text-emerald-500 tracking-tighter">
-                ${netInPocket.toLocaleString()}
+                ${netInPocket.toLocaleString(undefined, {maximumFractionDigits: 0})}
               </span>
             </div>
+            <p className="text-[10px] text-slate-400 mt-4 text-center">
+              * Cálculo orientativo. Tipo de cambio aplicado: ${exchangeRate} (Dólar Blue).
+            </p>
           </div>
         </div>
 
         {/* Section 4: Action Plan */}
-        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10">
+        <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-10 print:break-inside-avoid">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
               <Target className="w-6 h-6" />

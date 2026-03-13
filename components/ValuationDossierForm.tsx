@@ -31,9 +31,16 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
   ]);
   const [sellerCosts, setSellerCosts] = useState(dossierToEdit?.sellerCosts || {
     commissionPercentage: 3,
-    taxPercentage: 1.5,
-    notaryFees: 1000,
-    otherCosts: 0
+    taxPercentage: 1.75, // Impuesto de Sellos
+    notaryFeePercentage: 0.8, // Gastos de Escrituración
+    itiPercentage: 15, // ITI o Ganancias
+    notaryFees: 0,
+    otherCosts: 0,
+    exchangeRate: 1000,
+    isViviendaUnica: false,
+    hasTractoAbreviado: false,
+    boughtBefore2018: false,
+    originalPurchasePrice: 0
   });
 
   // Derived data
@@ -281,7 +288,7 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Honorarios (%)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Honorarios (%)</label>
                       <input 
                         type="number" 
                         step="0.1"
@@ -291,7 +298,60 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Impuestos (%)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Tipo de Cambio (Dólar Blue)</label>
+                      <input 
+                        type="number" 
+                        value={sellerCosts.exchangeRate || 1000}
+                        onChange={(e) => setSellerCosts({...sellerCosts, exchangeRate: Number(e.target.value)})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    
+                    <div className="col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={sellerCosts.isViviendaUnica || false}
+                          onChange={(e) => setSellerCosts({...sellerCosts, isViviendaUnica: e.target.checked})}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300"
+                        />
+                        <span className="text-xs font-bold text-slate-700">Es vivienda única, familiar y de uso permanente</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={sellerCosts.hasTractoAbreviado || false}
+                          onChange={(e) => setSellerCosts({...sellerCosts, hasTractoAbreviado: e.target.checked})}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300"
+                        />
+                        <span className="text-xs font-bold text-slate-700">Incluye trámite de Tracto Abreviado (+0.4% escritura)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={sellerCosts.boughtBefore2018 || false}
+                          onChange={(e) => setSellerCosts({...sellerCosts, boughtBefore2018: e.target.checked})}
+                          className="w-4 h-4 text-indigo-600 rounded border-slate-300"
+                        />
+                        <span className="text-xs font-bold text-slate-700">Inmueble adquirido antes del 1 de enero de 2018</span>
+                      </label>
+                    </div>
+
+                    {!sellerCosts.boughtBefore2018 && !sellerCosts.isViviendaUnica && (
+                      <div className="col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1">Valor de Compra Original (US$)</label>
+                        <input 
+                          type="number" 
+                          value={sellerCosts.originalPurchasePrice || 0}
+                          onChange={(e) => setSellerCosts({...sellerCosts, originalPurchasePrice: Number(e.target.value)})}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-indigo-500"
+                          placeholder="Para cálculo de Impuesto Cedular"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Impuesto de Sellos (%)</label>
                       <input 
                         type="number" 
                         step="0.1"
@@ -301,7 +361,27 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Escribanía ($)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">ITI / Ganancias (%)</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={sellerCosts.itiPercentage || 0}
+                        onChange={(e) => setSellerCosts({...sellerCosts, itiPercentage: Number(e.target.value)})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Gastos de Escrituración (%)</label>
+                      <input 
+                        type="number" 
+                        step="0.1"
+                        value={sellerCosts.notaryFeePercentage || 0}
+                        onChange={(e) => setSellerCosts({...sellerCosts, notaryFeePercentage: Number(e.target.value)})}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Escribanía Fijo ($)</label>
                       <input 
                         type="number" 
                         value={sellerCosts.notaryFees}
@@ -310,7 +390,7 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 mb-1">Otros Gastos ($)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 mb-1">Otros Gastos Fijos ($)</label>
                       <input 
                         type="number" 
                         value={sellerCosts.otherCosts}

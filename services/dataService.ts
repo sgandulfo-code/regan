@@ -805,7 +805,7 @@ export const dataService = {
       estimatedDaysOnMarket: d.estimated_days_on_market,
       comparables: d.comparables || [],
       marketingPlan: d.marketing_plan || [],
-      sellerCosts: d.seller_costs || { commissionPercentage: 0, taxPercentage: 0, notaryFees: 0, otherCosts: 0 },
+      sellerCosts: d.seller_costs || { commissionPercentage: 0, taxPercentage: 0, itiPercentage: 0, notaryFeePercentage: 0, notaryFees: 0, otherCosts: 0, exchangeRate: 1000, isViviendaUnica: false, hasTractoAbreviado: false, boughtBefore2018: false, originalPurchasePrice: 0 },
       notes: d.notes || '',
       isPublished: d.is_published,
       createdAt: d.created_at,

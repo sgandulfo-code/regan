@@ -233,7 +233,14 @@ export interface ValuationDossier {
     commissionPercentage: number;
     taxPercentage: number;
     notaryFees: number;
+    notaryFeePercentage?: number;
+    itiPercentage?: number;
     otherCosts: number;
+    exchangeRate?: number;
+    isViviendaUnica?: boolean;
+    hasTractoAbreviado?: boolean;
+    boughtBefore2018?: boolean;
+    originalPurchasePrice?: number;
   };
   notes: string;
   createdAt: string;
