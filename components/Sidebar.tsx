@@ -51,6 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'comparison', label: 'Comparador', icon: <ArrowLeftRight className="w-5 h-5" /> },
     { id: 'valuations', label: 'Dossier de Tasación', icon: <TrendingUp className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
+    { id: 'tax-calculator', label: 'Calculadora de Gastos', icon: <Calculator className="w-5 h-5" /> },
     { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Pencil className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },

@@ -47,6 +47,7 @@ import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
 import FinancialAnalysisView from './components/FinancialAnalysisView';
 import ValuationsDashboard from './components/ValuationsDashboard';
+import TaxCalculator from './components/TaxCalculator';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -843,6 +844,8 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'financials' && <FinancialAnalysisView properties={properties} folders={folders} />}
+
+        {activeTab === 'tax-calculator' && <TaxCalculator />}
 
         {activeTab === 'valuations' && (
           <ValuationsDashboard 
