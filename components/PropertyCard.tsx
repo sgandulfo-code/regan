@@ -2,7 +2,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, MessageCircle } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -16,6 +16,12 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+  const handleWhatsAppShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* USD ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -70,6 +76,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
               {property.isPublic !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
             </button>
           )}
+          <button 
+            onClick={handleWhatsAppShare}
+            className="p-2 bg-emerald-500 text-white rounded-xl shadow-lg hover:bg-emerald-600 transition-all"
+            title="Compartir por WhatsApp"
+          >
+            <MessageCircle className="w-4 h-4" />
+          </button>
           <button 
             onClick={(e) => { e.stopPropagation(); onEdit(property); }}
             className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-indigo-600 shadow-lg transition-all"

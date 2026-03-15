@@ -84,7 +84,7 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     
     const name = target === 'client' ? (visit.clientName || 'Cliente') : (visit.contactName || 'Colega');
     const message = target === 'client' 
-      ? `Hola ${name}, te escribo para confirmar nuestra visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs. ¡Nos vemos ahí!`
+      ? `*Confirmación de Visita*\n\nHola ${name}, te comparto los detalles de nuestra próxima visita:\n\n🏠 *Propiedad:* ${property.title}\n📍 *Dirección:* ${property.address}\n📅 *Fecha:* ${dateStr}\n⏰ *Hora:* ${visit.time} hs\n💰 *Precio:* USD ${property.price.toLocaleString()}\n🔗 *Ver Propiedad:* ${property.url}\n\n¡Nos vemos ahí!`
       : `Hola ${name}, te escribo para confirmar la visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs.`;
     
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -149,15 +149,23 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 </p>
               </div>
               <div className="flex gap-3 items-center">
-                {whatsappClientLink && (
+                {whatsappClientLink ? (
                   <a 
                     href={whatsappClientLink}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
                   >
-                    <MessageCircle className="w-3.5 h-3.5" /> Enviar al Cliente
+                    <MessageCircle className="w-3.5 h-3.5" /> Enviar Detalle WhatsApp
                   </a>
+                ) : (
+                  <button 
+                    onClick={() => alert('Para enviar el detalle, primero debes cargar el WhatsApp del cliente editando la visita.')}
+                    className="flex items-center gap-2 bg-slate-100 text-slate-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-help"
+                    title="Falta WhatsApp del Cliente"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> Enviar Detalle WhatsApp
+                  </button>
                 )}
                 {whatsappAgentLink && (
                   <a 
@@ -527,17 +535,25 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
              <span className="text-[10px] font-bold text-slate-600 truncate">{visit.clientName || visit.contactName}</span>
           </div>
           
-          <div className="flex gap-1">
-            {whatsappClientLink && (
+          <div className="flex gap-1.5">
+            {whatsappClientLink ? (
               <a 
                 href={whatsappClientLink}
                 target="_blank"
                 rel="noreferrer"
-                className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
-                title="Enviar al Cliente"
+                className="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all shadow-sm"
+                title="Enviar Detalle al Cliente WhatsApp"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </a>
+            ) : (
+              <button 
+                onClick={() => alert('Falta el WhatsApp del cliente. Edita la visita para agregarlo.')}
+                className="p-2 bg-slate-100 text-slate-300 rounded-lg cursor-help border border-slate-200"
+                title="Falta WhatsApp del Cliente"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+              </button>
             )}
             {whatsappAgentLink && (
               <a 
@@ -714,6 +730,24 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
           <CalendarIcon className="w-4 h-4 text-indigo-600" /> Próximas Visitas Programadas
         </h2>
         <div className="flex gap-3 items-center">
+          <button 
+            onClick={() => {
+              if (activeVisits.length === 0) {
+                alert('No hay visitas programadas para compartir.');
+                return;
+              }
+              let message = `*Mi Agenda de Visitas*\n\n`;
+              activeVisits.forEach((v, idx) => {
+                const p = getPropertyData(v.propertyId);
+                const dateStr = new Date(v.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                message += `${idx + 1}. *${v.time} hs* - ${p?.address}\n   🔗 ${p?.url}\n\n`;
+              });
+              window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+            }}
+            className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
+          >
+            <MessageCircle className="w-4 h-4" /> Compartir Agenda WhatsApp
+          </button>
           <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm mr-4">
             <button 
               onClick={() => setViewMode('list')}

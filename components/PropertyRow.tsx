@@ -1,7 +1,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, ExternalLink, MessageCircle } from 'lucide-react';
 
 interface PropertyRowProps {
   property: Property;
@@ -15,6 +15,12 @@ interface PropertyRowProps {
 }
 
 const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+  const handleWhatsAppShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* USD ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   const getStatusColor = (status: PropertyStatus) => {
     switch (status) {
       case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
@@ -151,6 +157,13 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, onSelect, on
                     {property.isPublic !== false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                     </button>
                 )}
+                <button 
+                    onClick={handleWhatsAppShare}
+                    className="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                    title="Compartir por WhatsApp"
+                >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                </button>
                 <button 
                     onClick={(e) => { e.stopPropagation(); onEdit(property); }}
                     className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
