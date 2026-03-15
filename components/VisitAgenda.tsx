@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2, LayoutGrid, MessageCircle, Map as MapIcon, Columns } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, Phone, CheckSquare, Square, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, MoreVertical, Plus, History, Share2, Star, MessageSquare, Image, Send, Trash2, Edit2, LayoutGrid, MessageCircle, Map as MapIcon, Columns, CalendarDays } from 'lucide-react';
 import { Visit, Property, PropertyStatus, SearchFolder, FeedbackItem } from '../types';
 import PropertyMap from './PropertyMap';
 
@@ -19,7 +19,7 @@ interface VisitAgendaProps {
 
 const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, onCompleteVisit, onCancelVisit, onAddVisit, onShareItinerary, onFeedbackUpdate, onEditVisit, onDeleteVisit }) => {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
-  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map' | 'kanban'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'calendar' | 'map' | 'kanban' | 'weekly'>('list');
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const getPropertyData = (propertyId: string) => properties.find(p => p.id === propertyId);
@@ -141,7 +141,17 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}
                 </p>
               </div>
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-3 items-center">
+                {whatsappLink && (
+                  <a 
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> Confirmar
+                  </a>
+                )}
                 <select
                   value={visit.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
@@ -207,17 +217,6 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group/phone">
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
                 <p className="text-sm font-black text-indigo-600">{visit.contactPhone}</p>
-                {whatsappLink && (
-                  <a 
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="absolute -top-2 -right-2 bg-emerald-500 text-white p-2 rounded-full shadow-lg hover:bg-emerald-600 transition-all hover:scale-110 z-10"
-                    title="Confirmar por WhatsApp"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                  </a>
-                )}
               </div>
             </div>
 
@@ -481,6 +480,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
       }
     };
 
+    const whatsappLink = getWhatsAppLink(visit, property);
+
     return (
       <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
         <div className="h-32 rounded-xl overflow-hidden mb-3 relative">
@@ -504,6 +505,17 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
           </div>
           
           <div className="flex gap-1">
+            {whatsappLink && (
+              <a 
+                href={whatsappLink}
+                target="_blank"
+                rel="noreferrer"
+                className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+                title="Confirmar Visita"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+              </a>
+            )}
             {onEditVisit && (
               <button 
                 onClick={() => onEditVisit(visit)}
@@ -526,6 +538,88 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               <option value="Cancelled">Cancelada</option>
             </select>
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  const WeeklyView = () => {
+    // Get start of current week (Monday)
+    const startOfWeek = new Date(currentDate);
+    const day = startOfWeek.getDay();
+    const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      weekDays.push(d);
+    }
+
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="flex items-center justify-between bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-4">
+            <button onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() - 7);
+              setCurrentDate(d);
+            }} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronLeft className="w-5 h-5 text-slate-600" /></button>
+            <h3 className="text-lg font-black text-slate-800">
+              Semana del {weekDays[0].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} al {weekDays[6].toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+            </h3>
+            <button onClick={() => {
+              const d = new Date(currentDate);
+              d.setDate(d.getDate() + 7);
+              setCurrentDate(d);
+            }} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><ChevronRight className="w-5 h-5 text-slate-600" /></button>
+          </div>
+          <button 
+            onClick={() => setCurrentDate(new Date())}
+            className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700"
+          >
+            Hoy
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          {weekDays.map((date, idx) => {
+            const dateStr = date.toISOString().split('T')[0];
+            const dayVisits = visits.filter(v => v.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
+            const isToday = new Date().toDateString() === date.toDateString();
+
+            return (
+              <div key={idx} className={`bg-white rounded-[2rem] border ${isToday ? 'border-indigo-200 ring-4 ring-indigo-500/5' : 'border-slate-100'} overflow-hidden shadow-sm`}>
+                <div className={`px-6 py-3 flex items-center justify-between ${isToday ? 'bg-indigo-50' : 'bg-slate-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xl font-black ${isToday ? 'text-indigo-600' : 'text-slate-800'}`}>{date.getDate()}</span>
+                    <div className="flex flex-col">
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${isToday ? 'text-indigo-500' : 'text-slate-400'}`}>
+                        {date.toLocaleDateString('es-ES', { weekday: 'long' })}
+                      </span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                        {date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="bg-white px-2 py-1 rounded-lg text-[10px] font-black text-slate-400 border border-slate-100">
+                    {dayVisits.length} Visitas
+                  </span>
+                </div>
+                <div className="p-4">
+                  {dayVisits.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {dayVisits.map(v => <CompactVisitCard key={v.id} visit={v} />)}
+                    </div>
+                  ) : (
+                    <p className="text-center py-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Sin visitas programadas</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -602,6 +696,13 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               <CalendarIcon className="w-4 h-4" />
             </button>
             <button 
+              onClick={() => setViewMode('weekly')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'weekly' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              title="Agenda Semanal"
+            >
+              <CalendarDays className="w-4 h-4" />
+            </button>
+            <button 
               onClick={() => setViewMode('map')}
               className={`p-2 rounded-lg transition-all ${viewMode === 'map' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
               title="Vista Mapa"
@@ -648,6 +749,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
       )}
 
       {viewMode === 'calendar' && <CalendarView />}
+      
+      {viewMode === 'weekly' && <WeeklyView />}
       
       {viewMode === 'map' && <MapView />}
 
