@@ -23,6 +23,8 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
     time: '12:00',
     contactName: '',
     contactPhone: '',
+    clientName: '',
+    clientPhone: '',
     checklist: [
       { task: 'Verificar presión de agua', completed: false },
       { task: 'Revisar humedades en paredes', completed: false },
@@ -43,6 +45,8 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         time: initialData.time,
         contactName: initialData.contactName || '',
         contactPhone: initialData.contactPhone || '',
+        clientName: initialData.clientName || '',
+        clientPhone: initialData.clientPhone || '',
         checklist: initialData.checklist || [],
         clientChecklist: initialData.clientChecklist || [],
         notes: initialData.notes || '',
@@ -202,17 +206,58 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
-                <User className="w-3 h-3" /> Contacto Inmobiliaria
-              </label>
-              <input
-                type="text"
-                placeholder="ej: Juan Pérez"
-                className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
-                value={formData.contactName}
-                onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <User className="w-3 h-3" /> Contacto Inmobiliaria
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej: Juan Pérez"
+                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
+                  value={formData.contactName}
+                  onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <Phone className="w-3 h-3" /> Teléfono Inmobiliaria
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej: +549..."
+                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none"
+                  value={formData.contactPhone}
+                  onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <User className="w-3 h-3" /> Nombre del Cliente
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej: María García"
+                  className="w-full p-5 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl font-bold text-slate-700 outline-none"
+                  value={formData.clientName}
+                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-2 flex items-center gap-2">
+                  <Phone className="w-3 h-3" /> WhatsApp del Cliente
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej: +549..."
+                  className="w-full p-5 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl font-bold text-slate-700 outline-none"
+                  value={formData.clientPhone}
+                  onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-6">

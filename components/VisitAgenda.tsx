@@ -72,14 +72,20 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     setReplyText(prev => ({ ...prev, [visit.id]: '' }));
   };
 
-  const getWhatsAppLink = (visit: Visit, property: Property) => {
-    if (!visit.contactPhone) return null;
-    const phone = visit.contactPhone.replace(/\D/g, '');
+  const getWhatsAppLink = (visit: Visit, property: Property, target: 'client' | 'agent' = 'agent') => {
+    const phoneNum = target === 'client' ? visit.clientPhone : visit.contactPhone;
+    if (!phoneNum) return null;
+    
+    const phone = phoneNum.replace(/\D/g, '');
     if (!phone) return null;
     
     const dateObj = new Date(visit.date + 'T00:00:00');
     const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-    const message = `Hola ${visit.contactName}, te escribo para confirmar la visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs.`;
+    
+    const name = target === 'client' ? (visit.clientName || 'Cliente') : (visit.contactName || 'Colega');
+    const message = target === 'client' 
+      ? `Hola ${name}, te escribo para confirmar nuestra visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs. ¡Nos vemos ahí!`
+      : `Hola ${name}, te escribo para confirmar la visita a la propiedad ${property.address} el día ${dateStr} a las ${visit.time} hs.`;
     
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   };
@@ -105,7 +111,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     };
 
     const hasFeedback = visit.clientFeedback || visit.rating || (visit.clientChecklist && visit.clientChecklist.some(i => i.response));
-    const whatsappLink = getWhatsAppLink(visit, property);
+    const whatsappClientLink = getWhatsAppLink(visit, property, 'client');
+    const whatsappAgentLink = getWhatsAppLink(visit, property, 'agent');
 
     return (
       <div className={`bg-white rounded-[2.5rem] border ${isToday ? 'border-indigo-500 ring-4 ring-indigo-500/5' : 'border-slate-200'} p-8 ${folder ? 'pt-14' : ''} shadow-sm hover:shadow-xl transition-all group relative overflow-hidden`}>
@@ -142,14 +149,25 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 </p>
               </div>
               <div className="flex gap-3 items-center">
-                {whatsappLink && (
+                {whatsappClientLink && (
                   <a 
-                    href={whatsappLink}
+                    href={whatsappClientLink}
                     target="_blank"
                     rel="noreferrer"
                     className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
                   >
-                    <MessageCircle className="w-3.5 h-3.5" /> Confirmar
+                    <MessageCircle className="w-3.5 h-3.5" /> Enviar al Cliente
+                  </a>
+                )}
+                {whatsappAgentLink && (
+                  <a 
+                    href={whatsappAgentLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-2 bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    title="Confirmar con Inmobiliaria"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" /> Inmobiliaria
                   </a>
                 )}
                 <select
@@ -215,8 +233,12 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
                 <p className="text-sm font-black text-slate-700 truncate">{visit.contactName}</p>
               </div>
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 relative group/phone">
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
+                <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Inmobiliaria</p>
                 <p className="text-sm font-black text-indigo-600">{visit.contactPhone}</p>
+              </div>
+              <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100/50 relative group/client-phone">
+                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Cliente</p>
+                <p className="text-sm font-black text-emerald-600">{visit.clientPhone || 'No asignado'}</p>
               </div>
             </div>
 
@@ -480,7 +502,8 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
       }
     };
 
-    const whatsappLink = getWhatsAppLink(visit, property);
+    const whatsappClientLink = getWhatsAppLink(visit, property, 'client');
+    const whatsappAgentLink = getWhatsAppLink(visit, property, 'agent');
 
     return (
       <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative">
@@ -501,17 +524,28 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
         <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-50">
           <div className="flex items-center gap-1.5 min-w-0">
              <User className="w-3 h-3 text-slate-400" />
-             <span className="text-[10px] font-bold text-slate-600 truncate">{visit.contactName}</span>
+             <span className="text-[10px] font-bold text-slate-600 truncate">{visit.clientName || visit.contactName}</span>
           </div>
           
           <div className="flex gap-1">
-            {whatsappLink && (
+            {whatsappClientLink && (
               <a 
-                href={whatsappLink}
+                href={whatsappClientLink}
                 target="_blank"
                 rel="noreferrer"
                 className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
-                title="Confirmar Visita"
+                title="Enviar al Cliente"
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+              </a>
+            )}
+            {whatsappAgentLink && (
+              <a 
+                href={whatsappAgentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-lg transition-all"
+                title="Enviar a Inmobiliaria"
               >
                 <MessageCircle className="w-3.5 h-3.5" />
               </a>

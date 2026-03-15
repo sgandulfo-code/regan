@@ -177,6 +177,8 @@ export interface Visit {
   time: string;
   contactName: string;
   contactPhone: string;
+  clientName?: string;
+  clientPhone?: string;
   checklist: VisitChecklistItem[];
   clientChecklist?: ClientChecklistItem[];
   notes: string;
