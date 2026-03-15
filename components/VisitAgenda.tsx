@@ -83,18 +83,17 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
     const dateStr = dateObj.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
     
     const name = target === 'client' ? (visit.clientName || 'Cliente') : (visit.contactName || 'Colega');
-    const sharedUrl = `https://ais-pre-ifq3hqw7ks7f2le7r2cubt-86850797215.us-east1.run.app/#/shared/${visit.folderId}`;
     const formattedTime = visit.time.split(':').slice(0, 2).join(':');
     
     const message = target === 'client' 
-      ? `*Agenda de visitas confirmadas*\n\n` +
-        `Hola ${name}, te comparto los detalles de nuestra próxima visita:\n\n` +
-        `🏠 *Propiedad:* ${property.title}\n` +
-        `📍 *Dirección:* ${property.address}\n` +
-        `📅 *Fecha:* ${dateStr}\n` +
-        `⏰ *Hora:* ${formattedTime} hs\n\n` +
-        `🔗 *Link:* ${sharedUrl}\n\n` +
-        `*Nos encontramos 5 minutos antes en la puerta del edificio.*`
+      ? `Agenda de visitas confirmadas\n` +
+        `Hola ${name}, te comparto los detalles de nuestra próxima visita:\n` +
+        `🏠 Propiedad: ${property.title}\n` +
+        `📍 Dirección: ${property.address}\n` +
+        `📅 Fecha: ${dateStr}\n` +
+        `⏰ Hora: ${formattedTime} hs\n` +
+        `🔗 Link: ${property.url}\n` +
+        `Nos encontramos 5 minutos antes en la puerta del edificio.`
       : `Hola ${name}, te escribo para confirmar la visita a la propiedad ${property.address} el día ${dateStr} a las ${formattedTime} hs.`;
     
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -748,14 +747,14 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
               }
               const firstFolderId = activeVisits[0].folderId;
               const sharedUrl = `https://ais-pre-ifq3hqw7ks7f2le7r2cubt-86850797215.us-east1.run.app/#/shared/${firstFolderId}`;
-              let message = `*Agenda de visitas confirmadas*\n\n`;
+              let message = `Agenda de visitas confirmadas\n\n`;
               activeVisits.forEach((v, idx) => {
                 const p = getPropertyData(v.propertyId);
                 const dateStr = new Date(v.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
                 const formattedTime = v.time.split(':').slice(0, 2).join(':');
-                message += `${idx + 1}. *${formattedTime} hs* - ${p?.address} (${dateStr})\n\n`;
+                message += `${idx + 1}. ${formattedTime} hs - ${p?.address} (${dateStr})\n\n`;
               });
-              message += `🔗 *Link:* ${sharedUrl}\n\n*Nos encontramos 5 minutos antes en la puerta del edificio.*`;
+              message += `🔗 Link: ${sharedUrl}\n\nNos encontramos 5 minutos antes en la puerta del edificio.`;
               window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
             }}
             className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-100"
