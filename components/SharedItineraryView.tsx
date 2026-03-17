@@ -68,6 +68,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   };
 
   useEffect(() => {
+    const originalTitle = document.title;
     const fetchSharedData = async () => {
       try {
         // Record view
@@ -75,6 +76,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
         const result = await dataService.getSharedItinerary(sharedId);
         setData(result);
+        
+        if (result?.itinerary?.folder?.name) {
+          document.title = `${result.itinerary.folder.name} | PropBi`;
+        }
         
         if (result?.itinerary?.folder?.userId) {
           const profile = await dataService.getProfile(result.itinerary.folder.userId);
@@ -92,6 +97,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     };
 
     fetchSharedData();
+
+    return () => {
+      document.title = originalTitle;
+    };
   }, [sharedId]);
 
   const handleSubmitLinks = async () => {
