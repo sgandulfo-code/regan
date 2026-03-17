@@ -32,6 +32,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [inboxLinks, setInboxLinks] = useState<any[]>([]);
   const [linksText, setLinksText] = useState('');
   const [isSubmittingLinks, setIsSubmittingLinks] = useState(false);
+  const [pendingInboxFiles, setPendingInboxFiles] = useState<File[]>([]);
 
   // Sorting State
   const [sortBy, setSortBy] = useState<'price' | 'pricePerSqft' | 'sqft' | 'rooms'>('price');
@@ -104,25 +105,31 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   }, [sharedId]);
 
   const handleSubmitLinks = async () => {
-    if (!linksText.trim() || !data?.itinerary?.folder?.userId) return;
+    if ((!linksText.trim() && pendingInboxFiles.length === 0) || !data?.itinerary?.folder?.userId) return;
 
     setIsSubmittingLinks(true);
     try {
       const urls = linksText.split(/[\n,]+/).map(url => url.trim()).filter(url => url.length > 0);
       
-      if (urls.length > 0) {
-        await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId, true);
-        setLinksText('');
-        
-        // Refresh links
-        const updatedLinks = await dataService.getAllInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
-        setInboxLinks(updatedLinks);
-        
-        alert('¡Links enviados con éxito! Tu consultor los revisará pronto.');
+      let uploadedFiles: { url: string, type: string }[] = [];
+      if (pendingInboxFiles.length > 0) {
+        uploadedFiles = await Promise.all(
+          pendingInboxFiles.map(file => dataService.uploadInboxFile(file))
+        );
       }
+
+      await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId, true, uploadedFiles);
+      setLinksText('');
+      setPendingInboxFiles([]);
+      
+      // Refresh links
+      const updatedLinks = await dataService.getAllInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
+      setInboxLinks(updatedLinks);
+      
+      alert('¡Sugerencias enviadas con éxito! Tu consultor las revisará pronto.');
     } catch (error) {
       console.error('Error submitting links:', error);
-      alert('Hubo un error al enviar los links. Por favor, intenta de nuevo.');
+      alert('Hubo un error al enviar las sugerencias. Por favor, intenta de nuevo.');
     } finally {
       setIsSubmittingLinks(false);
     }
@@ -732,10 +739,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
             )}
 
-            {itinerary.folder.image_url && itinerary.folder.is_image_public !== false && (
+            {itinerary.folder.imageUrl && itinerary.folder.isImagePublic !== false && (
               <div className="mt-4 md:mt-6 rounded-2xl md:rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
                 <img 
-                  src={itinerary.folder.image_url} 
+                  src={itinerary.folder.imageUrl} 
                   alt={itinerary.folder.name} 
                   className="w-full aspect-video object-cover"
                   referrerPolicy="no-referrer"
@@ -1707,7 +1714,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-slate-900 tracking-tight">Sugerir Propiedades</h3>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Envía links para que tu consultor los analice</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">Envía links o archivos para que tu consultor los analice</p>
                 </div>
               </div>
 
@@ -1718,9 +1725,42 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   placeholder="Pega aquí los links de las propiedades que te interesan (uno por línea o separados por comas)..."
                   className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"
                 />
+
+                {/* File Upload for Suggestions */}
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {pendingInboxFiles.map((file, idx) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 flex items-center gap-2 group">
+                        <span className="text-[10px] font-bold text-slate-600 truncate max-w-[150px]">{file.name}</span>
+                        <button 
+                          onClick={() => setPendingInboxFiles(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-slate-400 hover:text-rose-500 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <label className="flex items-center justify-center gap-2 w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl hover:border-indigo-400 hover:bg-indigo-50/30 transition-all cursor-pointer group">
+                    <UploadCloud className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                    <span className="text-xs font-bold text-slate-500 group-hover:text-indigo-600 transition-colors uppercase tracking-wider">Subir Imagen o Documento</span>
+                    <input 
+                      type="file" 
+                      multiple 
+                      className="hidden" 
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          setPendingInboxFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
                 <button
                   onClick={handleSubmitLinks}
-                  disabled={isSubmittingLinks || !linksText.trim()}
+                  disabled={isSubmittingLinks || (!linksText.trim() && pendingInboxFiles.length === 0)}
                   className="w-full bg-indigo-600 text-white py-4 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmittingLinks ? (
@@ -1730,7 +1770,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" /> Enviar Links
+                      <Send className="w-4 h-4" /> Enviar Sugerencias
                     </>
                   )}
                 </button>
@@ -1746,11 +1786,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   {inboxLinks.map((link: any) => (
                     <div key={link.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 group">
                       <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-50 transition-colors">
-                        <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        {link.file_url ? (
+                          link.file_type?.startsWith('image/') ? <Image className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" /> : <UploadCloud className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+                        ) : (
+                          <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">
-                          {(() => {
+                          {link.file_url ? (link.file_type?.startsWith('image/') ? 'Imagen' : 'Documento') : (() => {
                             try {
                               return new URL(link.url).hostname.replace('www.', '');
                             } catch {
@@ -1758,8 +1802,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             }
                           })()}
                         </p>
-                        <a href={link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 break-all block transition-colors">
-                          {link.url}
+                        <a href={link.file_url || link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 break-all block transition-colors">
+                          {link.file_url ? 'Ver Archivo' : link.url}
                         </a>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">

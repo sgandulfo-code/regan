@@ -7,6 +7,8 @@ import {
   ShieldCheck, 
   CheckCircle2, 
   ImageIcon, 
+  FileText,
+  Image as ImageIconLucide,
   Link as LinkIcon, 
   Trash2, 
   ArrowRight, 
@@ -302,6 +304,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const startProcessing = async (link: InboxLink, selectedMode: 'ai' | 'manual') => {
+    if (!link.url) return;
     setProcessingLink(link);
     setMode(selectedMode);
     setActiveRefTab('live'); 
@@ -314,7 +317,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         setAnalysisResult(result);
         setStep('verify');
         dataService.fetchExternalMetadata(link.url).then(meta => {
-          const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url)}?w=1440`;
+          const finalScreenshot = meta?.screenshot || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(link.url || '')}?w=1440`;
           setSnapshotUrl(finalScreenshot);
           setEditedData((prev: PropertyFormData) => ({ ...prev, imageUrl: prev.imageUrl || finalScreenshot }));
           setSnapshotLoading(false);
@@ -377,7 +380,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       id: Math.random().toString(36).substr(2, 9),
       folderId: activeFolderId || '',
       ...editedData,
-      url: processingLink.url,
+      url: processingLink.url || '',
       address: editedData.location || 'Unknown Address',
       status: PropertyStatus.WISHLIST,
       rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
@@ -415,7 +418,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   };
 
   const filteredLinks = pendingLinks.filter(link => {
-    const matchesText = link.url.toLowerCase().includes(filterText.toLowerCase());
+    const matchesText = (link.url || '').toLowerCase().includes(filterText.toLowerCase());
     const matchesFolder = filterFolderId === 'all' || link.folder_id === filterFolderId;
     return matchesText && matchesFolder;
   });
@@ -494,11 +497,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 
                 <div className="flex items-center gap-3 w-full">
                   <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center shrink-0">
-                    <Monitor className="w-5 h-5 text-indigo-600" />
+                    {link.file_url ? (
+                      link.file_type?.startsWith('image/') ? (
+                        <ImageIconLucide className="w-5 h-5 text-indigo-600" />
+                      ) : (
+                        <FileText className="w-5 h-5 text-indigo-600" />
+                      )
+                    ) : (
+                      <Monitor className="w-5 h-5 text-indigo-600" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest leading-none mb-1">
-                      {new URL(link.url).hostname.replace('www.', '')}
+                      {link.file_url ? (link.file_type?.startsWith('image/') ? 'Imagen' : 'Documento') : (link.url ? new URL(link.url).hostname.replace('www.', '') : 'Enlace')}
                     </p>
                     {link.added_by_client && (
                       <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit">
@@ -522,13 +533,33 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                 </div>
 
                 <div className="w-full min-w-0">
-                  <p className="text-xs text-slate-500 break-all font-bold tracking-tight leading-relaxed">{link.url}</p>
+                  {link.file_url ? (
+                    <a 
+                      href={link.file_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-bold tracking-tight leading-relaxed flex items-center gap-2"
+                    >
+                      Ver archivo adjunto <ArrowRight className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <p className="text-xs text-slate-500 break-all font-bold tracking-tight leading-relaxed">{link.url}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-2 w-full mt-auto pt-2 border-t border-slate-50">
-                  <button onClick={() => startProcessing(link, 'ai')} className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"><Cpu className="w-3.5 h-3.5" /> Neural</button>
-                  <button onClick={() => startProcessing(link, 'manual')} className="flex-1 bg-slate-50 text-slate-500 px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-100 transition-all border border-slate-100"><Keyboard className="w-3.5 h-3.5" /> Manual</button>
-                  <div className="w-px h-8 bg-slate-100 mx-1"></div>
+                  {!link.file_url && (
+                    <>
+                      <button onClick={() => startProcessing(link, 'ai')} className="flex-1 bg-slate-900 text-white px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200"><Cpu className="w-3.5 h-3.5" /> Neural</button>
+                      <button onClick={() => startProcessing(link, 'manual')} className="flex-1 bg-slate-50 text-slate-500 px-4 py-3 rounded-2xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-100 transition-all border border-slate-100"><Keyboard className="w-3.5 h-3.5" /> Manual</button>
+                      <div className="w-px h-8 bg-slate-100 mx-1"></div>
+                    </>
+                  )}
+                  {link.file_url && (
+                    <div className="flex-1 text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">
+                      Archivo informativo
+                    </div>
+                  )}
                   <button onClick={() => dataService.removeInboxLink(link.id).then(fetchInbox)} className="p-3 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-all"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>

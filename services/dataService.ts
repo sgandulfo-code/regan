@@ -4,7 +4,9 @@ import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, T
 
 export interface InboxLink {
   id: string;
-  url: string;
+  url?: string;
+  file_url?: string;
+  file_type?: string;
   folder_id: string;
   user_id: string;
   created_at: string;
@@ -135,6 +137,29 @@ export const dataService = {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  },
+
+  async uploadInboxFile(file: File) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `inbox-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('visit-photos') // Using existing bucket
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('visit-photos')
+      .getPublicUrl(filePath);
+
+    return {
+      url: data.publicUrl,
+      type: file.type
+    };
   },
 
   async createFolder(folder: Partial<SearchFolder>, userId: string) {
@@ -381,35 +406,34 @@ export const dataService = {
     return (data || []) as InboxLink[];
   },
 
-  async addInboxLinks(links: string[], userId: string, folderId: string | null, addedByClient: boolean = false) {
-    const toInsert = links.map(url => ({
+  async addInboxLinks(links: string[], userId: string, folderId: string | null, addedByClient: boolean = false, files?: { url: string, type: string }[]) {
+    const linkEntries = links.map(url => ({
       user_id: userId,
       folder_id: folderId,
       url: url,
       status: 'enviado',
       added_by_client: addedByClient
     }));
+
+    const fileEntries = (files || []).map(file => ({
+      user_id: userId,
+      folder_id: folderId,
+      file_url: file.url,
+      file_type: file.type,
+      status: 'enviado',
+      added_by_client: addedByClient
+    }));
+
+    const toInsert = [...linkEntries, ...fileEntries];
     const { error } = await supabase.from('link_inbox').insert(toInsert);
     
     if (error && error.code === '42703') {
-      // Intentamos insertar solo con status si added_by_client falla
-      const fallbackInsert1 = links.map(url => ({
-        user_id: userId,
-        folder_id: folderId,
-        url: url,
-        status: 'enviado'
-      }));
-      const { error: error2 } = await supabase.from('link_inbox').insert(fallbackInsert1);
-      
-      if (error2 && error2.code === '42703') {
-        // Fallback final sin status ni added_by_client
-        const fallbackInsert2 = links.map(url => ({
-          user_id: userId,
-          folder_id: folderId,
-          url: url
-        }));
-        await supabase.from('link_inbox').insert(fallbackInsert2);
-      }
+      // Fallback logic if columns don't exist
+      const fallbackInsert = toInsert.map(item => {
+        const { added_by_client, file_url, file_type, ...rest } = item as any;
+        return rest;
+      });
+      await supabase.from('link_inbox').insert(fallbackInsert);
     }
   },
 
@@ -670,7 +694,7 @@ export const dataService = {
     // This is a public method
     const { data: itinerary, error: itinError } = await supabase
       .from('shared_itineraries')
-      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status, welcome_message)')
+      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status, welcome_message, image_url, is_image_public)')
       .eq('id', id)
       .eq('is_active', true)
       .single();
@@ -705,7 +729,9 @@ export const dataService = {
           startDate: itinerary.folder.start_date,
           budget: itinerary.folder.budget,
           status: itinerary.folder.status,
-          welcomeMessage: itinerary.folder.welcome_message
+          welcomeMessage: itinerary.folder.welcome_message,
+          imageUrl: itinerary.folder.image_url,
+          isImagePublic: itinerary.folder.is_image_public
         }
       },
       visits: (visits || []).map(v => ({
