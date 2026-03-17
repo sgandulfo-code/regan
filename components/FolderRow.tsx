@@ -20,9 +20,18 @@ const FolderRow: React.FC<FolderRowProps> = ({ folder, propertiesCount, daysActi
       onClick={onClick}
       className="w-full bg-white p-4 rounded-2xl border border-slate-200 hover:shadow-md hover:border-indigo-100 transition-all text-left group flex items-center gap-4"
     >
-      {/* Icon */}
-      <div className={`w-12 h-12 ${folder.color} rounded-xl shadow-sm flex items-center justify-center text-white shrink-0`}>
-        <Home className="w-6 h-6" />
+      {/* Icon or Image */}
+      <div className={`w-12 h-12 ${folder.imageUrl ? '' : folder.color} rounded-xl shadow-sm flex items-center justify-center text-white shrink-0 overflow-hidden`}>
+        {folder.imageUrl ? (
+          <img 
+            src={folder.imageUrl} 
+            alt={folder.name} 
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <Home className="w-6 h-6" />
+        )}
       </div>
 
       {/* Main Info */}

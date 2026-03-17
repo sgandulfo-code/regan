@@ -121,7 +121,18 @@ const Sidebar: React.FC<SidebarProps> = ({
                       : 'text-slate-500 hover:bg-slate-50'
                   }`}
                 >
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
+                  {folder.imageUrl ? (
+                    <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
+                      <img 
+                        src={folder.imageUrl} 
+                        alt={folder.name} 
+                        className="w-full h-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
+                  )}
                   <span className="truncate pr-8">{folder.name}</span>
                   {folder.isShared && (
                     <Users className={`w-3 h-3 ml-auto ${activeFolderId === folder.id ? 'text-white/70' : 'text-slate-400'}`} />
