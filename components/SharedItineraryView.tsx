@@ -724,7 +724,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             )}
 
             {itinerary.folder.image_url && itinerary.folder.is_image_public !== false && (
-              <div className="mt-6 rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+              <div className="mt-4 md:mt-6 rounded-2xl md:rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
                 <img 
                   src={itinerary.folder.image_url} 
                   alt={itinerary.folder.name} 

@@ -468,8 +468,8 @@ const App: React.FC = () => {
               )}
 
               {activeFolder.imageUrl && (
-                <div className="bg-white p-2 rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
-                  <div className="relative aspect-video rounded-[2rem] overflow-hidden group">
+                <div className="bg-white p-1.5 md:p-2 rounded-[1.5rem] md:rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+                  <div className="relative aspect-video rounded-[1.25rem] md:rounded-[2rem] overflow-hidden group">
                     <img 
                       src={activeFolder.imageUrl} 
                       alt={activeFolder.name} 
@@ -478,8 +478,8 @@ const App: React.FC = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
                     {!activeFolder.isImagePublic && (
-                      <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border border-white/10">
-                        <EyeOff className="w-3 h-3" /> Solo visible para ti
+                      <div className="absolute top-3 right-3 md:top-4 md:right-4 bg-slate-900/80 backdrop-blur-md text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[8px] md:text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 md:gap-2 border border-white/10">
+                        <EyeOff className="w-2.5 h-2.5 md:w-3 md:h-3" /> <span className="hidden xs:inline">Solo visible para ti</span><span className="xs:hidden">Privado</span>
                       </div>
                     )}
                   </div>
