@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, DollarSign, ArrowLeftRight } from 'lucide-react';
+import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, DollarSign, ArrowLeftRight, Camera, UploadCloud, Eye, EyeOff } from 'lucide-react';
 import { SearchFolder, FolderStatus, TransactionType } from '../types';
 import Editor from 'react-simple-wysiwyg';
+import { dataService } from '../services/dataService';
 
 interface FolderFormModalProps {
   isOpen: boolean;
@@ -19,8 +20,12 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
     transactionType: TransactionType.COMPRA,
     budget: 0,
     startDate: new Date().toISOString().split('T')[0],
-    welcomeMessage: ''
+    welcomeMessage: '',
+    imageUrl: '',
+    isImagePublic: true
   });
+
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -31,7 +36,9 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         transactionType: initialData.transactionType || TransactionType.COMPRA,
         budget: initialData.budget || 0,
         startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        welcomeMessage: initialData.welcomeMessage || ''
+        welcomeMessage: initialData.welcomeMessage || '',
+        imageUrl: initialData.imageUrl || '',
+        isImagePublic: initialData.isImagePublic ?? true
       });
     } else {
       setFormData({ 
@@ -41,10 +48,28 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         transactionType: TransactionType.COMPRA,
         budget: 0,
         startDate: new Date().toISOString().split('T')[0],
-        welcomeMessage: ''
+        welcomeMessage: '',
+        imageUrl: '',
+        isImagePublic: true
       });
     }
   }, [initialData, isOpen]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setUploading(true);
+      try {
+        const url = await dataService.uploadFolderImage(file);
+        setFormData(prev => ({ ...prev, imageUrl: url }));
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        alert('Error al subir la imagen');
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -190,6 +215,72 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   containerProps={{ style: { height: '200px', border: 'none' } }}
                 />
+              </div>
+            </div>
+
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                <Camera className="w-3.5 h-3.5" /> Imagen de Portada
+              </label>
+              <div className="flex flex-col gap-4">
+                {formData.imageUrl ? (
+                  <div className="relative w-full aspect-video rounded-3xl overflow-hidden border border-slate-200 group">
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Folder cover" 
+                      className="w-full h-full object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                      className="absolute top-4 right-4 p-2 bg-rose-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="w-full aspect-video rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all">
+                    <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center">
+                      {uploading ? <Activity className="w-6 h-6 animate-spin" /> : <UploadCloud className="w-6 h-6" />}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-slate-600">Haz clic para subir</p>
+                      <p className="text-xs text-slate-400">JPG, PNG o WEBP</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                    />
+                  </label>
+                )}
+
+                {formData.imageUrl && (
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.isImagePublic ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-400'}`}>
+                        {formData.isImagePublic ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-700">Visibilidad en Shared</p>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                          {formData.isImagePublic ? 'Público: se verá en el link compartido' : 'Privado: solo tú lo verás'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, isImagePublic: !prev.isImagePublic }))}
+                      className={`w-12 h-6 rounded-full relative transition-all duration-300 ${formData.isImagePublic ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all duration-300 ${formData.isImagePublic ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

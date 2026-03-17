@@ -111,8 +111,30 @@ export const dataService = {
       isShared: f.user_id !== userId,
       permission: f.permission || SharePermission.ADMIN,
       welcomeMessage: f.welcome_message,
-      stageId: f.stage_id
+      stageId: f.stage_id,
+      imageUrl: f.image_url,
+      isImagePublic: f.is_image_public !== false // Default to true if null
     }));
+  },
+
+  async uploadFolderImage(file: File) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `folder-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('visit-photos') // Using existing bucket for simplicity
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data } = supabase.storage
+      .from('visit-photos')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   },
 
   async createFolder(folder: Partial<SearchFolder>, userId: string) {
@@ -129,7 +151,9 @@ export const dataService = {
         start_date: folder.startDate || new Date().toISOString(),
         status_updated_at: new Date().toISOString(),
         welcome_message: folder.welcomeMessage,
-        stage_id: folder.stageId
+        stage_id: folder.stageId,
+        image_url: folder.imageUrl,
+        is_image_public: folder.isImagePublic ?? true
       }])
       .select()
       .single();
@@ -147,7 +171,9 @@ export const dataService = {
       budget: folder.budget,
       start_date: folder.startDate,
       welcome_message: folder.welcomeMessage,
-      stage_id: folder.stageId
+      stage_id: folder.stageId,
+      image_url: folder.imageUrl,
+      is_image_public: folder.isImagePublic
     };
 
     if (folder.status && currentFolder && folder.status !== currentFolder.status) {

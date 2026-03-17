@@ -467,6 +467,25 @@ const App: React.FC = () => {
                 </div>
               )}
 
+              {activeFolder.imageUrl && (
+                <div className="bg-white p-2 rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden">
+                  <div className="relative aspect-video rounded-[2rem] overflow-hidden group">
+                    <img 
+                      src={activeFolder.imageUrl} 
+                      alt={activeFolder.name} 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                    {!activeFolder.isImagePublic && (
+                      <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-2 border border-white/10">
+                        <EyeOff className="w-3 h-3" /> Solo visible para ti
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-3">
                 <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600"><DollarSign className="w-3.5 h-3.5" /></div>

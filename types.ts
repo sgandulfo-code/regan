@@ -75,6 +75,8 @@ export interface SearchFolder {
   welcomeMessage?: string;
   funnelStage?: FunnelStage;
   stageId?: string;
+  imageUrl?: string;
+  isImagePublic?: boolean;
 }
 
 export interface RenovationItem {

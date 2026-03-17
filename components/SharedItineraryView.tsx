@@ -722,6 +722,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 />
               </div>
             )}
+
+            {itinerary.folder.image_url && itinerary.folder.is_image_public !== false && (
+              <div className="mt-6 rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+                <img 
+                  src={itinerary.folder.image_url} 
+                  alt={itinerary.folder.name} 
+                  className="w-full aspect-video object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            )}
           </div>
           <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl"></div>
         </div>
