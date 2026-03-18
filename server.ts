@@ -1,4 +1,5 @@
 import express from "express";
+console.log('SERVER.TS IS EXECUTING AT ' + new Date().toISOString());
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import { google } from "googleapis";
@@ -23,51 +24,108 @@ const supabase = createClient(
   supabaseKey || 'placeholder-key'
 );
 
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/google/callback`
-);
+// We'll initialize oauth2Client inside the routes to be more resilient to missing env vars
+function getOAuth2Client() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/google/callback`;
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+  }
+
+  return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+}
 
 app.use(express.json());
 
+// TEST ROUTE - should be accessible at /api/test
+app.get("/api/test", (req, res) => {
+  console.log('Test route hit');
+  res.send("Express server is working");
+});
+
 // Logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// OAuth URL Endpoint
-app.get("/api/auth/google/url", (req, res) => {
-  console.log('Received request for Google Auth URL');
-  
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    console.error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
-    return res.status(500).json({ error: 'Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment variables.' });
-  }
+// API Routes
+const apiRouter = express.Router();
 
-  const userId = req.query.userId as string;
-  if (!userId) {
-    return res.status(400).json({ error: 'userId is required' });
-  }
-
-  const scopes = [
-    'https://www.googleapis.com/auth/calendar.events',
-    'https://www.googleapis.com/auth/calendar.readonly'
-  ];
-
-  const url = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: scopes,
-    prompt: 'consent',
-    state: userId
-  });
-
-  res.json({ url });
+apiRouter.get("/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// OAuth Callback Endpoint
+apiRouter.get("/auth/google/url", (req, res) => {
+  console.log('Received request for Google Auth URL');
+  try {
+    const oauth2Client = getOAuth2Client();
+    const userId = req.query.userId as string;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar.readonly'
+    ];
+
+    const url = oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: scopes,
+      prompt: 'consent',
+      state: userId
+    });
+
+    res.json({ url });
+  } catch (error: any) {
+    console.error('Error generating Auth URL:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+apiRouter.post("/calendar/event", async (req, res) => {
+  const { userId, event } = req.body;
+
+  if (!userId || !event) {
+    return res.status(400).json({ error: 'userId and event are required' });
+  }
+
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('google_auth')
+      .eq('id', userId)
+      .single();
+
+    if (error || !profile?.google_auth) {
+      return res.status(401).json({ error: 'Google Calendar not connected' });
+    }
+
+    const oauth2Client = getOAuth2Client();
+    oauth2Client.setCredentials(profile.google_auth);
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      requestBody: event,
+    });
+
+    res.json(response.data);
+  } catch (error: any) {
+    console.error('Calendar Event Error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.use("/api", apiRouter);
+
+// OAuth Callback Endpoint (outside /api for cleaner URL)
 app.get("/auth/google/callback", async (req, res) => {
+  console.log('Received Google OAuth callback');
   const { code, state: userId } = req.query;
 
   if (!code || !userId) {
@@ -75,10 +133,9 @@ app.get("/auth/google/callback", async (req, res) => {
   }
 
   try {
+    const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code as string);
     
-    // Save tokens to Supabase profiles table
-    // We assume the column 'google_auth' exists (will add it in a migration)
     const { error } = await supabase
       .from('profiles')
       .update({ google_auth: tokens })
@@ -92,7 +149,7 @@ app.get("/auth/google/callback", async (req, res) => {
           <title>Authentication Successful</title>
           <style>
             body { font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc; }
-            .card { background: white; padding: 2rem; border-radius: 1rem; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; }
+            .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); text-align: center; }
           </style>
         </head>
         <body>
@@ -111,50 +168,9 @@ app.get("/auth/google/callback", async (req, res) => {
         </body>
       </html>
     `);
-  } catch (error) {
-    console.error('Google OAuth Error:', error);
-    res.status(500).send('Authentication failed. Please try again.');
-  }
-});
-
-// API to create a calendar event
-app.post("/api/calendar/event", async (req, res) => {
-  const { userId, event } = req.body;
-
-  if (!userId || !event) {
-    return res.status(400).json({ error: 'userId and event are required' });
-  }
-
-  try {
-    // Get tokens from Supabase
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('google_auth')
-      .eq('id', userId)
-      .single();
-
-    if (error || !profile?.google_auth) {
-      return res.status(401).json({ error: 'Google Calendar not connected' });
-    }
-
-    oauth2Client.setCredentials(profile.google_auth);
-    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
-
-    const response = await calendar.events.insert({
-      calendarId: 'primary',
-      requestBody: event,
-    });
-
-    res.json(response.data);
   } catch (error: any) {
-    console.error('Calendar Event Error:', error);
-    
-    // Handle token expiry / invalidation
-    if (error.code === 401) {
-      return res.status(401).json({ error: 'Google Calendar session expired' });
-    }
-
-    res.status(500).json({ error: 'Failed to create event' });
+    console.error('Google OAuth Error:', error.message);
+    res.status(500).send(`Authentication failed: ${error.message}`);
   }
 });
 
@@ -162,12 +178,14 @@ async function startServer() {
   const isProduction = process.env.NODE_ENV === "production";
 
   if (!isProduction) {
+    console.log('Starting Vite in middleware mode...');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
   } else {
+    console.log('Serving static files from dist...');
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
@@ -177,7 +195,10 @@ async function startServer() {
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   });
 }
 
-startServer();
+startServer().catch(err => {
+  console.error('Failed to start server:', err);
+});
