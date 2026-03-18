@@ -41,10 +41,15 @@ function getOAuth2Client() {
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
+const app = express();
+const PORT = 3000;
+
+// Export app for Vercel
+export default app;
+
 async function startServer() {
-  const app = express();
-  const PORT = 3000;
   const isProduction = process.env.NODE_ENV === "production";
+  const isVercel = process.env.VERCEL === "1";
 
   app.use(express.json());
 
