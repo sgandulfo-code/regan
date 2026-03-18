@@ -511,6 +511,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <p className="text-[10px] font-black text-indigo-500 uppercase truncate tracking-widest leading-none mb-1">
                       {link.file_url ? (link.file_type?.startsWith('image/') ? 'Imagen' : 'Documento') : (link.url ? new URL(link.url).hostname.replace('www.', '') : 'Enlace')}
                     </p>
+                    <p className="text-[8px] text-slate-400 truncate break-all opacity-60">{link.url || link.file_url}</p>
                     {link.added_by_client && (
                       <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit">
                         Solicitado por cliente
@@ -600,6 +601,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                   Verifying technical dimensions
                 </p>
+                <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Source Link</p>
+                  <p className="text-[10px] font-bold text-slate-500 break-all">{getPreviewUrl()}</p>
+                </div>
               </div>
               <div className="bg-indigo-50 text-indigo-600 p-4 rounded-3xl">
                 <Binary className="w-6 h-6" />
