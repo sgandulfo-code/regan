@@ -20,22 +20,30 @@ function getOAuth2Client() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   
-  // Ensure APP_URL has https://
-  let appUrl = process.env.APP_URL || "";
+  // Detect App URL with multiple fallbacks
+  let appUrl = process.env.APP_URL || process.env.VERCEL_URL || "";
+  
+  // Ensure it has https://
   if (appUrl && !appUrl.startsWith('http')) {
     appUrl = `https://${appUrl}`;
   }
   
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${appUrl}/auth/google/callback`;
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || (appUrl ? `${appUrl}/auth/google/callback` : "");
 
-  console.log('OAuth Client Init:', {
-    clientId: clientId ? `${clientId.substring(0, 10)}...` : 'MISSING',
-    hasSecret: !!clientSecret,
-    redirectUri
+  console.log('OAuth Client Init Debug:', {
+    hasClientId: !!clientId,
+    hasClientSecret: !!clientSecret,
+    detectedAppUrl: appUrl,
+    finalRedirectUri: redirectUri
   });
 
-  if (!clientId || !clientSecret || !appUrl) {
-    throw new Error('Missing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET or APP_URL. Please check your Vercel Environment Variables.');
+  if (!clientId || !clientSecret || !redirectUri) {
+    const missing = [];
+    if (!clientId) missing.push("GOOGLE_CLIENT_ID");
+    if (!clientSecret) missing.push("GOOGLE_CLIENT_SECRET");
+    if (!redirectUri) missing.push("APP_URL/VERCEL_URL");
+    
+    throw new Error(`Missing required configuration: ${missing.join(', ')}. Please check your Vercel Environment Variables and Redeploy.`);
   }
 
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
