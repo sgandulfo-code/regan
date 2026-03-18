@@ -19,10 +19,23 @@ const supabase = createClient(
 function getOAuth2Client() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/google/callback`;
+  
+  // Ensure APP_URL has https://
+  let appUrl = process.env.APP_URL || "";
+  if (appUrl && !appUrl.startsWith('http')) {
+    appUrl = `https://${appUrl}`;
+  }
+  
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${appUrl}/auth/google/callback`;
 
-  if (!clientId || !clientSecret) {
-    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET. Please check your Vercel Environment Variables.');
+  console.log('OAuth Client Init:', {
+    clientId: clientId ? `${clientId.substring(0, 10)}...` : 'MISSING',
+    hasSecret: !!clientSecret,
+    redirectUri
+  });
+
+  if (!clientId || !clientSecret || !appUrl) {
+    throw new Error('Missing GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET or APP_URL. Please check your Vercel Environment Variables.');
   }
 
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
