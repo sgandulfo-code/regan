@@ -106,7 +106,7 @@ app.post("/api/calendar/event", async (req, res) => {
 });
 
 // Catch-all for API routes that don't match
-app.all("/api/*", (req, res) => {
+app.all("/api/*all", (req, res) => {
   console.log(`API: 404 Not Found - ${req.method} ${req.url}`);
   res.status(404).json({ error: `API route not found: ${req.method} ${req.url}` });
 });
