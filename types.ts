@@ -133,6 +133,7 @@ export interface User {
   role: UserRole;
   email: string;
   whatsappNumber?: string;
+  googleAuth?: any;
 }
 
 // Added missing PropertyDocument interface for the DocumentVault functionality
@@ -190,6 +191,7 @@ export interface Visit {
   photos?: string[];
   createdAt?: string;
   property?: any;
+  syncToGoogle?: boolean;
 }
 
 export interface SharedItinerary {

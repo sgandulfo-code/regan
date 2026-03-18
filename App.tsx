@@ -90,6 +90,45 @@ const App: React.FC = () => {
   const [sharedId, setSharedId] = useState<string | null>(null);
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
 
+  const loadData = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    try {
+      const [f, p, v] = await Promise.all([
+        dataService.getFolders(user.id),
+        dataService.getProperties(user.id),
+        dataService.getVisits(user.id, activeFolderId)
+      ]);
+      setFolders(f);
+      setProperties(p);
+      setVisits(v);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const refreshUser = async () => {
+    if (!user) return;
+    try {
+      const updatedUser = await dataService.getProfile(user.id);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        refreshUser();
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [user]);
+
   useEffect(() => {
     const checkRoute = () => {
       const path = window.location.pathname;
@@ -131,23 +170,7 @@ const App: React.FC = () => {
     setIsSyncing(false);
   };
 
-  useEffect(() => { if (user) loadData(); }, [user]);
-
-  const loadData = async () => {
-    if (!user) return;
-    setIsSyncing(true);
-    const [f, p] = await Promise.all([
-      dataService.getFolders(user.id),
-      dataService.getProperties(user.id)
-    ]);
-    setFolders(f);
-    setProperties(p);
-    
-    const v = await dataService.getVisits(user.id, activeFolderId);
-    setVisits(v);
-    
-    setIsSyncing(false);
-  };
+  useEffect(() => { if (user) loadData(); }, [user, activeFolderId]);
 
   useEffect(() => {
     if (user) {
@@ -245,6 +268,30 @@ const App: React.FC = () => {
         if (!result) {
           alert("Error al registrar la visita. Por favor, verifica los datos.");
           return;
+        }
+
+        // Sync with Google Calendar if requested and connected
+        if (visitData.syncToGoogle && user.googleAuth) {
+          const property = properties.find(p => p.id === visitData.propertyId);
+          const event = {
+            summary: `Visita: ${property?.title || 'Propiedad'}`,
+            location: property?.address || '',
+            description: `Visita agendada desde PropBi.\nContacto: ${visitData.contactName}\nNotas: ${visitData.notes || ''}`,
+            start: {
+              dateTime: `${visitData.date}T${visitData.time}:00`,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+            end: {
+              dateTime: `${visitData.date}T${parseInt(visitData.time.split(':')[0]) + 1}:${visitData.time.split(':')[1]}:00`,
+              timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            },
+          };
+          try {
+            await dataService.createGoogleCalendarEvent(user.id, event);
+          } catch (err) {
+            console.error('Failed to sync to Google Calendar:', err);
+            // Don't block the whole process if calendar sync fails
+          }
         }
       }
       const v = await dataService.getVisits(user.id, activeFolderId);
@@ -383,6 +430,7 @@ const App: React.FC = () => {
 
       <div className={`fixed inset-y-0 left-0 z-50 transform lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <Sidebar 
+          user={user}
           activeTab={activeTab} 
           setActiveTab={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} 
           userRole={user.role} 
@@ -397,6 +445,7 @@ const App: React.FC = () => {
           onShareItinerary={(folderId) => { setActiveFolderId(folderId); setIsShareItineraryModalOpen(true); }}
           pendingVisitsCount={pendingVisitsCount}
           feedbackCount={feedbackCount}
+          onRefresh={refreshUser}
         />
       </div>
       

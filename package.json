@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx server.ts",
     "build": "tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview"
@@ -12,13 +12,17 @@
   "dependencies": {
     "@google/genai": "^1.41.0",
     "@supabase/supabase-js": "^2.45.4",
+    "@types/express": "^5.0.6",
     "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "googleapis": "^171.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.564.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-simple-wysiwyg": "^3.4.1",
-    "recharts": "^2.15.4"
+    "recharts": "^2.15.4",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",

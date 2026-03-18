@@ -30,8 +30,28 @@ export const dataService = {
       name: data.full_name,
       email: data.email,
       role: data.role as UserRole,
-      whatsappNumber: data.whatsapp_number
+      whatsappNumber: data.whatsapp_number,
+      googleAuth: data.google_auth
     } as User;
+  },
+
+  async getGoogleAuthUrl(userId: string) {
+    const response = await fetch(`/api/auth/google/url?userId=${userId}`);
+    if (!response.ok) throw new Error('Failed to get Google Auth URL');
+    return await response.json();
+  },
+
+  async createGoogleCalendarEvent(userId: string, event: any) {
+    const response = await fetch('/api/calendar/event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, event })
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create calendar event');
+    }
+    return await response.json();
   },
 
   async updateProfile(id: string, updates: Partial<User>) {

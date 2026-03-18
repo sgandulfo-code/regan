@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, User, Phone, CheckSquare, Plus, Trash2, Home, Save, FolderOpen } from 'lucide-react';
+import { X, Calendar, Clock, User, Phone, CheckSquare, Plus, Trash2, Home, Save, FolderOpen, Globe } from 'lucide-react';
 import { Visit, Property, SearchFolder } from '../types';
 
 interface VisitFormModalProps {
@@ -33,7 +33,8 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
     clientChecklist: [] as { id: string, label: string, response: 'yes' | 'no' | 'maybe' | null, comment?: string }[],
     notes: '',
     // Use the explicit union type for status to allow all possible Visit status values
-    status: 'Scheduled' as Visit['status']
+    status: 'Scheduled' as Visit['status'],
+    syncToGoogle: true
   });
 
   useEffect(() => {
@@ -51,7 +52,8 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
         clientChecklist: initialData.clientChecklist || [],
         notes: initialData.notes || '',
         status: initialData.status,
-        userId: initialData.userId
+        userId: initialData.userId,
+        syncToGoogle: false
       });
     } else {
       const initialFolderId = activeFolderId || (folders.length > 0 ? folders[0].id : '');
@@ -336,6 +338,19 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                   <p className="text-xs text-slate-400 italic ml-2">Agrega preguntas para que el cliente responda durante la visita.</p>
                 )}
               </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <input
+                type="checkbox"
+                id="syncToGoogle"
+                className="w-5 h-5 rounded-lg border-slate-200 text-indigo-600 focus:ring-indigo-500/20 transition-all cursor-pointer"
+                checked={formData.syncToGoogle}
+                onChange={(e) => setFormData({ ...formData, syncToGoogle: e.target.checked })}
+              />
+              <label htmlFor="syncToGoogle" className="text-xs font-black text-slate-600 uppercase tracking-widest cursor-pointer flex items-center gap-2">
+                <Globe className="w-3.5 h-3.5 text-indigo-500" /> Sincronizar con Google Calendar
+              </label>
             </div>
 
             <button type="submit" className="w-full bg-indigo-600 text-white py-5 rounded-[2.2rem] font-black shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-3">

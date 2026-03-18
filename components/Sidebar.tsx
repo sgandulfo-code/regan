@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { UserRole, SearchFolder } from '../types';
+import { UserRole, SearchFolder, User } from '../types';
 import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp } from 'lucide-react';
+import { dataService } from '../services/dataService';
 
 interface SidebarProps {
+  user: User | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   userRole?: UserRole;
@@ -18,9 +20,11 @@ interface SidebarProps {
   onShareItinerary?: (folderId: string) => void;
   pendingVisitsCount?: number;
   feedbackCount?: number;
+  onRefresh?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
+  user,
   activeTab, 
   setActiveTab, 
   userRole = UserRole.BUYER,
@@ -34,9 +38,21 @@ const Sidebar: React.FC<SidebarProps> = ({
   onShareFolder,
   onShareItinerary,
   pendingVisitsCount = 0,
-  feedbackCount = 0
+  feedbackCount = 0,
+  onRefresh
 }) => {
   
+  const handleConnectGoogle = async () => {
+    if (!user) return;
+    try {
+      const { url } = await dataService.getGoogleAuthUrl(user.id);
+      window.open(url, 'google_oauth', 'width=600,height=700');
+    } catch (error) {
+      console.error('Error connecting Google:', error);
+      alert('Error al conectar con Google Calendar');
+    }
+  };
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT },
@@ -158,7 +174,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </nav>
 
-      <div className="p-4">
+      <div className="p-4 space-y-2">
+        <button 
+          onClick={handleConnectGoogle}
+          className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+            user?.googleAuth 
+              ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+              : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <Calendar className="w-4 h-4" />
+          <span>{user?.googleAuth ? 'Google Conectado' : 'Conectar Google'}</span>
+        </button>
+
         <div className="bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
            <div className="flex items-center gap-2">
              <div className="w-6 h-6 bg-slate-200 rounded-lg flex items-center justify-center text-slate-500">
