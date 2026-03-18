@@ -37,7 +37,11 @@ export const dataService = {
 
   async getGoogleAuthUrl(userId: string) {
     const response = await fetch(`/api/auth/google/url?userId=${userId}`);
-    if (!response.ok) throw new Error('Failed to get Google Auth URL');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Google Auth URL Error:', errorData.error || 'Failed to get Google Auth URL');
+      throw new Error(errorData.error || 'Failed to get Google Auth URL');
+    }
     return await response.json();
   },
 

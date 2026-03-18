@@ -11,9 +11,16 @@ const app = express();
 const PORT = 3000;
 
 // Supabase client with service role for server-side operations
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing. Server-side Supabase operations will fail.');
+}
+
 const supabase = createClient(
-  process.env.SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseKey || 'placeholder-key'
 );
 
 const oauth2Client = new google.auth.OAuth2(
@@ -24,8 +31,21 @@ const oauth2Client = new google.auth.OAuth2(
 
 app.use(express.json());
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // OAuth URL Endpoint
 app.get("/api/auth/google/url", (req, res) => {
+  console.log('Received request for Google Auth URL');
+  
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+    return res.status(500).json({ error: 'Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in environment variables.' });
+  }
+
   const userId = req.query.userId as string;
   if (!userId) {
     return res.status(400).json({ error: 'userId is required' });
