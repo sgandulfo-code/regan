@@ -64,6 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       badge: pendingVisitsCount > 0 ? pendingVisitsCount : undefined,
       feedbackBadge: feedbackCount > 0 ? feedbackCount : undefined 
     },
+    { id: 'google-calendar', label: 'Calendario', icon: <Calendar className="w-5 h-5" />, hidden: !user?.googleAuth },
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'comparison', label: 'Comparador', icon: <ArrowLeftRight className="w-5 h-5" /> },
     { id: 'valuations', label: 'Dossier de Tasación', icon: <TrendingUp className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },

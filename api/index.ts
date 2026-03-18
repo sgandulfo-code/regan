@@ -126,6 +126,44 @@ app.post("/api/calendar/event", async (req, res) => {
   }
 });
 
+app.get("/api/calendar/events", async (req, res) => {
+  console.log('API: Fetching calendar events');
+  const userId = req.query.userId as string;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('google_auth')
+      .eq('id', userId)
+      .single();
+
+    if (error || !profile?.google_auth) {
+      return res.status(401).json({ error: 'Google Calendar not connected' });
+    }
+
+    const oauth2Client = getOAuth2Client();
+    oauth2Client.setCredentials(profile.google_auth);
+    const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+
+    const response = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: new Date().toISOString(),
+      maxResults: 10,
+      singleEvents: true,
+      orderBy: 'startTime',
+    });
+
+    res.json(response.data.items);
+  } catch (error: any) {
+    console.error('API Error (Calendar Events):', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Catch-all for API routes that don't match
 app.all("/api/*all", (req, res) => {
   console.log(`API: 404 Not Found - ${req.method} ${req.url}`);

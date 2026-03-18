@@ -60,6 +60,15 @@ export const dataService = {
     return await response.json();
   },
 
+  async getGoogleCalendarEvents(userId: string) {
+    const response = await fetch(`/api/calendar/events?userId=${userId}`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch calendar events');
+    }
+    return await response.json();
+  },
+
   async updateProfile(id: string, updates: Partial<User>) {
     const { error } = await supabase
       .from('profiles')

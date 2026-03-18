@@ -48,6 +48,7 @@ import SettingsView from './components/SettingsView';
 import FinancialAnalysisView from './components/FinancialAnalysisView';
 import ValuationsDashboard from './components/ValuationsDashboard';
 import TaxCalculator from './components/TaxCalculator';
+import CalendarView from './components/CalendarView';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -947,6 +948,10 @@ const App: React.FC = () => {
             onEditVisit={(visit) => { setEditingVisit(visit); setIsVisitModalOpen(true); }}
             onDeleteVisit={handleDeleteVisit}
           />
+        )}
+
+        {activeTab === 'google-calendar' && (
+          <CalendarView user={user} />
         )}
 
         {activeTab === 'settings' && user && (
