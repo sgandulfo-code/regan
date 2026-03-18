@@ -1,21 +1,14 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import { google } from "googleapis";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-console.log('API SERVER EXECUTING AT ' + new Date().toISOString());
-
 // Supabase client with service role for server-side operations
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.warn('Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing. Server-side Supabase operations will fail.');
-}
 
 const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
@@ -28,34 +21,24 @@ function getOAuth2Client() {
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.APP_URL}/auth/google/callback`;
 
-  console.log('OAuth Config Check:', {
-    hasClientId: !!clientId,
-    hasClientSecret: !!clientSecret,
-    redirectUri
-  });
-
   if (!clientId || !clientSecret) {
-    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+    throw new Error('Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET. Please check your Vercel Environment Variables.');
   }
 
   return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
 }
 
 const app = express();
-const PORT = 3000;
-
 app.use(express.json());
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
 
 // API Routes
 app.get("/api/test", (req, res) => {
-  console.log('API: Test route hit');
-  res.json({ message: "Express server is working on Vercel", env: process.env.NODE_ENV });
+  res.json({ 
+    status: "ok", 
+    message: "Express server is working on Vercel",
+    env: process.env.NODE_ENV,
+    isVercel: !!process.env.VERCEL
+  });
 });
 
 app.get("/api/auth/google/url", (req, res) => {
@@ -181,7 +164,8 @@ app.get("/auth/google/callback", async (req, res) => {
 
 // Local development server logic
 if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
-  async function startLocalServer() {
+  const startLocalServer = async () => {
+    const { createServer: createViteServer } = await import("vite");
     console.log('Starting Vite in middleware mode for local development...');
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -189,10 +173,11 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     });
     app.use(vite.middlewares);
 
+    const PORT = 3000;
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Local server running on http://localhost:${PORT}`);
     });
-  }
+  };
   startLocalServer().catch(err => console.error('Failed to start local server:', err));
 }
 
