@@ -51,6 +51,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onNewLead,
   onNewFolder
 }) => {
+  const calculateDays = (dateString?: string) => {
+    if (!dateString) return 0;
+    const start = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
   // Stats calculations
   const statusData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -353,33 +361,71 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {folders.slice(0, 6).map(folder => {
+          {folders.map(folder => {
             const folderProperties = properties.filter(p => p.folderId === folder.id);
+            const days = calculateDays(folder.startDate);
             return (
               <button 
                 key={folder.id}
                 onClick={() => onSetActiveTab('properties')}
-                className="bg-white p-6 rounded-[2.5rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group relative overflow-hidden"
+                className="bg-white p-6 rounded-[2.5rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group relative overflow-hidden flex flex-col h-full"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div className={`w-12 h-12 ${folder.color} rounded-2xl shadow-lg flex items-center justify-center text-white`}>
                     <FolderOpen className="w-6 h-6" />
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                    folder.status === 'Abierta' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-slate-500'
-                  }`}>
-                    {folder.status}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                      folder.status === 'Abierta' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
+                      folder.status === 'Pendiente' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
+                      'bg-slate-50 text-slate-500 border border-slate-100'
+                    }`}>
+                      {folder.status}
+                    </span>
+                    {folder.startDate && (
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                        {new Date(folder.startDate).toLocaleDateString('es-ES')}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <h4 className="text-lg font-black text-slate-900 mb-1 truncate">{folder.name}</h4>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
-                  {folderProperties.length} Propiedades
-                </p>
+                
+                <div className="flex-1">
+                  <h4 className="text-lg font-black text-slate-900 mb-1 truncate tracking-tight">{folder.name}</h4>
+                  {folder.description && (
+                    <p className="text-[10px] text-slate-400 font-medium mb-4 line-clamp-2 leading-relaxed">
+                      {folder.description.replace(/<[^>]*>?/gm, '')}
+                    </p>
+                  )}
+                  
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-3 mb-6">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Propiedades</span>
+                      <span className="text-xs font-black text-slate-700">{folderProperties.length}</span>
+                    </div>
+                    {folder.transactionType && (
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Operación</span>
+                        <span className="text-xs font-black text-slate-700">{folder.transactionType}</span>
+                      </div>
+                    )}
+                    {days > 0 && (
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest leading-none mb-1">Días</span>
+                        <span className="text-xs font-black text-indigo-600">{days}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
-                  <span className="text-[10px] font-bold text-slate-400">
-                    ${folder.budget?.toLocaleString()} Presupuesto
-                  </span>
-                  <ArrowUpRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 transition-colors" />
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Presupuesto</span>
+                    <span className="text-xs font-black text-slate-700">${folder.budget?.toLocaleString()}</span>
+                  </div>
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                    <ArrowUpRight className="w-4 h-4" />
+                  </div>
                 </div>
               </button>
             );
