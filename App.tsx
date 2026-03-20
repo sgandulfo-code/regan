@@ -26,7 +26,8 @@ import {
   List,
   Eye,
   EyeOff,
-  FolderOpen
+  FolderOpen,
+  Layout
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -51,6 +52,7 @@ import ValuationsDashboard from './components/ValuationsDashboard';
 import TaxCalculator from './components/TaxCalculator';
 import CalendarView from './components/CalendarView';
 import ActivityFeed from './components/ActivityFeed';
+import CriteriaTemplateManager from './components/CriteriaTemplateManager';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -992,6 +994,8 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'activity' && <ActivityFeed user={user} />}
+
+        {activeTab === 'criteria-templates' && <CriteriaTemplateManager user={user} />}
 
         {activeTab === 'settings' && user && (
           <SettingsView user={user} onUpdateUser={setUser} />

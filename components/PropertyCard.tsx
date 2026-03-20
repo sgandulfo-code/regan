@@ -119,16 +119,32 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
         </div>
 
         {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
-          <div className="mb-4 bg-indigo-50/50 rounded-xl p-3 border border-indigo-100/50">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Layers className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Criterios del Cliente</span>
+          <div className="mb-4 bg-indigo-50/30 rounded-2xl p-4 border border-indigo-100/50">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-6 h-6 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Layers className="w-3.5 h-3.5 text-indigo-600" />
+              </div>
+              <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Criterios de Evaluación</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(property.clientCustomFields).map(([key, value]) => (
-                <div key={key} className="bg-white px-2.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm flex flex-col">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{key}</span>
-                  <span className="text-[10px] font-black text-indigo-700">{String(value)}</span>
+              {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => (
+                <div key={id} className="bg-white px-3 py-2 rounded-xl border border-indigo-100 shadow-sm flex flex-col min-w-[80px]">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate max-w-[100px]">{field.label}</span>
+                  <div className="flex items-center gap-1">
+                    {field.type === 'boolean' ? (
+                      <span className={`text-[10px] font-black uppercase ${field.value ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {field.value ? 'Sí' : 'No'}
+                      </span>
+                    ) : field.type === 'rating' ? (
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (field.value || 0) ? 'bg-amber-400' : 'bg-slate-200'}`} />
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-black text-indigo-700 truncate max-w-[100px]">{String(field.value || 'N/A')}</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

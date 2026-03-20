@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, FolderShare, SharePermission, Activity, ActivityType } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, FolderShare, SharePermission, Activity, ActivityType, CriteriaTemplate } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -990,5 +990,63 @@ export const dataService = {
       metadata: d.metadata,
       createdAt: d.created_at
     })) as Activity[];
+  },
+
+  // Criteria Templates
+  async getCriteriaTemplates(agentId: string) {
+    const { data, error } = await supabase
+      .from('criteria_templates')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return data.map(d => ({
+      id: d.id,
+      agentId: d.agent_id,
+      name: d.name,
+      description: d.description,
+      fields: d.fields,
+      createdAt: d.created_at
+    })) as CriteriaTemplate[];
+  },
+
+  async createCriteriaTemplate(template: Omit<CriteriaTemplate, 'id' | 'createdAt'>) {
+    const { data, error } = await supabase
+      .from('criteria_templates')
+      .insert([{
+        agent_id: template.agentId,
+        name: template.name,
+        description: template.description,
+        fields: template.fields
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateCriteriaTemplate(id: string, updates: Partial<CriteriaTemplate>) {
+    const { error } = await supabase
+      .from('criteria_templates')
+      .update({
+        name: updates.name,
+        description: updates.description,
+        fields: updates.fields
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async deleteCriteriaTemplate(id: string) {
+    const { error } = await supabase
+      .from('criteria_templates')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
   }
 };

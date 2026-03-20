@@ -35,8 +35,9 @@ import {
   Phone as PhoneIcon
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
-import { Property, PropertyStatus, AcquisitionReason, SearchFolder } from '../types';
+import { Property, PropertyStatus, AcquisitionReason, SearchFolder, CriteriaTemplate } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
+import { Layout, ChevronDown } from 'lucide-react';
 
 interface PropertyFormProps {
   onAdd: (prop: Property) => void;
@@ -150,6 +151,41 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
     realEstateAgency: '', agentName: '', agentWhatsapp: ''
   });
+
+  const [templates, setTemplates] = useState<CriteriaTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [customFields, setCustomFields] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      const data = await dataService.getCriteriaTemplates(userId);
+      setTemplates(data);
+    };
+    loadTemplates();
+  }, [userId]);
+
+  useEffect(() => {
+    if (propertyToEdit?.clientCustomFields) {
+      setCustomFields(propertyToEdit.clientCustomFields);
+    }
+  }, [propertyToEdit]);
+
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    const newFields: Record<string, any> = {};
+    template.fields.forEach(field => {
+      newFields[field.id] = {
+        label: field.label,
+        type: field.type,
+        value: field.type === 'boolean' ? false : field.type === 'rating' ? 0 : '',
+        required: field.required
+      };
+    });
+    setCustomFields(newFields);
+    setSelectedTemplateId(templateId);
+  };
 
   const performAddressValidation = useCallback(async (address: string) => {
     if (!address || address.trim().length < 4) {
@@ -369,7 +405,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         ...editedData,
         address: editedData.location,
         rating: editedData.rating,
-        images: [finalImage]
+        images: [finalImage],
+        clientCustomFields: customFields
       };
       onAdd(updated);
       return;
@@ -388,6 +425,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       renovationCosts: [],
       images: [finalImage],
       createdAt: new Date().toISOString(),
+      clientCustomFields: customFields
     });
     await dataService.updateInboxLinkStatus(processingLink.id, 'procesado');
     await fetchInbox();
@@ -723,6 +761,109 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         <FormField label="Whatsapp Agente" type="text" value={editedData.agentWhatsapp} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, agentWhatsapp: v}))} icon={PhoneIcon} placeholder="+54 9 11..." />
                       </div>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-8 pt-6">
+                    <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                      <div className="w-8 h-[2px] bg-indigo-500"></div> Criterios de Evaluación
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <Layout className="w-2.5 h-2.5" /> Seleccionar Plantilla
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={selectedTemplateId}
+                          onChange={(e) => applyTemplate(e.target.value)}
+                          className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-xs font-bold text-slate-600 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                        >
+                          <option value="">Sin plantilla</option>
+                          {templates.map(t => (
+                            <option key={t.id} value={t.id}>{t.name}</option>
+                          ))}
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {Object.keys(customFields).length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100">
+                        {Object.entries(customFields).map(([id, field]) => (
+                          <div key={id} className="space-y-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                              {field.label} {field.required && <span className="text-rose-500">*</span>}
+                            </label>
+                            
+                            {field.type === 'boolean' ? (
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setCustomFields(prev => ({
+                                    ...prev,
+                                    [id]: { ...prev[id], value: true }
+                                  }))}
+                                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${field.value === true ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100'}`}
+                                >
+                                  Sí
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCustomFields(prev => ({
+                                    ...prev,
+                                    [id]: { ...prev[id], value: false }
+                                  }))}
+                                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${field.value === false ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-100'}`}
+                                >
+                                  No
+                                </button>
+                              </div>
+                            ) : field.type === 'rating' ? (
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((num) => (
+                                  <button
+                                    key={num}
+                                    type="button"
+                                    onClick={() => setCustomFields(prev => ({
+                                      ...prev,
+                                      [id]: { ...prev[id], value: num }
+                                    }))}
+                                    className={`flex-1 py-2 rounded-lg text-[10px] font-black transition-all ${field.value === num ? 'bg-indigo-600 text-white' : 'bg-white text-slate-300 border border-slate-100'}`}
+                                  >
+                                    {num}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : field.type === 'select' ? (
+                              <select
+                                value={field.value}
+                                onChange={(e) => setCustomFields(prev => ({
+                                  ...prev,
+                                  [id]: { ...prev[id], value: e.target.value }
+                                }))}
+                                className="w-full p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none focus:border-indigo-500"
+                              >
+                                <option value="">Seleccionar...</option>
+                                {field.options?.map((opt: string) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type={field.type === 'number' ? 'number' : 'text'}
+                                value={field.value}
+                                onChange={(e) => setCustomFields(prev => ({
+                                  ...prev,
+                                  [id]: { ...prev[id], value: e.target.value }
+                                }))}
+                                className="w-full p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-600 outline-none focus:border-indigo-500"
+                                placeholder={`Ingresar ${field.label.toLowerCase()}...`}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 gap-8 pt-6">

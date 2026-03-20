@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2, DollarSign } from 'lucide-react';
+import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2, DollarSign, Layout } from 'lucide-react';
 import { Property, UserRole, RenovationItem, TransactionType } from '../types';
 import RenovationCalculator from './RenovationCalculator';
 import ClosingCostsWidget from './ClosingCostsWidget';
@@ -90,6 +90,36 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                 <TechBadge icon={Ruler} label="Total Area" value={`${property.sqft} m²`} />
               </div>
             </section>
+
+            {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
+              <section className="space-y-6">
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                  <Layout className="w-4 h-4" /> Criterios de Evaluación
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => (
+                    <div key={id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
+                      <div className="flex items-center gap-2">
+                        {field.type === 'boolean' ? (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${field.value ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                            {field.value ? 'Sí' : 'No'}
+                          </span>
+                        ) : field.type === 'rating' ? (
+                          <div className="flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-3 h-3 ${i < (field.value || 0) ? 'text-amber-400 fill-current' : 'text-slate-200'}`} />
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm font-bold text-slate-800">{field.value || 'N/A'}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section><RenovationCalculator property={property} userRole={userRole} onUpdate={onUpdateReno} isEditable={isEditable} /></section>
           </div>

@@ -110,6 +110,23 @@ export interface Activity {
   createdAt: string;
 }
 
+export interface CriteriaField {
+  id: string;
+  label: string;
+  type: 'boolean' | 'text' | 'number' | 'select' | 'rating';
+  options?: string[]; // for select
+  required?: boolean;
+}
+
+export interface CriteriaTemplate {
+  id: string;
+  agentId: string;
+  name: string;
+  description?: string;
+  fields: CriteriaField[];
+  createdAt: string;
+}
+
 export interface Property {
   id: string;
   folderId: string;

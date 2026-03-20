@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder, User } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
 interface SidebarProps {
@@ -69,6 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'comparison', label: 'Comparador', icon: <ArrowLeftRight className="w-5 h-5" /> },
     { id: 'valuations', label: 'Dossier de Tasación', icon: <TrendingUp className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
+    { id: 'criteria-templates', label: 'Plantillas', icon: <Layout className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
     { id: 'tax-calculator', label: 'Calculadora de Gastos', icon: <Calculator className="w-5 h-5" /> },
     { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Pencil className="w-5 h-5" /> },
