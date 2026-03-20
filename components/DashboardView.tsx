@@ -37,6 +37,7 @@ interface DashboardViewProps {
   visits: Visit[];
   onSetActiveTab: (tab: string) => void;
   onSelectProperty: (p: Property) => void;
+  onSelectFolder: (folderId: string) => void;
   onNewLead: () => void;
   onNewFolder: () => void;
 }
@@ -48,6 +49,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   visits, 
   onSetActiveTab,
   onSelectProperty,
+  onSelectFolder,
   onNewLead,
   onNewFolder
 }) => {
@@ -367,7 +369,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             return (
               <button 
                 key={folder.id}
-                onClick={() => onSetActiveTab('properties')}
+                onClick={() => onSelectFolder(folder.id)}
                 className="bg-white p-6 rounded-[2.5rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group relative overflow-hidden flex flex-col h-full"
               >
                 <div className="flex justify-between items-start mb-4">

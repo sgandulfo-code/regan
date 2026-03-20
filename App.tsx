@@ -13,6 +13,8 @@ import {
   Loader2, 
   Printer, 
   ArrowRight,
+  ArrowLeft,
+  Calendar,
   DollarSign,
   ArrowLeftRight,
   Activity,
@@ -484,7 +486,18 @@ const App: React.FC = () => {
               </button>
               <div className="flex-1">
                 <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex flex-wrap items-center gap-2">
-                  {activeFolder ? activeFolder.name : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
+                  {activeFolder ? (
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setActiveFolderId(null)}
+                        className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-all"
+                        title="Volver al Dashboard"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                      </button>
+                      {activeFolder.name}
+                    </div>
+                  ) : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
                   {activeFolder?.isShared && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">
                       Compartido ({activeFolder.permission})
@@ -559,6 +572,13 @@ const App: React.FC = () => {
               )}
 
               <div className="flex flex-wrap gap-3">
+                <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                  <div className="w-7 h-7 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600"><Calendar className="w-3.5 h-3.5" /></div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Fecha Apertura</span>
+                    <span className="text-xs font-black text-slate-700 leading-none">{activeFolder.startDate ? new Date(activeFolder.startDate).toLocaleDateString('es-ES') : 'N/A'}</span>
+                  </div>
+                </div>
                 <div className="bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
                   <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-600"><DollarSign className="w-3.5 h-3.5" /></div>
                   <div className="flex flex-col">
@@ -719,6 +739,7 @@ const App: React.FC = () => {
             visits={visits}
             onSetActiveTab={setActiveTab}
             onSelectProperty={setSelectedProperty}
+            onSelectFolder={(id) => { setActiveFolderId(id); setActiveTab('properties'); }}
             onNewLead={() => setActiveTab('search')}
             onNewFolder={() => setIsFolderModalOpen(true)}
           />
