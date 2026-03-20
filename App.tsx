@@ -366,6 +366,17 @@ const App: React.FC = () => {
 
   const activeFolder = useMemo(() => folders.find(f => f.id === activeFolderId), [folders, activeFolderId]);
   
+  const activeFolderPendingLeads = useMemo(() => {
+    if (!activeFolderId) return [];
+    return inboxLinks.filter(link => 
+      link.folder_id === activeFolderId && 
+      (link.status === 'enviado' || !link.status)
+    );
+  }, [inboxLinks, activeFolderId]);
+
+  const activeFolderClientLeads = activeFolderPendingLeads.filter(l => l.added_by_client).length;
+  const activeFolderAgentLeads = activeFolderPendingLeads.filter(l => !l.added_by_client).length;
+  
   const canEdit = useMemo(() => {
     if (!activeFolder) return true;
     return activeFolder.permission === SharePermission.EDIT || activeFolder.permission === SharePermission.ADMIN;
@@ -626,6 +637,26 @@ const App: React.FC = () => {
                     </select>
                   </div>
                 </div>
+
+                {activeFolderClientLeads > 0 && (
+                  <div className="bg-indigo-600 border border-indigo-500 px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2.5 animate-pulse">
+                    <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center text-white"><Activity className="w-3.5 h-3.5" /></div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-indigo-200 uppercase tracking-widest leading-none mb-0.5">Leads Cliente</span>
+                      <span className="text-xs font-black text-white leading-none">{activeFolderClientLeads} Pendientes</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeFolderAgentLeads > 0 && (
+                  <div className="bg-slate-100 border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm flex items-center gap-2.5">
+                    <div className="w-7 h-7 bg-slate-200 rounded-lg flex items-center justify-center text-slate-600"><Activity className="w-3.5 h-3.5" /></div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Leads Usuario</span>
+                      <span className="text-xs font-black text-slate-600">{activeFolderAgentLeads} Pendientes</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
