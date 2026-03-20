@@ -53,13 +53,14 @@ import TaxCalculator from './components/TaxCalculator';
 import CalendarView from './components/CalendarView';
 import ActivityFeed from './components/ActivityFeed';
 import CriteriaTemplateManager from './components/CriteriaTemplateManager';
+import DashboardView from './components/DashboardView';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
-import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
+import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
 import { dataService } from './services/dataService';
 import { supabase } from './services/supabase';
 
-type SortOption = 'price-asc' | 'price-desc' | 'rating-desc' | 'newest';
+type SortOption = 'price-asc' | 'price-desc' | 'rating-desc' | 'newest' | 'price-m2-asc' | 'price-m2-desc';
 
 const stripHtml = (html: string) => {
   if (!html) return '';
@@ -80,6 +81,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'All'>('All');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [acquisitionFilter, setAcquisitionFilter] = useState<AcquisitionReason | 'All'>('All');
   const [folderTransactionFilter, setFolderTransactionFilter] = useState<TransactionType | 'All'>('All');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
@@ -378,13 +380,19 @@ const App: React.FC = () => {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(p => 
         p.title.toLowerCase().includes(q) || 
-        p.address.toLowerCase().includes(q)
+        p.address.toLowerCase().includes(q) ||
+        p.notes.toLowerCase().includes(q)
       );
     }
 
     // 3. Filtro por estado
     if (statusFilter !== 'All') {
       filtered = filtered.filter(p => p.status === statusFilter);
+    }
+
+    // 3.5 Filtro por origen (AcquisitionReason)
+    if (acquisitionFilter !== 'All') {
+      filtered = filtered.filter(p => p.acquisitionReason === acquisitionFilter);
     }
 
     // 4. Filtro por visibilidad
@@ -399,13 +407,23 @@ const App: React.FC = () => {
       switch (sortBy) {
         case 'price-asc': return a.price - b.price;
         case 'price-desc': return b.price - a.price;
+        case 'price-m2-asc': {
+          const aM2 = a.price / (a.sqft || 1);
+          const bM2 = b.price / (b.sqft || 1);
+          return aM2 - bM2;
+        }
+        case 'price-m2-desc': {
+          const aM2 = a.price / (a.sqft || 1);
+          const bM2 = b.price / (b.sqft || 1);
+          return bM2 - aM2;
+        }
         case 'rating-desc': return b.rating - a.rating;
         case 'newest': 
         default:
           return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
       }
     });
-  }, [properties, activeFolderId, searchQuery, statusFilter, visibilityFilter, sortBy]);
+  }, [properties, activeFolderId, searchQuery, statusFilter, visibilityFilter, acquisitionFilter, sortBy]);
 
   const filteredFolders = useMemo(() => {
     return folders.filter(f => folderTransactionFilter === 'All' || f.transactionType === folderTransactionFilter);
@@ -622,6 +640,18 @@ const App: React.FC = () => {
                 ))}
               </div>
 
+              <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar">
+                {(['All', ...Object.values(AcquisitionReason)] as string[]).map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setAcquisitionFilter(reason as any)}
+                    className={`px-3 md:px-4 py-2 rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${acquisitionFilter === reason ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+                  >
+                    {reason === 'All' ? 'Origen' : reason}
+                  </button>
+                ))}
+              </div>
+
               <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-1"></div>
 
               <div className="relative group">
@@ -660,6 +690,8 @@ const App: React.FC = () => {
                     <span>Ordenar: {
                       sortBy === 'price-asc' ? 'Precio Menor' : 
                       sortBy === 'price-desc' ? 'Precio Mayor' : 
+                      sortBy === 'price-m2-asc' ? 'm² Menor' :
+                      sortBy === 'price-m2-desc' ? 'm² Mayor' :
                       sortBy === 'rating-desc' ? 'Mejor Rating' : 'Más Recientes'
                     }</span>
                   </div>
@@ -670,6 +702,8 @@ const App: React.FC = () => {
                   <button onClick={() => setSortBy('newest')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Más Recientes</button>
                   <button onClick={() => setSortBy('price-asc')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Precio: Menor a Mayor</button>
                   <button onClick={() => setSortBy('price-desc')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Precio: Mayor a Menor</button>
+                  <button onClick={() => setSortBy('price-m2-asc')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">USD/m²: Menor a Mayor</button>
+                  <button onClick={() => setSortBy('price-m2-desc')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">USD/m²: Mayor a Menor</button>
                   <button onClick={() => setSortBy('rating-desc')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors">PropBrain Rating</button>
                 </div>
               </div>
@@ -677,218 +711,17 @@ const App: React.FC = () => {
           </div>
         )}
 
-          {activeTab === 'dashboard' && !activeFolderId && (
-            <div className="space-y-8">
-              {/* Stats Grid - Quick Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
-                    <FolderOpen className="w-5 h-5" />
-                  </div>
-                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Tesis Activas</p>
-                  <p className="text-3xl font-black text-slate-800">{folders.length}</p>
-                </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Propiedades</p>
-                  <p className="text-3xl font-black text-slate-800">{properties.length}</p>
-                </div>
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-4 group-hover:scale-110 transition-transform">
-                    <CalendarDays className="w-5 h-5" />
-                  </div>
-                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Visitas Agendadas</p>
-                  <p className="text-3xl font-black text-slate-800">{visits.filter(v => v.status === 'Scheduled' || v.status === 'Confirmed').length}</p>
-                </div>
-                <div 
-                  className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group cursor-pointer"
-                  onClick={() => setActiveTab('activity')}
-                >
-                  <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 mb-4 group-hover:scale-110 transition-transform">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Actividad Reciente</p>
-                  <p className="text-3xl font-black text-slate-800">Ver Feed</p>
-                </div>
-              </div>
-
-              {/* Weekly Agenda Section */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
-                  <CalendarDays className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-800 tracking-tight">Agenda Semanal</h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Próximas visitas confirmadas</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {visits
-                  .filter(v => v.status === 'Confirmed')
-                  .sort((a, b) => new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime())
-                  .slice(0, 5) // Show next 5 confirmed visits
-                  .map(visit => {
-                    const property = properties.find(p => p.id === visit.propertyId);
-                    const folder = folders.find(f => f.id === visit.folderId);
-                    const visitDate = new Date(visit.date + 'T' + visit.time);
-                    const today = new Date();
-                    const visitDateObj = new Date(visit.date + 'T00:00:00');
-                    const isToday = today.toDateString() === visitDateObj.toDateString();
-
-                    return (
-                      <div key={visit.id} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:bg-slate-50 transition-all group">
-                        <div className={`flex flex-col items-center justify-center w-14 h-14 rounded-xl shrink-0 ${isToday ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-100 text-slate-500'}`}>
-                          <span className="text-[10px] font-black uppercase tracking-widest leading-none">{visitDate.toLocaleDateString('es-ES', { weekday: 'short' }).slice(0, 3)}</span>
-                          <span className="text-lg font-black leading-none mt-1">{visitDate.getDate()}</span>
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-black text-slate-800 truncate">{property?.title || 'Propiedad desconocida'}</span>
-                            {folder && (
-                              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest whitespace-nowrap ${folder.color.replace('bg-', 'text-').replace('600', '500')} bg-slate-100`}>
-                                {folder.name}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {visit.time.slice(0, 5)} HS</span>
-                            <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3" /> {property?.address}</span>
-                          </div>
-                        </div>
-
-                        <button 
-                          onClick={() => { setActiveFolderId(visit.folderId); setActiveTab('visits'); }}
-                          className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-300 group-hover:text-indigo-600 group-hover:border-indigo-200 transition-all"
-                        >
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                
-                {visits.filter(v => v.status === 'Confirmed').length === 0 && (
-                  <div className="text-center py-8 text-slate-400">
-                    <p className="text-xs font-medium">No hay visitas confirmadas próximamente.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-              <button
-                onClick={() => setFolderTransactionFilter('All')}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${folderTransactionFilter === 'All' ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-200'}`}
-              >
-                Todos
-              </button>
-              {Object.values(TransactionType).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => setFolderTransactionFilter(type)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${folderTransactionFilter === type ? 'bg-indigo-600 text-white shadow-lg' : 'bg-white text-slate-400 hover:text-slate-600 border border-slate-200'}`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-
-            <div className={viewMode === 'list' ? "flex flex-col gap-3" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"}>
-              {filteredFolders.map(f => {
-                const days = calculateDays(f.startDate);
-                const folderProperties = properties.filter(p => p.folderId === f.id);
-                
-                if (viewMode === 'list') {
-                  return (
-                    <FolderRow
-                      key={f.id}
-                      folder={f}
-                      propertiesCount={folderProperties.length}
-                      daysActive={days}
-                      onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }}
-                    />
-                  );
-                }
-
-                return (
-                  <button 
-                    key={f.id}
-                    onClick={() => { setActiveFolderId(f.id); setActiveTab('properties'); }} 
-                    className="bg-white p-8 rounded-[3.5rem] border border-slate-200 hover:shadow-2xl hover:border-indigo-100 transition-all text-left group h-full flex flex-col relative overflow-hidden"
-                  >
-                    <div className="flex justify-between items-start mb-6">
-                      <div className={`w-14 h-14 ${f.color} rounded-2xl shadow-lg flex items-center justify-center text-white`}>
-                        <Home className="w-7 h-7" />
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                          f.status === FolderStatus.ABIERTA ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
-                          f.status === FolderStatus.PENDIENTE ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
-                          'bg-slate-50 text-slate-500 border border-slate-100'
-                        }`}>
-                          {f.status}
-                        </span>
-                        <span className="text-[9px] font-bold text-slate-400 mt-2 flex items-center gap-1">
-                          <CalendarDays className="w-3 h-3" /> {new Date(f.startDate || '').toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
-
-                    <h3 className="text-2xl font-black mb-2 text-slate-900 tracking-tight leading-tight">{f.name}</h3>
-                    <p className="text-xs text-slate-400 font-medium mb-8 italic line-clamp-2">{stripHtml(f.description)}</p>
-                    
-                    <div className="grid grid-cols-2 gap-3 mb-8">
-                      <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Presupuesto</p>
-                        <p className="text-sm font-black text-slate-700 leading-none">${f.budget?.toLocaleString()}</p>
-                      </div>
-                      <div className="bg-slate-50 border border-slate-100 p-3 rounded-2xl">
-                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Operación</p>
-                        <p className="text-sm font-black text-slate-700 leading-none">{f.transactionType}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto flex justify-between items-center pt-6 border-t border-slate-50">
-                      <div className="flex items-center gap-4">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter leading-none">Activos</span>
-                          <span className="text-base font-black text-slate-800 leading-none mt-1">{folderProperties.length}</span>
-                        </div>
-                        <div className="w-[1px] h-6 bg-slate-100"></div>
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter leading-none">Días</span>
-                          <span className="text-base font-black text-indigo-600 leading-none mt-1">{days}</span>
-                        </div>
-                      </div>
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                        <ArrowRight className="w-5 h-5" />
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-              {viewMode === 'list' ? (
-                <button 
-                  onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} 
-                  className="w-full bg-white p-4 rounded-2xl border-2 border-dashed border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/10 transition-all text-center group flex items-center justify-center gap-2"
-                >
-                  <div className="w-6 h-6 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-100 transition-colors text-slate-400 group-hover:text-indigo-600">
-                    <Plus className="w-4 h-4" />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-indigo-600">Nueva Tesis Estratégica</span>
-                </button>
-              ) : (
-                <button onClick={() => { setEditingFolder(null); setIsFolderModalOpen(true); }} className="border-2 border-dashed border-slate-200 rounded-[3.5rem] p-8 flex flex-col items-center justify-center text-slate-300 hover:border-indigo-400 hover:text-indigo-600 hover:bg-white transition-all min-h-[350px] group">
-                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-50 transition-colors"><Plus className="w-8 h-8" /></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">Nueva Tesis Estratégica</span>
-                </button>
-              )}
-            </div>
-          </div>
+        {activeTab === 'dashboard' && !activeFolderId && (
+          <DashboardView 
+            user={user}
+            properties={properties}
+            folders={folders}
+            visits={visits}
+            onSetActiveTab={setActiveTab}
+            onSelectProperty={setSelectedProperty}
+            onNewLead={() => setActiveTab('search')}
+            onNewFolder={() => setIsFolderModalOpen(true)}
+          />
         )}
 
         {activeTab === 'search' && (
