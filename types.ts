@@ -92,6 +92,24 @@ export enum AcquisitionReason {
   BUSQUEDA = 'Búsqueda'
 }
 
+export enum ActivityType {
+  ITINERARY_VIEWED = 'itinerary_viewed',
+  VISIT_FEEDBACK = 'visit_feedback',
+  PROPERTY_CRITERIA = 'property_criteria',
+  NEW_LEAD = 'new_lead',
+  VISIT_REQUESTED = 'visit_requested'
+}
+
+export interface Activity {
+  id: string;
+  folderId: string;
+  agentId: string;
+  type: ActivityType;
+  content: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
 export interface Property {
   id: string;
   folderId: string;

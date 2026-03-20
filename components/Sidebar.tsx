@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder, User } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
 interface SidebarProps {
@@ -55,6 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+    { id: 'activity', label: 'Feed de Actividad', icon: <Activity className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
     { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { 

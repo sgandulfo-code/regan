@@ -4,7 +4,7 @@ import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquar
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
-import { FeedbackItem, FunnelStage } from '../types';
+import { FeedbackItem, FunnelStage, ActivityType } from '../types';
 
 import SharedPropertyRow from './SharedPropertyRow';
 import ClientProgressBar from './ClientProgressBar';
@@ -86,6 +86,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           const profile = await dataService.getProfile(result.itinerary.folder.userId);
           if (profile) setAgentProfile(profile);
           
+          // Log activity: Itinerary viewed
+          dataService.logActivity({
+            folderId: result.itinerary.folderId,
+            agentId: result.itinerary.folder.userId,
+            type: ActivityType.ITINERARY_VIEWED,
+            content: `El cliente vio el itinerario compartido: ${result.itinerary.folder.name}`,
+            metadata: { sharedId }
+          });
+
           // Fetch inbox links for this folder
           const links = await dataService.getAllInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
           setInboxLinks(links);
@@ -119,6 +128,16 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       }
 
       await dataService.addInboxLinks(urls, data.itinerary.folder.userId, data.itinerary.folderId, true, uploadedFiles);
+      
+      // Log activity: New lead/suggestion
+      dataService.logActivity({
+        folderId: data.itinerary.folderId,
+        agentId: data.itinerary.folder.userId,
+        type: ActivityType.NEW_LEAD,
+        content: `El cliente envió una nueva sugerencia/link en la carpeta ${data.itinerary.folder.name}`,
+        metadata: { links: urls.length > 0 ? urls : uploadedFiles.map(f => f.url) }
+      });
+
       setLinksText('');
       setPendingInboxFiles([]);
       
@@ -271,6 +290,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         allPhotos, 
         ratings[visitId]
       );
+
+      // Log activity: Visit feedback
+      dataService.logActivity({
+        folderId: data.itinerary.folderId,
+        agentId: data.itinerary.folder.userId,
+        type: ActivityType.VISIT_FEEDBACK,
+        content: `El cliente dejó feedback para la visita en ${visit?.property?.title || 'una propiedad'}`,
+        metadata: { visitId, rating: ratings[visitId], feedback: feedback[visitId] }
+      });
 
       // Update local state
       setData((prev: any) => ({
@@ -458,6 +486,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           existingVisit.rating
         );
 
+        // Log activity: Visit requested (existing)
+        dataService.logActivity({
+          folderId: data.itinerary.folderId,
+          agentId: data.itinerary.folder.userId,
+          type: ActivityType.VISIT_REQUESTED,
+          content: `El cliente solicitó una visita para ${property.title}`,
+          metadata: { propertyId: property.id, message }
+        });
+
         // Update local state
         setData((prev: any) => ({
           ...prev,
@@ -495,6 +532,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         const createdVisit = await dataService.createVisit(newVisitData, data.itinerary.folder.userId);
         
         if (createdVisit) {
+          // Log activity: Visit requested (new)
+          dataService.logActivity({
+            folderId: data.itinerary.folderId,
+            agentId: data.itinerary.folder.userId,
+            type: ActivityType.VISIT_REQUESTED,
+            content: `El cliente solicitó una visita para ${property.title}`,
+            metadata: { propertyId: property.id, message }
+          });
+
           // Add property data to the visit for display
           const visitWithProperty = {
             ...createdVisit,
@@ -551,6 +597,15 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
     try {
       await dataService.updatePropertyCustomFields(property.id, updatedFields);
+      
+      // Log activity: Property criteria
+      dataService.logActivity({
+        folderId: data.itinerary.folderId,
+        agentId: data.itinerary.folder.userId,
+        type: ActivityType.PROPERTY_CRITERIA,
+        content: `El cliente agregó el criterio "${customFieldName}: ${customFieldValue}" a la propiedad ${property.title}`,
+        metadata: { propertyId: property.id, fieldName: customFieldName, fieldValue: customFieldValue }
+      });
     } catch (err) {
       console.error('Error saving custom field:', err);
       alert('Error al guardar el criterio.');

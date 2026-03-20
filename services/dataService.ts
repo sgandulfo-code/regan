@@ -1,6 +1,6 @@
 
 import { supabase } from './supabase';
-import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, FolderShare, SharePermission } from '../types';
+import { Property, SearchFolder, User, RenovationItem, UserRole, FolderStatus, TransactionType, FolderShare, SharePermission, Activity, ActivityType } from '../types';
 
 export interface InboxLink {
   id: string;
@@ -950,5 +950,45 @@ export const dataService = {
       .eq('id', id);
       
     if (error) throw error;
+  },
+
+  // Activities
+  async logActivity(activity: Omit<Activity, 'id' | 'createdAt'>) {
+    const { error } = await supabase
+      .from('activities')
+      .insert([{
+        folder_id: activity.folderId,
+        agent_id: activity.agentId,
+        type: activity.type,
+        content: activity.content,
+        metadata: activity.metadata
+      }]);
+
+    if (error) {
+      console.error('Error logging activity:', error);
+      // Don't throw error to avoid breaking the main flow
+      return null;
+    }
+  },
+
+  async getActivities(agentId: string, limit = 50) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('agent_id', agentId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    
+    return data.map(d => ({
+      id: d.id,
+      folderId: d.folder_id,
+      agentId: d.agent_id,
+      type: d.type as ActivityType,
+      content: d.content,
+      metadata: d.metadata,
+      createdAt: d.created_at
+    })) as Activity[];
   }
 };

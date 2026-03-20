@@ -25,7 +25,8 @@ import {
   Menu,
   List,
   Eye,
-  EyeOff
+  EyeOff,
+  FolderOpen
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -49,6 +50,7 @@ import FinancialAnalysisView from './components/FinancialAnalysisView';
 import ValuationsDashboard from './components/ValuationsDashboard';
 import TaxCalculator from './components/TaxCalculator';
 import CalendarView from './components/CalendarView';
+import ActivityFeed from './components/ActivityFeed';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType } from './types';
@@ -673,9 +675,44 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'dashboard' && !activeFolderId && (
-          <div className="space-y-8">
-            {/* Weekly Agenda Section */}
+          {activeTab === 'dashboard' && !activeFolderId && (
+            <div className="space-y-8">
+              {/* Stats Grid - Quick Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
+                    <FolderOpen className="w-5 h-5" />
+                  </div>
+                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Tesis Activas</p>
+                  <p className="text-3xl font-black text-slate-800">{folders.length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 mb-4 group-hover:scale-110 transition-transform">
+                    <Home className="w-5 h-5" />
+                  </div>
+                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Propiedades</p>
+                  <p className="text-3xl font-black text-slate-800">{properties.length}</p>
+                </div>
+                <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 mb-4 group-hover:scale-110 transition-transform">
+                    <CalendarDays className="w-5 h-5" />
+                  </div>
+                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Visitas Agendadas</p>
+                  <p className="text-3xl font-black text-slate-800">{visits.filter(v => v.status === 'Scheduled' || v.status === 'Confirmed').length}</p>
+                </div>
+                <div 
+                  className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group cursor-pointer"
+                  onClick={() => setActiveTab('activity')}
+                >
+                  <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 mb-4 group-hover:scale-110 transition-transform">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <p className="text-slate-400 font-black uppercase text-[9px] tracking-widest mb-1">Actividad Reciente</p>
+                  <p className="text-3xl font-black text-slate-800">Ver Feed</p>
+                </div>
+              </div>
+
+              {/* Weekly Agenda Section */}
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-8 shadow-sm">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
@@ -953,6 +990,8 @@ const App: React.FC = () => {
         {activeTab === 'google-calendar' && (
           <CalendarView user={user} />
         )}
+
+        {activeTab === 'activity' && <ActivityFeed user={user} />}
 
         {activeTab === 'settings' && user && (
           <SettingsView user={user} onUpdateUser={setUser} />
