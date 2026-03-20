@@ -29,12 +29,14 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { Property, SearchFolder, Visit, PropertyStatus, User } from '../types';
+import { InboxLink } from '../services/dataService';
 
 interface DashboardViewProps {
   user: User;
   properties: Property[];
   folders: SearchFolder[];
   visits: Visit[];
+  inboxLinks?: InboxLink[];
   onSetActiveTab: (tab: string) => void;
   onSelectProperty: (p: Property) => void;
   onSelectFolder: (folderId: string) => void;
@@ -47,6 +49,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   properties, 
   folders, 
   visits, 
+  inboxLinks = [],
   onSetActiveTab,
   onSelectProperty,
   onSelectFolder,
@@ -366,6 +369,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           {folders.map(folder => {
             const folderProperties = properties.filter(p => p.folderId === folder.id);
             const days = calculateDays(folder.startDate);
+            
+            // Leads pendientes de procesar
+            const pendingLeads = inboxLinks.filter(link => 
+              link.folder_id === folder.id && 
+              (link.status === 'enviado' || !link.status)
+            );
+            
+            const clientLeads = pendingLeads.filter(l => l.added_by_client).length;
+            const agentLeads = pendingLeads.filter(l => !l.added_by_client).length;
+
             return (
               <button 
                 key={folder.id}
@@ -405,6 +418,30 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Propiedades</span>
                       <span className="text-xs font-black text-slate-700">{folderProperties.length}</span>
                     </div>
+                    
+                    {(clientLeads > 0 || agentLeads > 0) && (
+                      <div className="flex items-center gap-3 px-3 py-2 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+                        {clientLeads > 0 && (
+                          <div className="flex flex-col">
+                            <span className="text-[7px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-1">Leads Cliente</span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                              <span className="text-xs font-black text-indigo-600">{clientLeads}</span>
+                            </div>
+                          </div>
+                        )}
+                        {agentLeads > 0 && (
+                          <div className="flex flex-col">
+                            <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Leads Usuario</span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                              <span className="text-xs font-black text-slate-600">{agentLeads}</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {folder.transactionType && (
                       <div className="flex flex-col">
                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Operación</span>

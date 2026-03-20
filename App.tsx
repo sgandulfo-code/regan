@@ -59,7 +59,7 @@ import DashboardView from './components/DashboardView';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
-import { dataService } from './services/dataService';
+import { dataService, InboxLink } from './services/dataService';
 import { supabase } from './services/supabase';
 
 type SortOption = 'price-asc' | 'price-desc' | 'rating-desc' | 'newest' | 'price-m2-asc' | 'price-m2-desc';
@@ -94,6 +94,7 @@ const App: React.FC = () => {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
+  const [inboxLinks, setInboxLinks] = useState<InboxLink[]>([]);
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
@@ -103,14 +104,16 @@ const App: React.FC = () => {
     if (!user) return;
     setIsSyncing(true);
     try {
-      const [f, p, v] = await Promise.all([
+      const [f, p, v, il] = await Promise.all([
         dataService.getFolders(user.id),
         dataService.getProperties(user.id),
-        dataService.getVisits(user.id, activeFolderId)
+        dataService.getVisits(user.id, activeFolderId),
+        dataService.getAllInboxLinks(user.id, null)
       ]);
       setFolders(f);
       setProperties(p);
       setVisits(v);
+      setInboxLinks(il);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -737,6 +740,7 @@ const App: React.FC = () => {
             properties={properties}
             folders={folders}
             visits={visits}
+            inboxLinks={inboxLinks}
             onSetActiveTab={setActiveTab}
             onSelectProperty={setSelectedProperty}
             onSelectFolder={(id) => { setActiveFolderId(id); setActiveTab('properties'); }}
