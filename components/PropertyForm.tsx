@@ -44,6 +44,7 @@ interface PropertyFormProps {
   userId: string;
   activeFolderId: string | null;
   propertyToEdit?: Property | null;
+  leadToProcess?: InboxLink | null;
   onCancelEdit?: () => void;
   folders?: SearchFolder[];
 }
@@ -127,10 +128,10 @@ const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix
   );
 };
 
-const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, onCancelEdit, folders = [] }) => {
-  const [step, setStep] = useState<CreationStep>(propertyToEdit ? 'verify' : 'inbox');
-  const [processingLink, setProcessingLink] = useState<InboxLink | null>(null);
-  const [mode, setMode] = useState<ProcessingMode>(propertyToEdit ? 'edit' : null);
+const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolderId, propertyToEdit, leadToProcess, onCancelEdit, folders = [] }) => {
+  const [step, setStep] = useState<CreationStep>(propertyToEdit || leadToProcess ? 'verify' : 'inbox');
+  const [processingLink, setProcessingLink] = useState<InboxLink | null>(leadToProcess || null);
+  const [mode, setMode] = useState<ProcessingMode>(propertyToEdit ? 'edit' : leadToProcess ? 'ai' : null);
   const [urlInput, setUrlInput] = useState('');
   const [pendingLinks, setPendingLinks] = useState<InboxLink[]>([]);
   
@@ -265,6 +266,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       if (validationTimerRef.current) clearTimeout(validationTimerRef.current);
     };
   }, [editedData.exactAddress, performAddressValidation]);
+
+  useEffect(() => {
+    if (leadToProcess && !propertyToEdit) {
+      startProcessing(leadToProcess, 'ai');
+    }
+  }, [leadToProcess, propertyToEdit]);
 
   useEffect(() => {
     if (propertyToEdit) {

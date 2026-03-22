@@ -30,6 +30,7 @@ import {
 } from 'recharts';
 import { Property, SearchFolder, Visit, PropertyStatus, User } from '../types';
 import { InboxLink } from '../services/dataService';
+import PendingLeadsList from './PendingLeadsList';
 
 interface DashboardViewProps {
   user: User;
@@ -40,6 +41,8 @@ interface DashboardViewProps {
   onSetActiveTab: (tab: string) => void;
   onSelectProperty: (p: Property) => void;
   onSelectFolder: (folderId: string) => void;
+  onProcessLead: (lead: InboxLink) => void;
+  onRejectLead: (leadId: string) => void;
   onNewLead: () => void;
   onNewFolder: () => void;
 }
@@ -53,6 +56,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onSetActiveTab,
   onSelectProperty,
   onSelectFolder,
+  onProcessLead,
+  onRejectLead,
   onNewLead,
   onNewFolder
 }) => {
@@ -347,6 +352,25 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Leads Section */}
+      {inboxLinks.filter(l => !l.status || l.status === 'enviado').length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-4">
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <Activity className="w-4 h-4 text-indigo-500" /> Leads Pendientes
+              </h3>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Sugerencias de clientes y captaciones rápidas</p>
+            </div>
+          </div>
+          <PendingLeadsList 
+            leads={inboxLinks.filter(l => !l.status || l.status === 'enviado')}
+            onProcess={onProcessLead}
+            onReject={onRejectLead}
+          />
+        </div>
+      )}
 
       {/* Folders Section */}
       <div className="space-y-6">

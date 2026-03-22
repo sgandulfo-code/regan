@@ -56,6 +56,7 @@ import CalendarView from './components/CalendarView';
 import ActivityFeed from './components/ActivityFeed';
 import CriteriaTemplateManager from './components/CriteriaTemplateManager';
 import DashboardView from './components/DashboardView';
+import PendingLeadsList from './components/PendingLeadsList';
 import Auth from './components/Auth';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
@@ -97,6 +98,7 @@ const App: React.FC = () => {
   const [inboxLinks, setInboxLinks] = useState<InboxLink[]>([]);
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false);
   const [editingVisit, setEditingVisit] = useState<Visit | null>(null);
+  const [leadToProcess, setLeadToProcess] = useState<InboxLink | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
 
@@ -231,6 +233,7 @@ const App: React.FC = () => {
     }
     await loadData();
     setPropertyToEdit(null);
+    setLeadToProcess(null);
     setActiveTab('properties');
     setIsSyncing(false);
   };
@@ -775,6 +778,14 @@ const App: React.FC = () => {
             onSetActiveTab={setActiveTab}
             onSelectProperty={setSelectedProperty}
             onSelectFolder={(id) => { setActiveFolderId(id); setActiveTab('properties'); }}
+            onProcessLead={(lead) => {
+              setLeadToProcess(lead);
+              setActiveTab('search');
+            }}
+            onRejectLead={async (leadId) => {
+              await dataService.removeInboxLink(leadId);
+              loadData();
+            }}
             onNewLead={() => setActiveTab('search')}
             onNewFolder={() => setIsFolderModalOpen(true)}
           />
@@ -786,9 +797,26 @@ const App: React.FC = () => {
             userId={user.id} 
             activeFolderId={activeFolderId} 
             propertyToEdit={propertyToEdit}
-            onCancelEdit={() => { setPropertyToEdit(null); setActiveTab('properties'); }}
+            leadToProcess={leadToProcess}
+            onCancelEdit={() => { setPropertyToEdit(null); setLeadToProcess(null); setActiveTab('properties'); }}
             folders={folders}
           />
+        )}
+
+        {activeTab === 'properties' && activeFolderId && (
+          <div className="mb-8">
+            <PendingLeadsList 
+              leads={inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado'))}
+              onProcess={(lead) => {
+                setLeadToProcess(lead);
+                setActiveTab('search');
+              }}
+              onReject={async (leadId) => {
+                await dataService.removeInboxLink(leadId);
+                loadData();
+              }}
+            />
+          </div>
         )}
 
         {activeTab === 'properties' && (
