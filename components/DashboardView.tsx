@@ -366,6 +366,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <PendingLeadsList 
             leads={inboxLinks.filter(l => !l.status || l.status === 'enviado')}
+            folders={folders}
             onProcess={onProcessLead}
             onReject={onRejectLead}
           />

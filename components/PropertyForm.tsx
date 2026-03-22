@@ -40,7 +40,7 @@ import { dataService, InboxLink } from '../services/dataService';
 import { Layout, ChevronDown } from 'lucide-react';
 
 interface PropertyFormProps {
-  onAdd: (prop: Property) => void;
+  onAdd: (prop: Property) => Promise<void> | void;
   userId: string;
   activeFolderId: string | null;
   propertyToEdit?: Property | null;
@@ -420,23 +420,34 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     }
 
     if (!processingLink || !analysisResult) return;
-    onAdd({
-      id: Math.random().toString(36).substr(2, 9),
-      folderId: activeFolderId || '',
-      ...editedData,
-      url: processingLink.url || '',
-      address: editedData.location || 'Unknown Address',
-      status: PropertyStatus.WISHLIST,
-      rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
-      notes: analysisResult.analysis?.strategy || editedData.notes || '',
-      renovationCosts: [],
-      images: [finalImage],
-      createdAt: new Date().toISOString(),
-      clientCustomFields: customFields
-    });
+    
+    // Update status BEFORE calling onAdd to ensure loadData in App.tsx sees the change
     await dataService.updateInboxLinkStatus(processingLink.id, 'procesado');
-    await fetchInbox();
-    resetProcessing();
+    
+    try {
+      await onAdd({
+        id: Math.random().toString(36).substr(2, 9),
+        folderId: (processingLink ? processingLink.folder_id : activeFolderId) || '',
+        ...editedData,
+        url: processingLink.url || '',
+        address: editedData.location || 'Unknown Address',
+        status: PropertyStatus.WISHLIST,
+        rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
+        notes: analysisResult.analysis?.strategy || editedData.notes || '',
+        renovationCosts: [],
+        images: [finalImage],
+        createdAt: new Date().toISOString(),
+        clientCustomFields: customFields
+      });
+      
+      await fetchInbox();
+      resetProcessing();
+    } catch (error) {
+      // If adding property fails, revert status
+      await dataService.updateInboxLinkStatus(processingLink.id, 'enviado');
+      console.error("Error processing lead:", error);
+      alert("Hubo un error al procesar el lead. Por favor intenta de nuevo.");
+    }
   };
 
   const resetProcessing = () => {

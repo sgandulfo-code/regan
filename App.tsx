@@ -807,6 +807,7 @@ const App: React.FC = () => {
           <div className="mb-8">
             <PendingLeadsList 
               leads={inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado'))}
+              folders={folders}
               onProcess={(lead) => {
                 setLeadToProcess(lead);
                 setActiveTab('search');

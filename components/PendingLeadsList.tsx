@@ -10,17 +10,26 @@ import {
   Link as LinkIcon,
   FileText,
   CheckCircle2,
-  XCircle
+  XCircle,
+  FolderOpen
 } from 'lucide-react';
+
+import { Property, SearchFolder } from '../types';
 
 interface PendingLeadsListProps {
   leads: InboxLink[];
+  folders?: SearchFolder[];
   onProcess: (lead: InboxLink) => void;
   onReject: (leadId: string) => void;
 }
 
-const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, onProcess, onReject }) => {
+const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = [], onProcess, onReject }) => {
   if (leads.length === 0) return null;
+
+  const getFolderName = (folderId: string) => {
+    const folder = folders.find(f => f.id === folderId);
+    return folder ? folder.name : 'Carpeta desconocida';
+  };
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -79,6 +88,9 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, onProcess, o
                         Agregado por Agente
                       </>
                     )}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-500 flex items-center gap-1 mt-0.5">
+                    <FolderOpen className="w-3 h-3" /> {getFolderName(lead.folder_id)}
                   </span>
                 </div>
               </div>
