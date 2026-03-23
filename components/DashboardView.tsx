@@ -428,24 +428,40 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* Leads Section */}
-      {inboxLinks.filter(l => !l.status || l.status === 'enviado').length > 0 && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-4">
-            <div>
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Activity className="w-4 h-4 text-indigo-500" /> Leads Pendientes
-              </h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Sugerencias de clientes y captaciones rápidas</p>
+      {(() => {
+        const pendingLeads = inboxLinks
+          .filter(l => !l.status || l.status === 'enviado')
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        
+        if (pendingLeads.length === 0) return null;
+
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between px-4">
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-indigo-500" /> Leads Pendientes
+                </h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                  Mostrando los últimos 4 leads. Para ver todos, ve al Lead Collector.
+                </p>
+              </div>
+              <button 
+                onClick={() => onSetActiveTab('search')}
+                className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline"
+              >
+                Ver todos ({pendingLeads.length})
+              </button>
             </div>
+            <PendingLeadsList 
+              leads={pendingLeads.slice(0, 4)}
+              folders={folders}
+              onProcess={onProcessLead}
+              onReject={onRejectLead}
+            />
           </div>
-          <PendingLeadsList 
-            leads={inboxLinks.filter(l => !l.status || l.status === 'enviado')}
-            folders={folders}
-            onProcess={onProcessLead}
-            onReject={onRejectLead}
-          />
-        </div>
-      )}
+        );
+      })()}
 
       {/* Folders Section */}
       <div className="space-y-6">
