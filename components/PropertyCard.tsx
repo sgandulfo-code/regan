@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Property, PropertyStatus } from '../types';
+import { Property, PropertyStatus, SearchFolder } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, MessageCircle } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, MessageCircle, FolderOpen } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
   index: number;
+  folders?: SearchFolder[];
   onSelect: (p: Property) => void;
   onStatusChange: (id: string, status: PropertyStatus) => void;
   onToggleVisibility?: (id: string, isPublic: boolean) => void;
@@ -15,7 +16,8 @@ interface PropertyCardProps {
   isEditable?: boolean;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+  const folder = folders.find(f => f.id === property.folderId);
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* USD ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
@@ -51,6 +53,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, onSelect, 
         />
         <div className="absolute top-4 left-14 flex flex-col gap-2 items-start">
           <div className="flex gap-2">
+            {folder && (
+              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-md border ${folder.color.replace('bg-', 'text-').replace('500', '600')} ${folder.color.replace('bg-', 'bg-').replace('500', '50')}`}>
+                <FolderOpen className="w-3 h-3" />
+                {folder.name}
+              </span>
+            )}
             <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
               {property.status}
             </span>

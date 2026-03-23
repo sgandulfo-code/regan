@@ -477,6 +477,7 @@ const App: React.FC = () => {
           setActiveTab={(tab) => { setActiveTab(tab); setIsSidebarOpen(false); }} 
           userRole={user.role} 
           folders={folders} 
+          properties={properties}
           activeFolderId={activeFolderId} 
           setActiveFolderId={(id) => { setActiveFolderId(id); setIsSidebarOpen(false); }}
           onLogout={() => supabase.auth.signOut()}
@@ -485,6 +486,7 @@ const App: React.FC = () => {
           onDeleteFolder={(id) => dataService.deleteFolder(id).then(loadData)}
           onShareFolder={(f) => setSharingFolder(f)}
           onShareItinerary={(folderId) => { setActiveFolderId(folderId); setIsShareItineraryModalOpen(true); }}
+          onSelectProperty={setSelectedProperty}
           pendingVisitsCount={pendingVisitsCount}
           feedbackCount={feedbackCount}
           onRefresh={refreshUser}
@@ -831,6 +833,7 @@ const App: React.FC = () => {
                     key={p.id} 
                     property={p} 
                     index={idx} 
+                    folders={folders}
                     onSelect={setSelectedProperty} 
                     onStatusChange={handleUpdateStatus}
                     onToggleVisibility={handleToggleVisibility}
@@ -843,6 +846,7 @@ const App: React.FC = () => {
                     key={p.id} 
                     property={p} 
                     index={idx} 
+                    folders={folders}
                     onSelect={setSelectedProperty} 
                     onStatusChange={handleUpdateStatus}
                     onToggleVisibility={handleToggleVisibility}

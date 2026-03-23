@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { UserRole, SearchFolder, User } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout } from 'lucide-react';
+import { UserRole, SearchFolder, User, Property } from '../types';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
 interface SidebarProps {
@@ -10,6 +10,7 @@ interface SidebarProps {
   setActiveTab: (tab: string) => void;
   userRole?: UserRole;
   folders: SearchFolder[];
+  properties: Property[];
   activeFolderId: string | null;
   setActiveFolderId: (id: string | null) => void;
   onLogout?: () => void;
@@ -18,6 +19,7 @@ interface SidebarProps {
   onDeleteFolder?: (id: string) => void;
   onShareFolder?: (folder: SearchFolder) => void;
   onShareItinerary?: (folderId: string) => void;
+  onSelectProperty?: (property: Property) => void;
   pendingVisitsCount?: number;
   feedbackCount?: number;
   onRefresh?: () => void;
@@ -29,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab, 
   userRole = UserRole.BUYER,
   folders,
+  properties,
   activeFolderId,
   setActiveFolderId,
   onLogout,
@@ -37,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onDeleteFolder,
   onShareFolder,
   onShareItinerary,
+  onSelectProperty,
   pendingVisitsCount = 0,
   feedbackCount = 0,
   onRefresh
@@ -127,52 +131,74 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="pt-8">
           <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Tesis Activas</p>
           <div className="space-y-1">
-            {folders.map(folder => (
-              <div key={folder.id} className="group relative">
-                <button
-                  onClick={() => {
-                    setActiveFolderId(folder.id);
-                    setActiveTab('properties');
-                  }}
-                  className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
-                    activeFolderId === folder.id 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  {folder.imageUrl ? (
-                    <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
-                      <img 
-                        src={folder.imageUrl} 
-                        alt={folder.name} 
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
+            {folders.map(folder => {
+              const folderProperties = properties.filter(p => p.folderId === folder.id);
+              const isActive = activeFolderId === folder.id;
+
+              return (
+                <div key={folder.id} className="group relative">
+                  <button
+                    onClick={() => {
+                      setActiveFolderId(folder.id);
+                      setActiveTab('properties');
+                    }}
+                    className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                      isActive 
+                        ? 'bg-indigo-600 text-white shadow-md' 
+                        : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {folder.imageUrl ? (
+                      <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
+                        <img 
+                          src={folder.imageUrl} 
+                          alt={folder.name} 
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
+                    )}
+                    <span className="truncate pr-8">{folder.name}</span>
+                    {folder.isShared && (
+                      <Users className={`w-3 h-3 ml-auto ${isActive ? 'text-white/70' : 'text-slate-400'}`} />
+                    )}
+                  </button>
+                  
+                  {/* Properties under folder */}
+                  {isActive && folderProperties.length > 0 && (
+                    <div className="mt-1 ml-6 space-y-1 border-l border-indigo-200 pl-2 animate-in slide-in-from-left-2 duration-200">
+                      {folderProperties.map(prop => (
+                        <button
+                          key={prop.id}
+                          onClick={() => onSelectProperty?.(prop)}
+                          className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-100 hover:bg-white/10 transition-all text-left"
+                        >
+                          <MapPin className="w-2.5 h-2.5 shrink-0" />
+                          <span className="truncate">{prop.title}</span>
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    <div className={`w-2 h-2 rounded-full shrink-0 ${activeFolderId === folder.id ? 'bg-white' : folder.color}`}></div>
                   )}
-                  <span className="truncate pr-8">{folder.name}</span>
-                  {folder.isShared && (
-                    <Users className={`w-3 h-3 ml-auto ${activeFolderId === folder.id ? 'text-white/70' : 'text-slate-400'}`} />
-                  )}
-                </button>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {onShareFolder && !folder.isShared && (
-                    <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className="p-1 text-slate-400 hover:text-emerald-600" title="Compartir"><Users className="w-3 h-3" /></button>
-                  )}
-                  {onShareItinerary && (
-                    <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className="p-1 text-slate-400 hover:text-indigo-600" title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
-                  )}
-                  {onEditFolder && !folder.isShared && (
-                    <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className="p-1 text-slate-400 hover:text-indigo-600"><Pencil className="w-3 h-3" /></button>
-                  )}
-                  {onDeleteFolder && (
-                    <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className="p-1 text-slate-400 hover:text-rose-600"><Trash2 className="w-3 h-3" /></button>
-                  )}
+
+                  <div className="absolute right-2 top-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onShareFolder && !folder.isShared && (
+                      <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-emerald-600'}`} title="Compartir"><Users className="w-3 h-3" /></button>
+                    )}
+                    {onShareItinerary && (
+                      <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`} title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
+                    )}
+                    {onEditFolder && !folder.isShared && (
+                      <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`}><Pencil className="w-3 h-3" /></button>
+                    )}
+                    {onDeleteFolder && (
+                      <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-rose-600'}`}><Trash2 className="w-3 h-3" /></button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </nav>
