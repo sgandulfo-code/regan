@@ -568,22 +568,22 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       {link.file_url ? (link.file_type?.startsWith('image/') ? 'Imagen' : 'Documento') : (link.url ? new URL(link.url).hostname.replace('www.', '') : 'Enlace')}
                     </p>
                     <p className="text-[8px] text-slate-400 truncate break-all opacity-60">{link.url || link.file_url}</p>
-                    {link.added_by_client && (
+                    {link.added_by_client ? (
                       <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit">
-                        Solicitado por cliente
+                        Sugerido vía Portal Cliente
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest w-fit">
+                        Captado vía Lead Collector (Agente)
                       </span>
                     )}
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
                       {(() => {
                         const date = new Date(link.created_at);
-                        const now = new Date();
-                        const diffTime = now.getTime() - date.getTime();
-                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                        const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                        const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                         const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-                        if (diffDays === 0) return `${dateStr} ${timeStr} (Hoy)`;
-                        if (diffDays === 1) return `${dateStr} ${timeStr} (Hace 1 día)`;
-                        return `${dateStr} ${timeStr} (Hace ${diffDays} días)`;
+                        return `${dateStr} ${timeStr}`;
                       })()}
                     </span>
                   </div>

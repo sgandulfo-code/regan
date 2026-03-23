@@ -31,7 +31,14 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
     return folder ? folder.name : 'Carpeta desconocida';
   };
 
-  const formatTime = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timePart = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    return `${datePart} ${timePart}`;
+  };
+
+  const formatRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -74,18 +81,18 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {formatTime(lead.created_at)}
+                    <Clock className="w-3 h-3" /> {formatDateTime(lead.created_at)}
                   </span>
                   <span className="text-xs font-black text-slate-700 flex items-center gap-1.5">
                     {lead.added_by_client ? (
                       <>
                         <UserIcon className="w-3 h-3 text-indigo-500" />
-                        Sugerido por Cliente
+                        Sugerido vía Portal Cliente
                       </>
                     ) : (
                       <>
                         <UserIcon className="w-3 h-3 text-slate-400" />
-                        Agregado por Agente
+                        Captado vía Lead Collector (Agente)
                       </>
                     )}
                   </span>

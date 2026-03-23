@@ -1861,11 +1861,20 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                           {link.file_url ? 'Ver Archivo' : link.url}
                         </a>
                       </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                          {new Date(link.created_at).toLocaleDateString()}
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {(() => {
+                            const date = new Date(link.created_at);
+                            const datePart = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                            const timePart = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                            return `${datePart} ${timePart}`;
+                          })()}
                         </div>
-                        <div className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
+                        <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                          {link.added_by_client ? 'Sugerido por ti' : 'Agregado por Agente'}
+                        </div>
+                        <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${
                           link.status === 'procesado' ? 'bg-emerald-100 text-emerald-600' :
                           link.status === 'rechazado' ? 'bg-rose-100 text-rose-600' :
                           'bg-amber-100 text-amber-600'
