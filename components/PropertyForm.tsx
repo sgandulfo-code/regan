@@ -72,6 +72,7 @@ interface PropertyFormData {
   realEstateAgency?: string;
   agentName?: string;
   agentWhatsapp?: string;
+  folderId: string;
 }
 
 type CreationStep = 'inbox' | 'verify';
@@ -150,7 +151,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
-    realEstateAgency: '', agentName: '', agentWhatsapp: ''
+    realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || ''
   });
 
   const [templates, setTemplates] = useState<CriteriaTemplate[]>([]);
@@ -297,7 +298,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA,
         realEstateAgency: propertyToEdit.realEstateAgency || '',
         agentName: propertyToEdit.agentName || '',
-        agentWhatsapp: propertyToEdit.agentWhatsapp || ''
+        agentWhatsapp: propertyToEdit.agentWhatsapp || '',
+        folderId: propertyToEdit.folderId
       });
       setAnalysisResult({ dealScore: propertyToEdit.rating * 20 });
     } else {
@@ -330,7 +332,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         coveredSqft: analysisResult.coveredSqft || 0,
         uncoveredSqft: analysisResult.uncoveredSqft || 0,
         age: analysisResult.age || 0,
-        floor: analysisResult.floor || ''
+        floor: analysisResult.floor || '',
+        folderId: (processingLink ? processingLink.folder_id : activeFolderId) || ''
       }));
     }
   }, [analysisResult, propertyToEdit]);
@@ -410,6 +413,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       const updated: Property = {
         ...propertyToEdit,
         ...editedData,
+        folderId: editedData.folderId,
         address: editedData.location,
         rating: editedData.rating,
         images: [finalImage],
@@ -427,8 +431,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     try {
       await onAdd({
         id: Math.random().toString(36).substr(2, 9),
-        folderId: (processingLink ? processingLink.folder_id : activeFolderId) || '',
         ...editedData,
+        folderId: editedData.folderId,
         url: processingLink.url || '',
         address: editedData.location || 'Unknown Address',
         status: PropertyStatus.WISHLIST,
@@ -464,7 +468,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setResolvedAddress(null);
     setEditedData({
       title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
-      realEstateAgency: '', agentName: '', agentWhatsapp: ''
+      realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || ''
     });
   };
 
@@ -577,14 +581,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         Captado vía Lead Collector (Agente)
                       </span>
                     )}
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {(() => {
-                        const date = new Date(link.created_at);
-                        const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                        const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-                        return `${dateStr} ${timeStr}`;
-                      })()}
+                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {(() => {
+                          const date = new Date(link.created_at);
+                          const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                          const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+                          return `${dateStr} ${timeStr}`;
+                        })()}
+                      </div>
+                      <div className="flex items-center gap-1 text-slate-500">
+                        <Inbox className="w-3 h-3" />
+                        {folders.find(f => f.id === link.folder_id)?.name || 'Carpeta desconocida'}
+                      </div>
                     </span>
                   </div>
                 </div>
@@ -657,9 +667,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
                   Verifying technical dimensions
                 </p>
-                <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Source Link</p>
-                  <p className="text-[10px] font-bold text-slate-500 break-all">{getPreviewUrl()}</p>
+                <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3">
+                  <div>
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Source Link</p>
+                    <p className="text-[10px] font-bold text-slate-500 break-all">{getPreviewUrl()}</p>
+                  </div>
+                  <div className="pt-3 border-t border-slate-200/50">
+                    <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Carpeta de Destino</p>
+                    <div className="relative">
+                      <select
+                        value={editedData.folderId}
+                        onChange={(e) => setEditedData(prev => ({ ...prev, folderId: e.target.value }))}
+                        className="w-full p-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black text-slate-700 uppercase tracking-tight outline-none focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="">Seleccionar carpeta...</option>
+                        {folders.map(f => (
+                          <option key={f.id} value={f.id}>{f.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  </div>
                 </div>
               </div>
               <div className="bg-indigo-50 text-indigo-600 p-4 rounded-3xl">
