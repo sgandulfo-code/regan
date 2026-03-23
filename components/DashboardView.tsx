@@ -81,10 +81,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const folderData = useMemo(() => {
     const stats: Record<string, any> = {
-      'Búsqueda Venta': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
-      'Búsqueda Alquiler': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
-      'Captación Venta': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
-      'Captación Alquiler': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
+      'Búsqueda Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
+      'Búsqueda Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
+      'Captación Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
+      'Captación Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
     };
 
     folders.forEach(f => {
@@ -103,15 +103,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
       if (stats[typeKey]) {
         stats[typeKey].total++;
+        stats[typeKey].budget += (f.budget || 0);
         stats[typeKey][f.status]++;
+        
+        const days = calculateDays(f.statusUpdatedAt || f.createdAt);
+        stats[typeKey].totalDays += days;
       }
     });
 
     return Object.entries(stats).map(([name, values]) => ({
       name,
-      ...values
+      ...values,
+      avgDays: values.total > 0 ? Math.round(values.totalDays / values.total) : 0
     })).filter(d => d.total > 0);
-  }, [folders, properties]);
+  }, [folders, properties, calculateDays]);
 
   const topProperties = useMemo(() => {
     return [...properties]
@@ -226,9 +231,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Folder Distribution */}
         <div className="lg:col-span-8 bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col h-[450px]">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <FolderOpen className="w-4 h-4 text-indigo-500" /> Distribución de Carpetas
-            </h3>
+            <div>
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <FolderOpen className="w-4 h-4 text-indigo-500" /> Distribución de Carpetas
+              </h3>
+              <div className="flex gap-4 mt-1">
+                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                  Presupuesto Total: <span className="text-indigo-600">${folders.reduce((acc, f) => acc + (f.budget || 0), 0).toLocaleString()}</span>
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase">
+                  Promedio Permanencia: <span className="text-amber-600">{Math.round(folders.reduce((acc, f) => acc + calculateDays(f.statusUpdatedAt || f.createdAt), 0) / (folders.length || 1))} días</span>
+                </p>
+              </div>
+            </div>
             <p className="text-[10px] font-bold text-slate-400 uppercase">Búsqueda vs Captación</p>
           </div>
           <div className="flex-1 min-h-0">
@@ -246,7 +261,48 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 />
                 <Tooltip 
                   cursor={{ fill: '#f8fafc' }}
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  contentStyle={{ borderRadius: '1.5rem', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '1.5rem' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-100 min-w-[220px]">
+                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 border-b border-slate-50 pb-2">{label}</p>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Total Carpetas</span>
+                              <span className="text-sm font-black text-slate-900">{data.total}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Presupuesto Total</span>
+                              <span className="text-sm font-black text-indigo-600">${data.budget.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-bold text-slate-500 uppercase">Promedio Días</span>
+                              <span className="text-sm font-black text-amber-600">{data.avgDays} d</span>
+                            </div>
+                            <div className="pt-2 border-t border-slate-50">
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="text-center">
+                                  <p className="text-[8px] font-black text-emerald-500 uppercase">Abiertas</p>
+                                  <p className="text-xs font-black">{data[FolderStatus.ABIERTA]}</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-[8px] font-black text-amber-500 uppercase">Pend.</p>
+                                  <p className="text-xs font-black">{data[FolderStatus.PENDIENTE]}</p>
+                                </div>
+                                <div className="text-center">
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Cerr.</p>
+                                  <p className="text-xs font-black">{data[FolderStatus.CERRADA]}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }} />
                 <Bar dataKey={FolderStatus.ABIERTA} name="Abierta" stackId="a" fill="#10b981" barSize={30} />
