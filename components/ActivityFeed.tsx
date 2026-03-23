@@ -172,6 +172,33 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ user }) => {
                           <p className="text-xs font-bold text-slate-600 truncate">{activity.metadata.message}</p>
                         </div>
                       )}
+
+                      {activity.metadata.clientInfo && (
+                        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-x-4 gap-y-2">
+                          {activity.metadata.clientInfo.ip && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                              <span className="bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">IP</span>
+                              {activity.metadata.clientInfo.ip}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                            <span className="bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">DISPOSITIVO</span>
+                            {activity.metadata.clientInfo.platform || 'N/A'}
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                            <span className="bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">BROWSER</span>
+                            <span className="truncate max-w-[150px]" title={activity.metadata.clientInfo.userAgent}>
+                              {activity.metadata.clientInfo.userAgent?.split(' ').slice(-1)[0] || 'N/A'}
+                            </span>
+                          </div>
+                          {activity.metadata.clientInfo.screenResolution && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                              <span className="bg-slate-200 px-1.5 py-0.5 rounded text-slate-600">PANTALLA</span>
+                              {activity.metadata.clientInfo.screenResolution}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

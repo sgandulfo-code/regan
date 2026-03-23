@@ -953,7 +953,40 @@ export const dataService = {
   },
 
   // Activities
+  _clientInfo: null as any,
+
+  async getClientInfo() {
+    if (this._clientInfo) return this._clientInfo;
+    
+    try {
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipResponse.json();
+      
+      this._clientInfo = {
+        ip: ipData.ip,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: `${window.screen.width}x${window.screen.height}`
+      };
+      return this._clientInfo;
+    } catch (e) {
+      return {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        screenResolution: `${window.screen.width}x${window.screen.height}`
+      };
+    }
+  },
+
   async logActivity(activity: Omit<Activity, 'id' | 'createdAt'>) {
+    const info = await this.getClientInfo();
+    const metadata = {
+      ...activity.metadata,
+      clientInfo: info
+    };
+
     const { error } = await supabase
       .from('activities')
       .insert([{
@@ -961,7 +994,7 @@ export const dataService = {
         agent_id: activity.agentId,
         type: activity.type,
         content: activity.content,
-        metadata: activity.metadata
+        metadata: metadata
       }]);
 
     if (error) {
