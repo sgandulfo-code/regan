@@ -667,6 +667,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   }) : [];
 
   const filteredProperties = sortedProperties.filter((p: any) => {
+    if (p.isPublic === false) return false;
     if (filterPriceMin !== '' && p.price < Number(filterPriceMin)) return false;
     if (filterPriceMax !== '' && p.price > Number(filterPriceMax)) return false;
     if (filterBedrooms !== '' && p.rooms < Number(filterBedrooms)) return false;

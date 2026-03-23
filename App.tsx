@@ -227,7 +227,7 @@ const App: React.FC = () => {
     if (propertyToEdit) {
       await dataService.updateProperty(prop.id, prop);
     } else {
-      const folderId = activeFolderId || folders[0]?.id;
+      const folderId = prop.folderId || activeFolderId || folders[0]?.id;
       if (!folderId) { alert("Crea una carpeta primero"); return; }
       await dataService.createProperty({ ...prop, folderId }, user.id);
     }

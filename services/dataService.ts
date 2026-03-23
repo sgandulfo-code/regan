@@ -345,7 +345,8 @@ export const dataService = {
         images: property.images,
         real_estate_agency: property.realEstateAgency,
         agent_name: property.agentName,
-        agent_whatsapp: property.agentWhatsapp
+        agent_whatsapp: property.agentWhatsapp,
+        is_public: property.isPublic ?? true
       }])
       .select()
       .single();
@@ -378,7 +379,8 @@ export const dataService = {
         real_estate_agency: property.realEstateAgency,
         agent_name: property.agentName,
         agent_whatsapp: property.agentWhatsapp,
-        client_custom_fields: property.clientCustomFields
+        client_custom_fields: property.clientCustomFields,
+        is_public: property.isPublic
       })
       .eq('id', id)
       .select()

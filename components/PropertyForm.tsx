@@ -73,6 +73,7 @@ interface PropertyFormData {
   agentName?: string;
   agentWhatsapp?: string;
   folderId: string;
+  isPublic: boolean;
 }
 
 type CreationStep = 'inbox' | 'verify';
@@ -151,7 +152,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
     title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
-    realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || ''
+    realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '', isPublic: true
   });
 
   const [templates, setTemplates] = useState<CriteriaTemplate[]>([]);
@@ -270,9 +271,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   useEffect(() => {
     if (leadToProcess && !propertyToEdit) {
+      setEditedData(prev => ({
+        ...prev,
+        folderId: leadToProcess.folder_id || activeFolderId || '',
+        isPublic: true
+      }));
       startProcessing(leadToProcess, 'ai');
     }
-  }, [leadToProcess, propertyToEdit]);
+  }, [leadToProcess, propertyToEdit, activeFolderId]);
 
   useEffect(() => {
     if (propertyToEdit) {
@@ -299,7 +305,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         realEstateAgency: propertyToEdit.realEstateAgency || '',
         agentName: propertyToEdit.agentName || '',
         agentWhatsapp: propertyToEdit.agentWhatsapp || '',
-        folderId: propertyToEdit.folderId
+        folderId: propertyToEdit.folderId,
+        isPublic: propertyToEdit.isPublic !== undefined ? propertyToEdit.isPublic : true
       });
       setAnalysisResult({ dealScore: propertyToEdit.rating * 20 });
     } else {
@@ -333,10 +340,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         uncoveredSqft: analysisResult.uncoveredSqft || 0,
         age: analysisResult.age || 0,
         floor: analysisResult.floor || '',
-        folderId: (processingLink ? processingLink.folder_id : activeFolderId) || ''
+        folderId: (processingLink ? processingLink.folder_id : (leadToProcess ? leadToProcess.folder_id : activeFolderId)) || '',
+        isPublic: true
       }));
     }
-  }, [analysisResult, propertyToEdit]);
+  }, [analysisResult, propertyToEdit, processingLink, leadToProcess, activeFolderId]);
 
   const handleAddLinks = async () => {
     const urls = urlInput.split('\n').map(l => l.trim()).filter(l => l.startsWith('http'));
@@ -414,6 +422,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         ...propertyToEdit,
         ...editedData,
         folderId: editedData.folderId,
+        isPublic: editedData.isPublic,
         address: editedData.location,
         rating: editedData.rating,
         images: [finalImage],
@@ -433,6 +442,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         id: Math.random().toString(36).substr(2, 9),
         ...editedData,
         folderId: editedData.folderId,
+        isPublic: editedData.isPublic,
         url: processingLink.url || '',
         address: editedData.location || 'Unknown Address',
         status: PropertyStatus.WISHLIST,
@@ -468,7 +478,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setResolvedAddress(null);
     setEditedData({
       title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
-      realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || ''
+      realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
 
@@ -687,6 +697,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                       </select>
                       <ChevronDown className="w-3 h-3 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
+                  </div>
+                  <div className="pt-3 border-t border-slate-200/50 flex items-center justify-between">
+                    <div>
+                      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Visibilidad Shared</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        {editedData.isPublic ? 'Visible' : 'Oculto'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setEditedData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
+                      className={`w-10 h-5 rounded-full transition-all relative ${editedData.isPublic ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all ${editedData.isPublic ? 'left-5.5' : 'left-0.5'}`} />
+                    </button>
                   </div>
                 </div>
               </div>
