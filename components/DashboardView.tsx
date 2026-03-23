@@ -26,9 +26,10 @@ import {
   XAxis, 
   YAxis, 
   Tooltip, 
-  CartesianGrid 
+  CartesianGrid,
+  Legend
 } from 'recharts';
-import { Property, SearchFolder, Visit, PropertyStatus, User } from '../types';
+import { Property, SearchFolder, Visit, PropertyStatus, User, AcquisitionReason, TransactionType, FolderStatus } from '../types';
 import { InboxLink } from '../services/dataService';
 import PendingLeadsList from './PendingLeadsList';
 
@@ -79,17 +80,37 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   }, [properties]);
 
   const folderData = useMemo(() => {
-    return folders.map(f => {
+    const stats: Record<string, any> = {
+      'Búsqueda Venta': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
+      'Búsqueda Alquiler': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
+      'Captación Venta': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
+      'Captación Alquiler': { total: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0 },
+    };
+
+    folders.forEach(f => {
       const folderProps = properties.filter(p => p.folderId === f.id);
-      const avgPricePerM2 = folderProps.length > 0 
-        ? Math.round(folderProps.reduce((acc, p) => acc + (p.price / p.sqft), 0) / folderProps.length)
-        : 0;
-      return {
-        name: f.name.length > 15 ? f.name.substring(0, 12) + '...' : f.name,
-        count: folderProps.length,
-        avgPrice: avgPricePerM2
-      };
-    }).filter(f => f.count > 0).slice(0, 5);
+      const isCaptacion = folderProps.some(p => p.acquisitionReason === AcquisitionReason.CAPTACION);
+      
+      const isVenta = f.transactionType === TransactionType.VENTA || f.transactionType === TransactionType.COMPRA;
+      const isAlquiler = f.transactionType === TransactionType.ALQUILER || f.transactionType === TransactionType.ALQUILER_TEMPORARIO;
+
+      let typeKey = '';
+      if (isCaptacion) {
+        typeKey = isVenta ? 'Captación Venta' : 'Captación Alquiler';
+      } else {
+        typeKey = isVenta ? 'Búsqueda Venta' : 'Búsqueda Alquiler';
+      }
+
+      if (stats[typeKey]) {
+        stats[typeKey].total++;
+        stats[typeKey][f.status]++;
+      }
+    });
+
+    return Object.entries(stats).map(([name, values]) => ({
+      name,
+      ...values
+    })).filter(d => d.total > 0);
   }, [folders, properties]);
 
   const topProperties = useMemo(() => {
@@ -202,17 +223,17 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Price Comparison */}
+        {/* Folder Distribution */}
         <div className="lg:col-span-8 bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col h-[450px]">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-500" /> Valor por m² por Tesis
+              <FolderOpen className="w-4 h-4 text-indigo-500" /> Distribución de Carpetas
             </h3>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Top 5 Carpetas Activas</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Búsqueda vs Captación</p>
           </div>
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={folderData} layout="vertical" margin={{ left: 20, right: 40 }}>
+              <BarChart data={folderData} layout="vertical" margin={{ left: 20, right: 40, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                 <XAxis type="number" hide />
                 <YAxis 
@@ -221,19 +242,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }}
-                  width={100}
+                  width={120}
                 />
                 <Tooltip 
                   cursor={{ fill: '#f8fafc' }}
                   contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => [`$${value.toLocaleString()}`, 'USD/m²']}
                 />
-                <Bar 
-                  dataKey="avgPrice" 
-                  fill="#6366f1" 
-                  radius={[0, 10, 10, 0]} 
-                  barSize={30}
-                />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }} />
+                <Bar dataKey={FolderStatus.ABIERTA} name="Abierta" stackId="a" fill="#10b981" barSize={30} />
+                <Bar dataKey={FolderStatus.PENDIENTE} name="Pendiente" stackId="a" fill="#f59e0b" barSize={30} />
+                <Bar dataKey={FolderStatus.CERRADA} name="Cerrada" stackId="a" fill="#94a3b8" radius={[0, 10, 10, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>
