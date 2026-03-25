@@ -4,7 +4,10 @@ export enum PropertyStatus {
   CONTACTED = 'Contacted',
   VISITED = 'Visited',
   OFFERED = 'Offered',
-  DISCARDED = 'Discarded'
+  DISCARDED = 'Discarded',
+  SOLD = 'Vendida',
+  SOLD_BY_OTHER = 'Vendida por otro',
+  CANCELLED = 'Cancelada'
 }
 
 export enum FolderStatus {

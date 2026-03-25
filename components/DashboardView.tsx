@@ -193,7 +193,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     return combined.sort((a, b) => a.time.localeCompare(b.time));
   }, [visits, googleEvents, properties]);
 
-  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#059669', '#94a3b8', '#f43f5e'];
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
