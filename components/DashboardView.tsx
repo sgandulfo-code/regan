@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   FolderOpen, 
   Home, 
@@ -14,7 +14,9 @@ import {
   MapPin,
   ChevronRight,
   Clock,
-  User as UserIcon
+  User as UserIcon,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -30,7 +32,7 @@ import {
   Legend
 } from 'recharts';
 import { Property, SearchFolder, Visit, PropertyStatus, User, AcquisitionReason, TransactionType, FolderStatus } from '../types';
-import { InboxLink } from '../services/dataService';
+import { InboxLink, dataService } from '../services/dataService';
 import PendingLeadsList from './PendingLeadsList';
 
 interface DashboardViewProps {
@@ -62,6 +64,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onNewLead,
   onNewFolder
 }) => {
+  const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
+
+  useEffect(() => {
+    const fetchGoogleEvents = async () => {
+      if (user?.googleAuth) {
+        try {
+          setLoadingCalendar(true);
+          const events = await dataService.getGoogleCalendarEvents(user.id);
+          setGoogleEvents(events || []);
+        } catch (error) {
+          console.error('Error fetching google events:', error);
+        } finally {
+          setLoadingCalendar(false);
+        }
+      }
+    };
+    fetchGoogleEvents();
+  }, [user?.id, user?.googleAuth]);
+
   const calculateDays = (dateString?: string) => {
     if (!dateString) return 0;
     const start = new Date(dateString);
@@ -131,12 +153,45 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       .slice(0, 3);
   }, [visits]);
 
-  const todayVisits = useMemo(() => {
+  const todayEvents = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
-    return visits
+    
+    // Combine visits and google events for today
+    const combined: any[] = [];
+    
+    // Add visits
+    visits
       .filter(v => v.date === today && (v.status === 'Confirmed' || v.status === 'Scheduled'))
-      .sort((a, b) => a.time.localeCompare(b.time));
-  }, [visits]);
+      .forEach(v => {
+        const property = properties.find(p => p.id === v.propertyId);
+        combined.push({
+          id: v.id,
+          time: v.time,
+          title: property?.title || 'Visita Propiedad',
+          location: property?.address,
+          type: 'visit',
+          original: v
+        });
+      });
+      
+    // Add google events
+    googleEvents.forEach(e => {
+      const start = e.start?.dateTime || e.start?.date;
+      if (start && start.startsWith(today)) {
+        const time = e.start?.dateTime ? new Date(e.start.dateTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) : '00:00';
+        combined.push({
+          id: e.id,
+          time,
+          title: e.summary || '(Sin título)',
+          location: e.location,
+          type: 'google',
+          original: e
+        });
+      }
+    });
+    
+    return combined.sort((a, b) => a.time.localeCompare(b.time));
+  }, [visits, googleEvents, properties]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
@@ -156,35 +211,52 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               Tu portafolio tiene <span className="text-white">{properties.length} activos</span> distribuidos en <span className="text-white">{folders.length} tesis de inversión</span>.
             </p>
 
-            {/* Agenda del Día */}
+            {/* Calendario del Día */}
             <div className="mt-6 space-y-3">
-              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                <CalendarIcon className="w-3.5 h-3.5" /> Agenda del Día
-              </h3>
-              {todayVisits.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {todayVisits.map((visit) => {
-                    const property = properties.find(p => p.id === visit.propertyId);
-                    return (
-                      <div key={visit.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 group hover:bg-white/10 transition-all cursor-pointer" onClick={() => onSetActiveTab('visits')}>
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex flex-col items-center justify-center shrink-0">
-                          <span className="text-[10px] font-black text-indigo-400 leading-none">{visit.time}</span>
+              <div className="flex items-center justify-between">
+                <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                  <CalendarIcon className="w-3.5 h-3.5" /> Calendario del Día
+                </h3>
+                {loadingCalendar && <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />}
+              </div>
+              
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
+                
+                <div className="space-y-4 relative">
+                  {todayEvents.length > 0 ? (
+                    todayEvents.map((event) => (
+                      <div key={event.id} className="flex items-start gap-4 group">
+                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center shrink-0 z-10 group-hover:bg-indigo-600 group-hover:border-indigo-400 transition-all">
+                          <Clock className="w-3.5 h-3.5 text-indigo-400 group-hover:text-white" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-white truncate">{property?.title || 'Propiedad desconocida'}</p>
-                          <p className="text-[9px] text-slate-400 truncate flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5" /> {property?.address || 'Sin dirección'}
-                          </p>
+                        
+                        <div className="flex-1 bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl hover:bg-white/10 transition-all cursor-pointer" onClick={() => event.type === 'visit' ? onSetActiveTab('visits') : window.open(event.original.htmlLink, '_blank')}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{event.time}</span>
+                            {event.type === 'visit' ? (
+                              <span className="bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Visita</span>
+                            ) : (
+                              <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Google</span>
+                            )}
+                          </div>
+                          <h4 className="text-xs font-bold text-white mb-1">{event.title}</h4>
+                          {event.location && (
+                            <p className="text-[9px] text-slate-400 flex items-center gap-1">
+                              <MapPin className="w-2.5 h-2.5" /> {event.location}
+                            </p>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <div className="ml-12 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-2xl text-center">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">No tienes eventos programados para hoy</p>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl text-center">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">No tienes visitas programadas para hoy</p>
-                </div>
-              )}
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-4 pt-4">
