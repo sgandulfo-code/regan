@@ -62,10 +62,15 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
       {/* Main Info */}
       <div className="flex-1 min-w-0 w-full">
         <div className="flex justify-between items-start mb-1">
+          <div className="flex flex-col min-w-0">
+            {property.code && (
+              <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-0.5">{property.code}</span>
+            )}
             <h3 className="font-bold text-sm md:text-base text-slate-800 truncate pr-2 cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => onSelect(property)} title={property.title}>{property.title}</h3>
-             <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-600 transition-colors">
-                <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+          </div>
+          <a href={property.url} target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-indigo-600 transition-colors mt-1">
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
         
         <div className="flex items-center gap-2 mb-2 text-slate-500">

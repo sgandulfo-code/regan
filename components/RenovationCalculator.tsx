@@ -41,7 +41,7 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
             {ICONS.Calculator} Renovation Estimator
             {isArchitect && <span className="bg-orange-100 text-orange-600 text-[9px] md:text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">Expert Access</span>}
           </h3>
-          <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property: {property.title}</p>
+          <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Property: {property.code ? `${property.code} - ` : ''}{property.title}</p>
         </div>
         
         {canEdit && (

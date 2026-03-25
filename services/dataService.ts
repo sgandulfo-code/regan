@@ -280,6 +280,7 @@ export const dataService = {
     return (data || []).map((p: any) => ({
       id: p.id,
       folderId: p.folder_id,
+      code: p.code,
       title: p.title,
       url: p.url,
       address: p.address,
@@ -322,6 +323,7 @@ export const dataService = {
       .insert([{
         user_id: userId,
         folder_id: property.folderId,
+        code: property.code,
         title: property.title,
         url: property.url,
         address: property.address,
@@ -357,6 +359,7 @@ export const dataService = {
     const { data, error } = await supabase
       .from('properties')
       .update({
+        code: property.code,
         title: property.title,
         address: property.address,
         exact_address: property.exactAddress,
@@ -789,6 +792,7 @@ export const dataService = {
       })),
       properties: (properties || []).map(p => ({
         id: p.id,
+        code: p.code,
         title: p.title,
         address: p.address,
         exactAddress: p.exact_address,

@@ -97,7 +97,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   {isSelected ? <Check className="w-5 h-5" /> : <Building className="w-5 h-5 text-slate-400" />}
                 </div>
                 <div className="overflow-hidden">
-                  <p className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{property.title}</p>
+                  <p className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>{property.code ? `${property.code} - ` : ''}{property.title}</p>
                   <p className={`text-[10px] font-bold truncate ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>{property.address}</p>
                 </div>
               </button>

@@ -98,6 +98,9 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                   ${property.price.toLocaleString()}
                 </span>
               </div>
+              {property.code && (
+                <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-0.5 block">{property.code}</span>
+              )}
               <h3 className="font-black text-slate-900 text-lg mb-1 truncate">{property.title}</h3>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wide truncate">{property.address}</p>
             </button>

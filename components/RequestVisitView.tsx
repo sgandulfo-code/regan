@@ -116,6 +116,9 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, v
                 </div>
                 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  {property.code && (
+                    <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-0.5 block">{property.code}</span>
+                  )}
                   <h3 className="font-bold text-base md:text-lg text-slate-900 truncate mb-1">{property.title}</h3>
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 mb-4">
                     <MapPin className="w-3 h-3" /> {property.address}

@@ -133,6 +133,9 @@ const ValuationsDashboard: React.FC<ValuationsDashboardProps> = ({ folders, prop
                   <img src={property.images[0]} alt={property.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
                   <div className="absolute bottom-4 left-4 right-4">
+                    {property.code && (
+                      <span className="text-[9px] font-black text-indigo-300 uppercase tracking-widest mb-0.5 block">{property.code}</span>
+                    )}
                     <h3 className="text-white font-bold text-lg truncate">{property.title}</h3>
                     <div className="flex items-center gap-1 text-slate-300 text-xs mt-1">
                       <MapPin className="w-3 h-3" />

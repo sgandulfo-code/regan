@@ -42,6 +42,9 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
       {/* Title & Address - Full Width */}
       <div className="flex justify-between items-start w-full gap-4">
         <div className="flex-1 min-w-0">
+          {property.code && (
+            <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">{property.code}</span>
+          )}
           <h3 className="font-bold text-lg md:text-xl text-slate-800 pr-2 cursor-pointer hover:text-indigo-600 transition-colors leading-snug" onClick={() => onSelect(property)} title={property.title}>{property.title}</h3>
           <div className="flex items-start gap-2 mt-1.5 text-slate-500">
             <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />

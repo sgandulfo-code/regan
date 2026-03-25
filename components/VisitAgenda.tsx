@@ -152,6 +152,9 @@ const VisitAgenda: React.FC<VisitAgendaProps> = ({ visits, properties, folders, 
           <div className="flex-1">
             <div className="flex justify-between items-start mb-4">
               <div>
+                {property.code && (
+                  <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">{property.code}</span>
+                )}
                 <h3 className="text-2xl font-black text-slate-900 tracking-tight mb-1">{property.title}</h3>
                 <p className="text-slate-400 text-xs font-bold flex items-center gap-2 uppercase tracking-widest">
                   <MapPin className="w-3.5 h-3.5 text-indigo-500" /> {property.address}

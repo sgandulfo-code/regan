@@ -112,6 +112,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0">
+            {property.code && (
+              <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">
+                {property.code}
+              </div>
+            )}
             <h3 className="font-bold text-lg text-slate-800 truncate mb-1" title={property.title}>
               {property.title}
             </h3>

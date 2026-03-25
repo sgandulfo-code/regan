@@ -133,6 +133,7 @@ export interface CriteriaTemplate {
 export interface Property {
   id: string;
   folderId: string;
+  code?: string;
   title: string;
   url: string;
   address: string;

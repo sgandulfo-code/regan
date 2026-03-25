@@ -50,6 +50,7 @@ interface PropertyFormProps {
 }
 
 interface PropertyFormData {
+  code: string;
   title: string;
   imageUrl: string;
   price: number;
@@ -152,7 +153,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [filterFolderId, setFilterFolderId] = useState<string>('all');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
+    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
     realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '', isPublic: true
   });
 
@@ -284,6 +285,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   useEffect(() => {
     if (propertyToEdit) {
       setEditedData({
+        code: propertyToEdit.code || '',
         title: propertyToEdit.title,
         imageUrl: propertyToEdit.images[0] || '',
         price: propertyToEdit.price,
@@ -480,7 +482,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
+      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
       realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
@@ -757,7 +759,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                           ))}
                         </div>
                       </div>
-                      <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                        <FormField label="Código de Propiedad" type="text" value={editedData.code} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, code: v}))} icon={Binary} placeholder="e.g. REF-1234" />
+                      </div>
                       
                       {mode === 'edit' && (
                         <div className="space-y-2">
