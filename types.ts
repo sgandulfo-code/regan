@@ -6,7 +6,7 @@ export enum PropertyStatus {
   OFFERED = 'Offered',
   DISCARDED = 'Discarded',
   SOLD = 'Vendida',
-  SOLD_BY_OTHER = 'Vendida por otro',
+  SOLD_BY_OTHER = 'Vendida por otra inmobiliaria',
   CANCELLED = 'Cancelada'
 }
 

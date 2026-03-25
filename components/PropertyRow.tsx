@@ -30,7 +30,7 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
       case PropertyStatus.DISCARDED: return 'bg-red-100 text-red-700';
       case PropertyStatus.OFFERED: return 'bg-purple-100 text-purple-700';
       case PropertyStatus.SOLD: return 'bg-emerald-100 text-emerald-700';
-      case PropertyStatus.SOLD_BY_OTHER: return 'bg-slate-200 text-slate-700';
+      case PropertyStatus.SOLD_BY_OTHER: return 'bg-slate-800 text-slate-200';
       case PropertyStatus.CANCELLED: return 'bg-rose-50 text-rose-700';
       default: return 'bg-slate-100 text-slate-700';
     }
@@ -188,6 +188,21 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>
              </div>
+
+             {isEditable ? (
+               <select 
+                 className="bg-slate-100 border-none rounded-lg text-[9px] font-bold text-slate-500 py-1.5 px-2 cursor-pointer outline-none focus:ring-2 focus:ring-indigo-500 transition-all uppercase tracking-widest"
+                 value={property.status}
+                 onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
+                 onClick={(e) => e.stopPropagation()}
+               >
+                 {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
+               </select>
+             ) : (
+               <div className="bg-slate-50 rounded-lg text-[9px] font-bold text-slate-400 py-1.5 px-2 text-center border border-slate-100 uppercase tracking-widest">
+                  {property.status}
+               </div>
+             )}
              
              <button 
                 onClick={() => onSelect(property)}

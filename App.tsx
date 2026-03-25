@@ -407,6 +407,9 @@ const App: React.FC = () => {
     // 3. Filtro por estado
     if (statusFilter !== 'All') {
       filtered = filtered.filter(p => p.status === statusFilter);
+    } else {
+      // Ocultar por defecto las propiedades vendidas por otra inmobiliaria
+      filtered = filtered.filter(p => p.status !== PropertyStatus.SOLD_BY_OTHER);
     }
 
     // 3.5 Filtro por origen (AcquisitionReason)
@@ -925,7 +928,16 @@ const App: React.FC = () => {
       </main>
 
       <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
-      {selectedProperty && <PropertyDetailModal property={selectedProperty} onClose={() => setSelectedProperty(null)} userRole={user.role} onUpdateReno={handleUpdateReno} />}
+      {selectedProperty && (
+        <PropertyDetailModal 
+          property={selectedProperty} 
+          onClose={() => setSelectedProperty(null)} 
+          userRole={user.role} 
+          onUpdateReno={handleUpdateReno} 
+          onStatusChange={handleUpdateStatus}
+          isEditable={canEdit}
+        />
+      )}
       {isReportOpen && activeFolder && <ReportGenerator folder={activeFolder} properties={displayProperties} onClose={() => setIsReportOpen(false)} />}
       {sharingFolder && <ShareFolderModal folder={sharingFolder} onClose={() => setSharingFolder(null)} />}
       

@@ -69,6 +69,7 @@ interface PropertyFormData {
   notes: string;
   rating: number;
   acquisitionReason?: AcquisitionReason;
+  status: PropertyStatus;
   realEstateAgency?: string;
   agentName?: string;
   agentWhatsapp?: string;
@@ -151,7 +152,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [filterFolderId, setFilterFolderId] = useState<string>('all');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
+    title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
     realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '', isPublic: true
   });
 
@@ -302,6 +303,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         notes: propertyToEdit.notes || '',
         rating: propertyToEdit.rating || 3,
         acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA,
+        status: propertyToEdit.status || PropertyStatus.WISHLIST,
         realEstateAgency: propertyToEdit.realEstateAgency || '',
         agentName: propertyToEdit.agentName || '',
         agentWhatsapp: propertyToEdit.agentWhatsapp || '',
@@ -340,6 +342,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         uncoveredSqft: analysisResult.uncoveredSqft || 0,
         age: analysisResult.age || 0,
         floor: analysisResult.floor || '',
+        status: PropertyStatus.WISHLIST,
         folderId: (processingLink ? processingLink.folder_id : (leadToProcess ? leadToProcess.folder_id : activeFolderId)) || '',
         isPublic: true
       }));
@@ -477,7 +480,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA,
+      title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
       realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
@@ -755,6 +758,21 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                         </div>
                       </div>
                       <FormField label="Asset Commercial Title" type="text" value={editedData.title} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, title: v}))} icon={Home} placeholder="e.g. Penthouse con Terraza" />
+                      
+                      {mode === 'edit' && (
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Binary className="w-2.5 h-2.5" /> Estado de la Propiedad
+                          </label>
+                          <select
+                            value={editedData.status}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, status: e.target.value as PropertyStatus }))}
+                            className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all uppercase tracking-widest"
+                          >
+                            {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      )}
                       
                       {/* Campo de URL de Imagen Restaurado */}
                     <FormField label="Visual Media URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, imageUrl: v}))} icon={ImageIcon} placeholder="https://example.com/property-photo.jpg" />

@@ -31,7 +31,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
       case PropertyStatus.DISCARDED: return 'bg-red-100 text-red-700';
       case PropertyStatus.OFFERED: return 'bg-purple-100 text-purple-700';
       case PropertyStatus.SOLD: return 'bg-emerald-100 text-emerald-700';
-      case PropertyStatus.SOLD_BY_OTHER: return 'bg-slate-200 text-slate-700';
+      case PropertyStatus.SOLD_BY_OTHER: return 'bg-slate-800 text-slate-200';
       case PropertyStatus.CANCELLED: return 'bg-rose-50 text-rose-700';
       default: return 'bg-slate-100 text-slate-700';
     }
