@@ -126,9 +126,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const upcomingVisits = useMemo(() => {
     return visits
-      .filter(v => v.status === 'Confirmed')
+      .filter(v => v.status === 'Confirmed' || v.status === 'Scheduled')
       .sort((a, b) => new Date(a.date + 'T' + a.time).getTime() - new Date(b.date + 'T' + b.time).getTime())
       .slice(0, 3);
+  }, [visits]);
+
+  const todayVisits = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return visits
+      .filter(v => v.date === today && (v.status === 'Confirmed' || v.status === 'Scheduled'))
+      .sort((a, b) => a.time.localeCompare(b.time));
   }, [visits]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -148,6 +155,38 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">
               Tu portafolio tiene <span className="text-white">{properties.length} activos</span> distribuidos en <span className="text-white">{folders.length} tesis de inversión</span>.
             </p>
+
+            {/* Agenda del Día */}
+            <div className="mt-6 space-y-3">
+              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <CalendarIcon className="w-3.5 h-3.5" /> Agenda del Día
+              </h3>
+              {todayVisits.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {todayVisits.map((visit) => {
+                    const property = properties.find(p => p.id === visit.propertyId);
+                    return (
+                      <div key={visit.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-3 rounded-2xl flex items-center gap-3 group hover:bg-white/10 transition-all cursor-pointer" onClick={() => onSetActiveTab('visits')}>
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex flex-col items-center justify-center shrink-0">
+                          <span className="text-[10px] font-black text-indigo-400 leading-none">{visit.time}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{property?.title || 'Propiedad desconocida'}</p>
+                          <p className="text-[9px] text-slate-400 truncate flex items-center gap-1">
+                            <MapPin className="w-2.5 h-2.5" /> {property?.address || 'Sin dirección'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded-2xl text-center">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest italic">No tienes visitas programadas para hoy</p>
+                </div>
+              )}
+            </div>
+
             <div className="flex flex-wrap gap-4 pt-4">
               <button 
                 onClick={onNewLead}
