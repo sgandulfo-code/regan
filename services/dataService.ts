@@ -423,7 +423,11 @@ export const dataService = {
 
   async getInboxLinks(userId: string, folderId: string | null) {
     let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
-    if (folderId) query = query.eq('folder_id', folderId);
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    } else {
+      query = query.is('folder_id', null);
+    }
     
     // Intentamos filtrar por status='enviado' o NULL
     const { data, error } = await query.or('status.eq.enviado,status.is.null').order('created_at', { ascending: false });
@@ -431,7 +435,11 @@ export const dataService = {
     if (error && error.code === '42703') {
       // Si la columna status no existe, hacemos la consulta sin el filtro
       let fallbackQuery = supabase.from('link_inbox').select('*').eq('user_id', userId);
-      if (folderId) fallbackQuery = fallbackQuery.eq('folder_id', folderId);
+      if (folderId) {
+        fallbackQuery = fallbackQuery.eq('folder_id', folderId);
+      } else {
+        fallbackQuery = fallbackQuery.is('folder_id', null);
+      }
       const { data: fallbackData } = await fallbackQuery.order('created_at', { ascending: false });
       return (fallbackData || []) as InboxLink[];
     }
@@ -439,9 +447,8 @@ export const dataService = {
     return (data || []) as InboxLink[];
   },
 
-  async getAllInboxLinks(userId: string, folderId: string | null) {
-    let query = supabase.from('link_inbox').select('*').eq('user_id', userId);
-    if (folderId) query = query.eq('folder_id', folderId);
+  async getAllInboxLinks(userId: string) {
+    const query = supabase.from('link_inbox').select('*').eq('user_id', userId);
     const { data, error } = await query.order('created_at', { ascending: false });
     return (data || []) as InboxLink[];
   },

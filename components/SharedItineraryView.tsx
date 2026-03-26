@@ -96,7 +96,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           });
 
           // Fetch inbox links for this folder
-          const links = await dataService.getAllInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
+          const links = await dataService.getInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
           setInboxLinks(links);
         }
       } catch (error) {
@@ -142,7 +142,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       setPendingInboxFiles([]);
       
       // Refresh links
-      const updatedLinks = await dataService.getAllInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
+      const updatedLinks = await dataService.getInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
       setInboxLinks(updatedLinks);
       
       alert('¡Sugerencias enviadas con éxito! Tu consultor las revisará pronto.');

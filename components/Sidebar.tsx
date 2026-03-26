@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { UserRole, SearchFolder, User, Property } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin } from 'lucide-react';
-import { dataService } from '../services/dataService';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin, Inbox } from 'lucide-react';
+import { dataService, InboxLink } from '../services/dataService';
 
 interface SidebarProps {
   user: User | null;
@@ -11,6 +11,7 @@ interface SidebarProps {
   userRole?: UserRole;
   folders: SearchFolder[];
   properties: Property[];
+  inboxLinks?: InboxLink[];
   activeFolderId: string | null;
   setActiveFolderId: (id: string | null) => void;
   onLogout?: () => void;
@@ -32,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   userRole = UserRole.BUYER,
   folders,
   properties,
+  inboxLinks = [],
   activeFolderId,
   setActiveFolderId,
   onLogout,
@@ -57,10 +59,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const unassignedLeadsCount = inboxLinks.filter(l => l.folder_id === null && (!l.status || l.status === 'enviado')).length;
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
     { id: 'activity', label: 'Feed de Actividad', icon: <Activity className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
-    { id: 'search', label: 'Lead Collector', icon: <Plus className="w-5 h-5" />, hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT },
+    { 
+      id: 'search', 
+      label: 'Inbox Global', 
+      icon: <Inbox className="w-5 h-5" />, 
+      hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT,
+      badge: unassignedLeadsCount > 0 ? unassignedLeadsCount : undefined
+    },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
     { 
       id: 'visits', 
@@ -103,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             key={item.id}
             onClick={() => {
               setActiveTab(item.id);
-              if (item.id === 'dashboard' || item.id === 'visits') setActiveFolderId(null);
+              if (item.id === 'dashboard' || item.id === 'visits' || item.id === 'search') setActiveFolderId(null);
             }}
             className={`w-full flex items-center gap-4 p-4 rounded-2xl transition-all ${
               activeTab === item.id && !activeFolderId
@@ -134,6 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {folders.map(folder => {
               const folderProperties = properties.filter(p => p.folderId === folder.id);
               const isActive = activeFolderId === folder.id;
+              const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
 
               return (
                 <div key={folder.id} className="group relative">
@@ -161,7 +172,12 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
                     )}
                     <span className="truncate pr-8">{folder.name}</span>
-                    {folder.isShared && (
+                    {folderLeadsCount > 0 && (
+                      <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'}`}>
+                        {folderLeadsCount}
+                      </span>
+                    )}
+                    {folder.isShared && folderLeadsCount === 0 && (
                       <Users className={`w-3 h-3 ml-auto ${isActive ? 'text-white/70' : 'text-slate-400'}`} />
                     )}
                   </button>

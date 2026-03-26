@@ -150,7 +150,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [filterText, setFilterText] = useState('');
-  const [filterFolderId, setFilterFolderId] = useState<string>('all');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
     code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
@@ -494,8 +493,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
   const filteredLinks = pendingLinks.filter(link => {
     const matchesText = (link.url || '').toLowerCase().includes(filterText.toLowerCase());
-    const matchesFolder = filterFolderId === 'all' || link.folder_id === filterFolderId;
-    return matchesText && matchesFolder;
+    return matchesText;
   });
 
   if (step === 'inbox') {
@@ -549,17 +547,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                   className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all w-48"
                 />
               </div>
-              
-              <select
-                value={filterFolderId}
-                onChange={(e) => setFilterFolderId(e.target.value)}
-                className="pl-4 pr-8 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-indigo-500 transition-all cursor-pointer appearance-none"
-              >
-                <option value="all">Todas las carpetas</option>
-                {folders.map(f => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
-              </select>
 
               {isSyncingInbox && <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />}
             </div>

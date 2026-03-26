@@ -110,7 +110,7 @@ const App: React.FC = () => {
         dataService.getFolders(user.id),
         dataService.getProperties(user.id),
         dataService.getVisits(user.id, activeFolderId),
-        dataService.getAllInboxLinks(user.id, null)
+        dataService.getAllInboxLinks(user.id)
       ]);
       setFolders(f);
       setProperties(p);
@@ -481,6 +481,7 @@ const App: React.FC = () => {
           userRole={user.role} 
           folders={folders} 
           properties={properties}
+          inboxLinks={inboxLinks}
           activeFolderId={activeFolderId} 
           setActiveFolderId={(id) => { setActiveFolderId(id); setIsSidebarOpen(false); }}
           onLogout={() => supabase.auth.signOut()}
@@ -536,12 +537,24 @@ const App: React.FC = () => {
             
             <div className="flex items-center gap-2 md:gap-4 ml-0 md:ml-4 w-full md:w-auto justify-between md:justify-end">
               {activeFolderId && activeTab === 'properties' && (
-                <button 
-                  onClick={() => setIsReportOpen(true)}
-                  className="bg-white border border-slate-200 text-indigo-600 px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
-                >
-                  <Printer className="w-4 h-4" /> <span className="hidden sm:inline">Informe PDF</span>
-                </button>
+                <>
+                  <button 
+                    onClick={() => {
+                      setPropertyToEdit(null);
+                      setLeadToProcess(null);
+                      setActiveTab('search');
+                    }}
+                    className="bg-indigo-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Lead Collector</span>
+                  </button>
+                  <button 
+                    onClick={() => setIsReportOpen(true)}
+                    className="bg-white border border-slate-200 text-indigo-600 px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
+                  >
+                    <Printer className="w-4 h-4" /> <span className="hidden sm:inline">Informe PDF</span>
+                  </button>
+                </>
               )}
               <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
                 <button onClick={() => setViewMode('grid')} className={`p-2 px-3 md:px-4 rounded-xl flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400'}`}><LayoutGrid className="w-3 h-3" /> <span className="hidden sm:inline">Grid</span></button>
