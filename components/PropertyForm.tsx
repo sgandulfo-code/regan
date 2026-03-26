@@ -84,10 +84,10 @@ type ValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid';
 
 const FormField = ({ label, value, onChange, type = "number", icon: Icon, prefix, placeholder, error, success, loading }: any) => {
   const isNumeric = type === "number";
-  const [localValue, setLocalValue] = useState(isNumeric && value === 0 ? '' : value.toString());
+  const [localValue, setLocalValue] = useState(isNumeric && value === 0 ? '' : (value?.toString() || ''));
 
   useEffect(() => {
-    setLocalValue(isNumeric && value === 0 ? '' : value.toString());
+    setLocalValue(isNumeric && value === 0 ? '' : (value?.toString() || ''));
   }, [value, isNumeric]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +144,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>(propertyToEdit ? 'snapshot' : 'live');
   const [snapshotLoading, setSnapshotLoading] = useState(false);
-  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(propertyToEdit?.images[0] || null);
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(propertyToEdit?.images?.[0] || null);
 
   const [addressStatus, setAddressStatus] = useState<ValidationStatus>('idle');
   const [resolvedAddress, setResolvedAddress] = useState<string | null>(null);
@@ -285,19 +285,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     if (propertyToEdit) {
       setEditedData({
         code: propertyToEdit.code || '',
-        title: propertyToEdit.title,
-        imageUrl: propertyToEdit.images[0] || '',
-        price: propertyToEdit.price,
+        title: propertyToEdit.title || '',
+        imageUrl: propertyToEdit.images?.[0] || '',
+        price: propertyToEdit.price || 0,
         fees: propertyToEdit.fees || 0,
-        location: propertyToEdit.address,
+        location: propertyToEdit.address || '',
         exactAddress: propertyToEdit.exactAddress || '',
-        environments: propertyToEdit.environments,
-        rooms: propertyToEdit.rooms,
-        bathrooms: propertyToEdit.bathrooms,
+        environments: propertyToEdit.environments || 0,
+        rooms: propertyToEdit.rooms || 0,
+        bathrooms: propertyToEdit.bathrooms || 0,
         toilets: propertyToEdit.toilets || 0,
         parking: propertyToEdit.parking || 0,
-        sqft: propertyToEdit.sqft,
-        coveredSqft: propertyToEdit.coveredSqft || propertyToEdit.sqft,
+        sqft: propertyToEdit.sqft || 0,
+        coveredSqft: propertyToEdit.coveredSqft || propertyToEdit.sqft || 0,
         uncoveredSqft: propertyToEdit.uncoveredSqft || 0,
         age: propertyToEdit.age || 0,
         floor: propertyToEdit.floor || '',
@@ -308,10 +308,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         realEstateAgency: propertyToEdit.realEstateAgency || '',
         agentName: propertyToEdit.agentName || '',
         agentWhatsapp: propertyToEdit.agentWhatsapp || '',
-        folderId: propertyToEdit.folderId,
+        folderId: propertyToEdit.folderId || activeFolderId || '',
         isPublic: propertyToEdit.isPublic !== undefined ? propertyToEdit.isPublic : true
       });
-      setAnalysisResult({ dealScore: propertyToEdit.rating * 20 });
+      setAnalysisResult({ dealScore: (propertyToEdit.rating || 3) * 20 });
     } else {
       fetchInbox();
     }
@@ -419,7 +419,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
       }
     }
 
-    const finalImage = editedData.imageUrl || snapshotUrl || (propertyToEdit?.images[0]) || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(propertyToEdit?.url || processingLink?.url || '')}?w=1200`;
+    const finalImage = editedData.imageUrl || snapshotUrl || (propertyToEdit?.images?.[0]) || `https://s.wordpress.com/mshots/v1/${encodeURIComponent(propertyToEdit?.url || processingLink?.url || '')}?w=1200`;
 
     if (propertyToEdit) {
       const updated: Property = {
