@@ -257,7 +257,13 @@ const ClientModal: React.FC<ClientModalProps> = ({ isOpen, onClose, onConfirm, i
                 return;
               }
               setError(null);
-              onConfirm(formData);
+              
+              const dataToSave = { ...formData };
+              if (dataToSave.birthdate === '') {
+                delete dataToSave.birthdate;
+              }
+              
+              onConfirm(dataToSave);
             }}
             className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
           >

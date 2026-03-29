@@ -66,9 +66,9 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
       setIsClientModalOpen(false);
       setEditingClient(null);
       loadClients();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving client:', error);
-      setError('Error al guardar el cliente');
+      setError(error?.message || 'Error al guardar el cliente');
     }
   };
 
