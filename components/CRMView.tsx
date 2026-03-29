@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SearchFolder, Client } from '../types';
 import { dataService } from '../services/dataService';
-import { Plus, Users, Search, Phone, Mail, Calendar, Briefcase, Building, ChevronRight, MapPin, DollarSign, Home, Edit, Trash2 } from 'lucide-react';
+import { Plus, Users, Search, Phone, Mail, Calendar, Briefcase, Building, ChevronRight, MapPin, DollarSign, Home, Edit, Trash2, X } from 'lucide-react';
 import ClientModal from './ClientModal';
 
 interface CRMViewProps {
@@ -27,6 +27,8 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
   const [searchTerm, setSearchTerm] = useState('');
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     loadClients();
@@ -55,6 +57,7 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
 
   const handleSaveClient = async (clientData: Partial<Client>) => {
     try {
+      setError(null);
       if (editingClient) {
         await dataService.updateClient(editingClient.id, clientData);
       } else {
@@ -65,19 +68,26 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
       loadClients();
     } catch (error) {
       console.error('Error saving client:', error);
-      alert('Error al guardar el cliente');
+      setError('Error al guardar el cliente');
     }
   };
 
-  const handleDeleteClient = async (id: string) => {
-    if (!window.confirm('¿Estás seguro de eliminar este cliente? Las operaciones asociadas quedarán sin cliente asignado.')) return;
+  const confirmDeleteClient = async () => {
+    if (!clientToDelete) return;
     try {
-      await dataService.deleteClient(id);
+      setError(null);
+      await dataService.deleteClient(clientToDelete);
+      setClientToDelete(null);
       loadClients();
     } catch (error) {
       console.error('Error deleting client:', error);
-      alert('Error al eliminar el cliente');
+      setError('Error al eliminar el cliente');
+      setClientToDelete(null);
     }
+  };
+
+  const handleDeleteClient = (id: string) => {
+    setClientToDelete(id);
   };
 
   const handleDragStart = (e: React.DragEvent, folderId: string) => {
@@ -309,6 +319,15 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm font-bold flex justify-between items-center">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="p-1 hover:bg-rose-100 rounded-full">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {viewMode === 'clients' && (
         <div className="mb-8 relative max-w-md">
           <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -336,6 +355,31 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
         onConfirm={handleSaveClient}
         initialData={editingClient}
       />
+
+      {clientToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="text-lg font-black text-slate-800 mb-2">¿Eliminar cliente?</h3>
+            <p className="text-slate-500 text-sm mb-6">
+              ¿Estás seguro de eliminar este cliente? Las operaciones asociadas quedarán sin cliente asignado. Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setClientToDelete(null)}
+                className="px-4 py-2 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDeleteClient}
+                className="px-4 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors shadow-lg shadow-rose-200"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

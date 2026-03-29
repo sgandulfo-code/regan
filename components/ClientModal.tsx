@@ -11,6 +11,7 @@ interface ClientModalProps {
 
 const ClientModal: React.FC<ClientModalProps> = ({ isOpen, onClose, onConfirm, initialData }) => {
   const [formData, setFormData] = useState<Partial<Client>>({});
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -46,6 +47,12 @@ const ClientModal: React.FC<ClientModalProps> = ({ isOpen, onClose, onConfirm, i
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
+
+        {error && (
+          <div className="mx-6 mt-6 p-3 bg-rose-50 border border-rose-200 text-rose-600 rounded-xl text-sm font-bold">
+            {error}
+          </div>
+        )}
 
         <div className="p-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -245,7 +252,11 @@ const ClientModal: React.FC<ClientModalProps> = ({ isOpen, onClose, onConfirm, i
           </button>
           <button
             onClick={() => {
-              if (!formData.name) return alert('El nombre es obligatorio');
+              if (!formData.name) {
+                setError('El nombre completo es obligatorio');
+                return;
+              }
+              setError(null);
               onConfirm(formData);
             }}
             className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200"
