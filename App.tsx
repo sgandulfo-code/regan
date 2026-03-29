@@ -58,6 +58,7 @@ import CriteriaTemplateManager from './components/CriteriaTemplateManager';
 import DashboardView from './components/DashboardView';
 import PendingLeadsList from './components/PendingLeadsList';
 import Auth from './components/Auth';
+import CRMView from './components/CRMView';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
 import { dataService, InboxLink } from './services/dataService';
@@ -806,6 +807,15 @@ const App: React.FC = () => {
             }}
             onNewLead={() => setActiveTab('search')}
             onNewFolder={() => setIsFolderModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'crm' && (
+          <CRMView 
+            userId={user.id}
+            folders={folders}
+            onFolderSelect={(id) => { setActiveFolderId(id); setActiveTab('properties'); }}
+            onRefresh={loadData}
           />
         )}
 

@@ -104,7 +104,7 @@ export const dataService = {
     // 1. Get owned folders
     const { data: owned, error: ownedError } = await supabase
       .from('folders')
-      .select('*')
+      .select('*, client:clients(*)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -115,7 +115,7 @@ export const dataService = {
     if (userEmail) {
       const { data: shares, error: sharesError } = await supabase
         .from('folder_shares')
-        .select('permission, folder_id, folder:folders(*)')
+        .select('permission, folder_id, folder:folders(*, client:clients(*))')
         .eq('user_email', userEmail);
 
       if (sharesError) {
@@ -150,7 +150,13 @@ export const dataService = {
       welcomeMessage: f.welcome_message,
       stageId: f.stage_id,
       imageUrl: f.image_url,
-      isImagePublic: f.is_image_public !== false // Default to true if null
+      isImagePublic: f.is_image_public !== false, // Default to true if null
+      client_id: f.client_id,
+      stage: f.stage,
+      budget_min: Number(f.budget_min),
+      budget_max: Number(f.budget_max),
+      operation_type: f.operation_type,
+      client: f.client
     }));
   },
 
@@ -213,7 +219,12 @@ export const dataService = {
         welcome_message: folder.welcomeMessage,
         stage_id: folder.stageId,
         image_url: folder.imageUrl,
-        is_image_public: folder.isImagePublic ?? true
+        is_image_public: folder.isImagePublic ?? true,
+        client_id: folder.client_id,
+        stage: folder.stage || 'Nuevos Leads',
+        budget_min: folder.budget_min,
+        budget_max: folder.budget_max,
+        operation_type: folder.operation_type
       }])
       .select()
       .single();
@@ -233,7 +244,12 @@ export const dataService = {
       welcome_message: folder.welcomeMessage,
       stage_id: folder.stageId,
       image_url: folder.imageUrl,
-      is_image_public: folder.isImagePublic
+      is_image_public: folder.isImagePublic,
+      client_id: folder.client_id,
+      stage: folder.stage,
+      budget_min: folder.budget_min,
+      budget_max: folder.budget_max,
+      operation_type: folder.operation_type
     };
 
     if (folder.status && currentFolder && folder.status !== currentFolder.status) {
@@ -251,6 +267,47 @@ export const dataService = {
 
   async deleteFolder(id: string) {
     await supabase.from('folders').delete().eq('id', id);
+  },
+
+  // Client Methods
+  async getClients(userId: string) {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching clients:', error);
+      return [];
+    }
+    return data;
+  },
+
+  async createClient(client: any, userId: string) {
+    const { data, error } = await supabase
+      .from('clients')
+      .insert([{ ...client, user_id: userId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async updateClient(id: string, client: any) {
+    const { data, error } = await supabase
+      .from('clients')
+      .update({ ...client, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deleteClient(id: string) {
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) throw error;
   },
 
   // Properties

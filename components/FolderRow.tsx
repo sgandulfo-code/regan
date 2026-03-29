@@ -57,11 +57,15 @@ const FolderRow: React.FC<FolderRowProps> = ({ folder, propertiesCount, daysActi
         <div className="hidden md:flex md:col-span-3 gap-4">
              <div>
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Presupuesto</p>
-                <p className="text-xs font-black text-slate-700 leading-none">${folder.budget?.toLocaleString()}</p>
+                <p className="text-xs font-black text-slate-700 leading-none">
+                  {folder.budget_min || folder.budget_max 
+                    ? `$${folder.budget_min ? folder.budget_min.toLocaleString() : 0} - $${folder.budget_max ? folder.budget_max.toLocaleString() : 'Max'}`
+                    : `$${folder.budget?.toLocaleString() || 0}`}
+                </p>
              </div>
              <div>
                 <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Operación</p>
-                <p className="text-xs font-black text-slate-700 leading-none">{folder.transactionType}</p>
+                <p className="text-xs font-black text-slate-700 leading-none">{folder.operation_type || folder.transactionType}</p>
              </div>
         </div>
 

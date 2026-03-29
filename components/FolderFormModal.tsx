@@ -4,6 +4,7 @@ import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, 
 import { SearchFolder, FolderStatus, TransactionType } from '../types';
 import Editor from 'react-simple-wysiwyg';
 import { dataService } from '../services/dataService';
+import { supabase } from '../services/supabase';
 
 interface FolderFormModalProps {
   isOpen: boolean;
@@ -22,10 +23,31 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
     startDate: new Date().toISOString().split('T')[0],
     welcomeMessage: '',
     imageUrl: '',
-    isImagePublic: true
+    isImagePublic: true,
+    client_id: '',
+    stage: 'Nuevos Leads',
+    budget_min: 0,
+    budget_max: 0,
+    operation_type: 'Búsqueda'
   });
 
   const [uploading, setUploading] = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadClients = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const data = await dataService.getClients(user.id);
+          setClients(data);
+        }
+      } catch (error) {
+        console.error('Error loading clients:', error);
+      }
+    };
+    loadClients();
+  }, []);
 
   useEffect(() => {
     if (initialData) {
@@ -38,7 +60,12 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         startDate: initialData.startDate ? new Date(initialData.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         welcomeMessage: initialData.welcomeMessage || '',
         imageUrl: initialData.imageUrl || '',
-        isImagePublic: initialData.isImagePublic ?? true
+        isImagePublic: initialData.isImagePublic ?? true,
+        client_id: initialData.client_id || '',
+        stage: initialData.stage || 'Nuevos Leads',
+        budget_min: initialData.budget_min || 0,
+        budget_max: initialData.budget_max || 0,
+        operation_type: initialData.operation_type || 'Búsqueda'
       });
     } else {
       setFormData({ 
@@ -50,7 +77,12 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         startDate: new Date().toISOString().split('T')[0],
         welcomeMessage: '',
         imageUrl: '',
-        isImagePublic: true
+        isImagePublic: true,
+        client_id: '',
+        stage: 'Nuevos Leads',
+        budget_min: 0,
+        budget_max: 0,
+        operation_type: 'Búsqueda'
       });
     }
   }, [initialData, isOpen]);
@@ -128,12 +160,12 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   Operación
                 </label>
                 <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  {Object.values(TransactionType).map((type) => (
+                  {['Búsqueda', 'Venta'].map((type) => (
                     <button
                       key={type}
                       type="button"
-                      onClick={() => setFormData({ ...formData, transactionType: type })}
-                      className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.transactionType === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                      onClick={() => setFormData({ ...formData, operation_type: type })}
+                      className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                     >
                       {type}
                     </button>
@@ -144,16 +176,51 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
                   <DollarSign className="w-3 h-3" />
-                  Presupuesto Máx.
+                  Cliente Asociado
+                </label>
+                <select
+                  className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                  value={formData.client_id}
+                  onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+                >
+                  <option value="">Sin cliente asignado</option>
+                  {clients.map(client => (
+                    <option key={client.id} value={client.id}>{client.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                  <DollarSign className="w-3 h-3" />
+                  Presupuesto Mínimo
                 </label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
                   <input
                     type="number"
                     className="w-full p-5 pl-10 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
-                    value={formData.budget === 0 ? '' : formData.budget}
+                    value={formData.budget_min === 0 ? '' : formData.budget_min}
                     placeholder="0"
-                    onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
+                    onChange={(e) => setFormData({ ...formData, budget_min: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
+                  <DollarSign className="w-3 h-3" />
+                  Presupuesto Máximo
+                </label>
+                <div className="relative">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                  <input
+                    type="number"
+                    className="w-full p-5 pl-10 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all"
+                    value={formData.budget_max === 0 ? '' : formData.budget_max}
+                    placeholder="0"
+                    onChange={(e) => setFormData({ ...formData, budget_max: Number(e.target.value) })}
                   />
                 </div>
               </div>

@@ -63,6 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
+    { id: 'crm', label: 'CRM & Pipeline', icon: <Users className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
     { id: 'activity', label: 'Feed de Actividad', icon: <Activity className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
     { 
       id: 'search', 
@@ -171,7 +172,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     ) : (
                       <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
                     )}
-                    <span className="truncate pr-8">{folder.name}</span>
+                    <span className="truncate pr-8 flex-1 text-left">{folder.name}</span>
                     {folderLeadsCount > 0 && (
                       <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'}`}>
                         {folderLeadsCount}
@@ -189,7 +190,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <button
                           key={prop.id}
                           onClick={() => onSelectProperty?.(prop)}
-                          className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-100 hover:bg-white/10 transition-all text-left"
+                          className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-400 hover:bg-slate-50 transition-all text-left"
                         >
                           <MapPin className="w-2.5 h-2.5 shrink-0" />
                           <span className="truncate">{prop.title}</span>

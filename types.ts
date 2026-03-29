@@ -62,6 +62,27 @@ export enum FunnelStage {
   DEED = 'Escritura'
 }
 
+export interface Client {
+  id: string;
+  user_id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  lead_source?: string;
+  timeframe?: string;
+  client_type?: string;
+  needs_to_sell?: boolean;
+  financial_status?: string;
+  family_composition?: string;
+  pets?: string;
+  occupation?: string;
+  birthdate?: string;
+  last_contact_date?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface SearchFolder {
   id: string;
   name: string;
@@ -80,6 +101,12 @@ export interface SearchFolder {
   stageId?: string;
   imageUrl?: string;
   isImagePublic?: boolean;
+  client_id?: string;
+  stage?: string;
+  budget_min?: number;
+  budget_max?: number;
+  operation_type?: string;
+  client?: Client;
 }
 
 export interface RenovationItem {

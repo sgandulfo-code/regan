@@ -668,10 +668,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
                     )}
 
-                    {folder.transactionType && (
+                    {folder.operation_type || folder.transactionType && (
                       <div className="flex flex-col">
                         <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Operación</span>
-                        <span className="text-xs font-black text-slate-700">{folder.transactionType}</span>
+                        <span className="text-xs font-black text-slate-700">{folder.operation_type || folder.transactionType}</span>
                       </div>
                     )}
                     {days > 0 && (
@@ -686,7 +686,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-50">
                   <div className="flex flex-col">
                     <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Presupuesto</span>
-                    <span className="text-xs font-black text-slate-700">${folder.budget?.toLocaleString()}</span>
+                    <span className="text-xs font-black text-slate-700">
+                      {folder.budget_min || folder.budget_max 
+                        ? `$${folder.budget_min ? folder.budget_min.toLocaleString() : 0} - $${folder.budget_max ? folder.budget_max.toLocaleString() : 'Max'}`
+                        : `$${folder.budget?.toLocaleString() || 0}`}
+                    </span>
                   </div>
                   <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
                     <ArrowUpRight className="w-4 h-4" />
