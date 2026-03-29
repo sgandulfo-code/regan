@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, DollarSign, ArrowLeftRight, Camera, UploadCloud, Eye, EyeOff } from 'lucide-react';
-import { SearchFolder, FolderStatus, TransactionType } from '../types';
+import { X, FolderPlus, Type, FileText, CheckCircle2, Save, Calendar, Activity, DollarSign, ArrowLeftRight, Camera, UploadCloud, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { SearchFolder, FolderStatus, TransactionType, Client } from '../types';
 import Editor from 'react-simple-wysiwyg';
 import { dataService } from '../services/dataService';
 import { supabase } from '../services/supabase';
+import ClientModal from './ClientModal';
 
 interface FolderFormModalProps {
   isOpen: boolean;
@@ -33,21 +34,25 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
 
   const [uploading, setUploading] = useState(false);
   const [clients, setClients] = useState<any[]>([]);
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+
+  const loadClients = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const data = await dataService.getClients(user.id);
+        setClients(data);
+      }
+    } catch (error) {
+      console.error('Error loading clients:', error);
+    }
+  };
 
   useEffect(() => {
-    const loadClients = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const data = await dataService.getClients(user.id);
-          setClients(data);
-        }
-      } catch (error) {
-        console.error('Error loading clients:', error);
-      }
-    };
-    loadClients();
-  }, []);
+    if (isOpen) {
+      loadClients();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (initialData) {
@@ -174,10 +179,20 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                  <DollarSign className="w-3 h-3" />
-                  Cliente Asociado
-                </label>
+                <div className="flex items-center justify-between ml-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <DollarSign className="w-3 h-3" />
+                    Cliente Asociado
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsClientModalOpen(true)}
+                    className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+                  >
+                    <UserPlus className="w-3 h-3" />
+                    Nuevo Cliente
+                  </button>
+                </div>
                 <select
                   className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
                   value={formData.client_id}
@@ -370,6 +385,26 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
           </form>
         </div>
       </div>
+
+      {/* Client Modal */}
+      <ClientModal
+        isOpen={isClientModalOpen}
+        onClose={() => setIsClientModalOpen(false)}
+        onConfirm={async (clientData) => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              const newClient = await dataService.createClient(clientData, user.id);
+              await loadClients();
+              setFormData({ ...formData, client_id: newClient.id });
+              setIsClientModalOpen(false);
+            }
+          } catch (error) {
+            console.error('Error creating client:', error);
+            alert('Error al crear el cliente');
+          }
+        }}
+      />
     </div>
   );
 };
