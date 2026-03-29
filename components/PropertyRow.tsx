@@ -1,7 +1,7 @@
 import React from 'react';
 import { Property, PropertyStatus, SearchFolder } from '../types';
 import { ICONS } from '../constants';
-import { ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, ExternalLink, MessageCircle, FolderOpen } from 'lucide-react';
+import { ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, ExternalLink, MessageCircle, FolderOpen, Copy } from 'lucide-react';
 
 interface PropertyRowProps {
   property: Property;
@@ -12,10 +12,11 @@ interface PropertyRowProps {
   onToggleVisibility?: (id: string, isPublic: boolean) => void;
   onEdit: (p: Property) => void;
   onDelete: (id: string) => void;
+  onCopy?: (p: Property) => void;
   isEditable?: boolean;
 }
 
-const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, onCopy, isEditable = true }) => {
   const folder = folders.find(f => f.id === property.folderId);
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -186,6 +187,15 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
                 >
                     <Pencil className="w-3.5 h-3.5" />
                 </button>
+                {onCopy && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onCopy(property); }}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                        title="Copiar a otra carpeta"
+                    >
+                        <Copy className="w-3.5 h-3.5" />
+                    </button>
+                )}
                 <button 
                     onClick={(e) => { e.stopPropagation(); onDelete(property.id); }}
                     className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"

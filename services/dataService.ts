@@ -412,6 +412,36 @@ export const dataService = {
     return data;
   },
 
+  async copyPropertyToFolder(propertyId: string, targetFolderId: string) {
+    // 1. Fetch the original property
+    const { data: original, error: fetchError } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    // 2. Remove specific fields and set the new folder_id
+    const { id, created_at, updated_at, folder_id, ...propertyData } = original;
+    
+    const newProperty = {
+      ...propertyData,
+      folder_id: targetFolderId,
+      status: 'Pendiente', // Reset status for the new folder
+    };
+
+    // 3. Insert the new property
+    const { data: newProp, error: insertError } = await supabase
+      .from('properties')
+      .insert([newProperty])
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+    return newProp;
+  },
+
   async updateProperty(id: string, property: Partial<Property>) {
     const { data, error } = await supabase
       .from('properties')

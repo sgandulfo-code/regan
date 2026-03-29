@@ -2,7 +2,7 @@
 import React from 'react';
 import { Property, PropertyStatus, SearchFolder } from '../types';
 import { ICONS } from '../constants';
-import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, MessageCircle, FolderOpen } from 'lucide-react';
+import { Layers, ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, MessageCircle, FolderOpen, Copy } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -13,10 +13,11 @@ interface PropertyCardProps {
   onToggleVisibility?: (id: string, isPublic: boolean) => void;
   onEdit: (p: Property) => void;
   onDelete: (id: string) => void;
+  onCopy?: (p: Property) => void;
   isEditable?: boolean;
 }
 
-const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, isEditable = true }) => {
+const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, onCopy, isEditable = true }) => {
   const folder = folders.find(f => f.id === property.folderId);
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,6 +101,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
           >
             <Pencil className="w-4 h-4" />
           </button>
+          {onCopy && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onCopy(property); }}
+              className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-indigo-600 shadow-lg transition-all"
+              title="Copiar a otra carpeta"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+          )}
           <button 
             onClick={(e) => { e.stopPropagation(); onDelete(property.id); }}
             className="p-2 bg-white/90 backdrop-blur rounded-xl text-slate-600 hover:text-rose-600 shadow-lg transition-all"

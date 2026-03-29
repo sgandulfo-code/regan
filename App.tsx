@@ -59,6 +59,7 @@ import DashboardView from './components/DashboardView';
 import PendingLeadsList from './components/PendingLeadsList';
 import Auth from './components/Auth';
 import CRMView from './components/CRMView';
+import CopyPropertyModal from './components/CopyPropertyModal';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
 import { dataService, InboxLink } from './services/dataService';
@@ -93,6 +94,7 @@ const App: React.FC = () => {
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
+  const [propertyToCopy, setPropertyToCopy] = useState<Property | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
@@ -864,6 +866,7 @@ const App: React.FC = () => {
                     onStatusChange={handleUpdateStatus}
                     onToggleVisibility={handleToggleVisibility}
                     onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                    onCopy={(p) => setPropertyToCopy(p)}
                     onDelete={handleDeleteProperty}
                     isEditable={canEdit}
                   />
@@ -877,6 +880,7 @@ const App: React.FC = () => {
                     onStatusChange={handleUpdateStatus}
                     onToggleVisibility={handleToggleVisibility}
                     onEdit={(p) => { setPropertyToEdit(p); setActiveTab('search'); }}
+                    onCopy={(p) => setPropertyToCopy(p)}
                     onDelete={handleDeleteProperty}
                     isEditable={canEdit}
                   />
@@ -983,6 +987,24 @@ const App: React.FC = () => {
           userId={user.id}
         />
       )}
+
+      <CopyPropertyModal
+        isOpen={!!propertyToCopy}
+        onClose={() => setPropertyToCopy(null)}
+        property={propertyToCopy}
+        folders={folders}
+        onConfirm={async (targetFolderId) => {
+          if (!propertyToCopy) return;
+          try {
+            await dataService.copyPropertyToFolder(propertyToCopy.id, targetFolderId);
+            setPropertyToCopy(null);
+            loadData();
+          } catch (error) {
+            console.error('Error copying property:', error);
+            alert('Error al copiar la propiedad');
+          }
+        }}
+      />
     </div>
   );
 };
