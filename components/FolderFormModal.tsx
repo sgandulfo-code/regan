@@ -26,7 +26,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
     imageUrl: '',
     isImagePublic: true,
     client_id: '',
-    stage: 'Nuevos Leads',
+    stage: 'Búsqueda',
+    stageId: 'busqueda',
     budget_min: 0,
     budget_max: 0,
     operation_type: 'Búsqueda'
@@ -67,7 +68,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         imageUrl: initialData.imageUrl || '',
         isImagePublic: initialData.isImagePublic ?? true,
         client_id: initialData.client_id || '',
-        stage: initialData.stage || 'Nuevos Leads',
+        stage: initialData.stage || (initialData.transactionType === TransactionType.VENTA ? 'Tasación' : 'Búsqueda'),
+        stageId: initialData.stageId || (initialData.transactionType === TransactionType.VENTA ? 'tasacion' : 'busqueda'),
         budget_min: initialData.budget_min || 0,
         budget_max: initialData.budget_max || 0,
         operation_type: initialData.operation_type || 'Búsqueda'
@@ -84,7 +86,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         imageUrl: '',
         isImagePublic: true,
         client_id: '',
-        stage: 'Nuevos Leads',
+        stage: 'Búsqueda',
+        stageId: 'busqueda',
         budget_min: 0,
         budget_max: 0,
         operation_type: 'Búsqueda'
@@ -169,7 +172,13 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                     <button
                       key={type}
                       type="button"
-                      onClick={() => setFormData({ ...formData, operation_type: type })}
+                      onClick={() => setFormData({ 
+                        ...formData, 
+                        operation_type: type,
+                        stage: type === 'Venta' ? 'Tasación' : 'Búsqueda',
+                        stageId: type === 'Venta' ? 'tasacion' : 'busqueda',
+                        transactionType: type === 'Venta' ? TransactionType.VENTA : TransactionType.COMPRA
+                      })}
                       className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                     >
                       {type}

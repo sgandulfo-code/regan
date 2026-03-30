@@ -212,8 +212,16 @@ const App: React.FC = () => {
 
   const handleUpdateStage = async (folderId: string, stageId: string) => {
     setIsSyncing(true);
-    await dataService.updateFolder(folderId, { stageId });
-    await loadData();
+    const folder = folders.find(f => f.id === folderId);
+    if (folder) {
+      const stages = folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+      const stageObj = stages.find(s => s.id === stageId);
+      await dataService.updateFolder(folderId, { 
+        stageId,
+        stage: stageObj?.title || stageId
+      });
+      await loadData();
+    }
     setIsSyncing(false);
   };
 

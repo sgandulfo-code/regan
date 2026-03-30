@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SearchFolder, Client } from '../types';
+import { SearchFolder, Client, TransactionType } from '../types';
 import { dataService } from '../services/dataService';
 import { Plus, Users, Search, Phone, Mail, Calendar, Briefcase, Building, ChevronRight, MapPin, DollarSign, Home, Edit, Trash2, X } from 'lucide-react';
 import ClientModal from './ClientModal';
@@ -11,19 +11,28 @@ interface CRMViewProps {
   onRefresh: () => void;
 }
 
-const STAGES = [
-  'Nuevos Leads',
-  'Calificación',
-  'Activos',
-  'Negociación',
-  'Cierre',
-  'Post-Venta'
+const STAGES_COMPRA = [
+  'Búsqueda',
+  'Visitas',
+  'Reserva',
+  'Boleto',
+  'Escritura'
+];
+
+const STAGES_VENTA = [
+  'Tasación',
+  'Autorización',
+  'Comercialización',
+  'Reserva',
+  'Boleto',
+  'Escritura'
 ];
 
 export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelect, onRefresh }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'clients'>('kanban');
+  const [pipelineType, setPipelineType] = useState<'compra' | 'venta'>('compra');
   const [searchTerm, setSearchTerm] = useState('');
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -48,7 +57,23 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
 
   const handleStageChange = async (folderId: string, newStage: string) => {
     try {
-      await dataService.updateFolder(folderId, { stage: newStage });
+      const stageIdMap: Record<string, string> = {
+        'Búsqueda': 'busqueda',
+        'Visitas': 'visitas',
+        'Reserva': 'reserva',
+        'Boleto': 'boleto',
+        'Escritura': 'escritura',
+        'Tasación': 'tasacion',
+        'Autorización': 'autorizacion',
+        'Comercialización': 'comercializacion'
+      };
+      
+      const newStageId = stageIdMap[newStage] || newStage.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      await dataService.updateFolder(folderId, { 
+        stage: newStage,
+        stageId: newStageId
+      });
       onRefresh();
     } catch (error) {
       console.error('Error updating folder stage:', error);
@@ -107,10 +132,28 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
   };
 
   const renderKanban = () => {
+    const currentStages = pipelineType === 'venta' ? STAGES_VENTA : STAGES_COMPRA;
+    const defaultStage = currentStages[0];
+    
+    const filteredFolders = folders.filter(f => {
+      // Si la operación es Venta, va al pipeline de Venta.
+      // Si es Compra, Alquiler, Alquiler Temporario o no está definido, va al pipeline de Compra.
+      if (pipelineType === 'venta') {
+        return f.transactionType === TransactionType.VENTA || f.operation_type?.toLowerCase() === 'venta';
+      } else {
+        return f.transactionType !== TransactionType.VENTA && f.operation_type?.toLowerCase() !== 'venta';
+      }
+    });
+
     return (
       <div className="flex gap-6 overflow-x-auto pb-8 min-h-[600px]">
-        {STAGES.map(stage => {
-          const stageFolders = folders.filter(f => (f.stage || 'Nuevos Leads') === stage);
+        {currentStages.map(stage => {
+          const stageFolders = filteredFolders.filter(f => {
+            // Si la carpeta no tiene stage o tiene un stage que no pertenece a este pipeline, lo mandamos al primero
+            const folderStage = f.stage || defaultStage;
+            if (!currentStages.includes(folderStage) && stage === defaultStage) return true;
+            return folderStage === stage;
+          });
           
           return (
             <div 
@@ -138,18 +181,18 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: folder.color || '#6366f1' }} />
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{folder.operation_type || 'Operación'}</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{folder.operation_type || folder.transactionType || 'Operación'}</span>
                       </div>
                       <div className="relative">
                         <select 
                           className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-slate-600 outline-none cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 top-0 w-8"
-                          value={folder.stage || 'Nuevos Leads'}
+                          value={currentStages.includes(folder.stage || '') ? folder.stage : defaultStage}
                           onChange={(e) => {
                             e.stopPropagation();
                             handleStageChange(folder.id, e.target.value);
                           }}
                         >
-                          {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                          {currentStages.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
                         <button className="text-slate-400 hover:text-indigo-600 p-1" onClick={(e) => e.stopPropagation()}>
                           <ChevronRight className="w-4 h-4" />
@@ -293,19 +336,38 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
           <p className="text-slate-500 mt-2 font-medium">Gestiona tus clientes y el embudo de ventas</p>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
+          {viewMode === 'kanban' && (
+            <div className="bg-white p-1 rounded-2xl border border-slate-200 flex shadow-sm">
+              <button 
+                onClick={() => setPipelineType('compra')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'compra' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              >
+                <Home className="w-4 h-4" />
+                Compra / Alquiler
+              </button>
+              <button 
+                onClick={() => setPipelineType('venta')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'venta' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              >
+                <Building className="w-4 h-4" />
+                Venta
+              </button>
+            </div>
+          )}
+
           <div className="bg-white p-1 rounded-2xl border border-slate-200 flex shadow-sm">
             <button 
               onClick={() => setViewMode('kanban')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'kanban' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'kanban' ? 'bg-slate-100 text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
             >
-              Pipeline (Kanban)
+              Pipeline
             </button>
             <button 
               onClick={() => setViewMode('clients')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'clients' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${viewMode === 'clients' ? 'bg-slate-100 text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
             >
-              Directorio de Clientes
+              Directorio
             </button>
           </div>
           
