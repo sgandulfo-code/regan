@@ -168,22 +168,24 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   Operación
                 </label>
                 <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  {['Búsqueda', 'Venta'].map((type) => (
+                  {['Búsqueda', 'Captación Venta', 'Captación Alquiler'].map((type) => {
+                    const isCaptacion = type.startsWith('Captación');
+                    return (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setFormData({ 
                         ...formData, 
                         operation_type: type,
-                        stage: type === 'Venta' ? 'Tasación' : 'Búsqueda',
-                        stageId: type === 'Venta' ? 'tasacion' : 'busqueda',
-                        transactionType: type === 'Venta' ? TransactionType.VENTA : TransactionType.COMPRA
+                        stage: isCaptacion ? 'Tasación' : 'Búsqueda',
+                        stageId: isCaptacion ? 'tasacion' : 'busqueda',
+                        transactionType: isCaptacion ? TransactionType.VENTA : TransactionType.COMPRA
                       })}
-                      className={`py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
+                      className={`py-3 px-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                     >
                       {type}
                     </button>
-                  ))}
+                  )})}
                 </div>
               </div>
 

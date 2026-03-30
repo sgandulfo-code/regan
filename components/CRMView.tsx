@@ -138,10 +138,11 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
     const filteredFolders = folders.filter(f => {
       // Si la operación es Venta, va al pipeline de Venta.
       // Si es Compra, Alquiler, Alquiler Temporario o no está definido, va al pipeline de Compra.
+      const isCaptacion = f.operation_type?.startsWith('Captación');
       if (pipelineType === 'venta') {
-        return f.transactionType === TransactionType.VENTA || f.operation_type?.toLowerCase() === 'venta';
+        return f.transactionType === TransactionType.VENTA || isCaptacion;
       } else {
-        return f.transactionType !== TransactionType.VENTA && f.operation_type?.toLowerCase() !== 'venta';
+        return f.transactionType !== TransactionType.VENTA && !isCaptacion;
       }
     });
 
