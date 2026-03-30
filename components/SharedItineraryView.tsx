@@ -55,6 +55,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [selectedPropertyForCustomField, setSelectedPropertyForCustomField] = useState<any>(null);
   const [customFieldName, setCustomFieldName] = useState('');
   const [customFieldValue, setCustomFieldValue] = useState('');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
 
   const toggleComparison = (id: string) => {
     if (comparisonIds.includes(id)) {
@@ -63,7 +69,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       if (comparisonIds.length < 4) {
         setComparisonIds(prev => [...prev, id]);
       } else {
-        alert("Puedes comparar hasta 4 propiedades.");
+        showToast("Puedes comparar hasta 4 propiedades.");
       }
     }
   };
@@ -145,10 +151,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       const updatedLinks = await dataService.getInboxLinks(data.itinerary.folder.userId, data.itinerary.folderId);
       setInboxLinks(updatedLinks);
       
-      alert('¡Sugerencias enviadas con éxito! Tu consultor las revisará pronto.');
+      showToast('¡Sugerencias enviadas con éxito! Tu consultor las revisará pronto.');
     } catch (error) {
       console.error('Error submitting links:', error);
-      alert('Hubo un error al enviar las sugerencias. Por favor, intenta de nuevo.');
+      showToast('Hubo un error al enviar las sugerencias. Por favor, intenta de nuevo.');
     } finally {
       setIsSubmittingLinks(false);
     }
@@ -195,7 +201,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         handleClientChecklistUpdate(visitId, itemId, { photos: [...currentPhotos, ...uploadedUrls] });
       } catch (error) {
         console.error('Error uploading checklist photos:', error);
-        alert('Error al subir fotos. Intenta de nuevo.');
+        showToast('Error al subir fotos. Intenta de nuevo.');
       }
     }
   };
@@ -317,7 +323,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       setPhotos(prev => ({ ...prev, [visitId]: [] }));
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      alert('Error al enviar feedback. Por favor intenta de nuevo.');
+      showToast('Error al enviar feedback. Por favor intenta de nuevo.');
     } finally {
       setSubmitting(prev => ({ ...prev, [visitId]: false }));
     }
@@ -433,10 +439,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         ...prev,
         visits: prev.visits.filter((v: any) => v.id !== visitId)
       }));
-      alert('Solicitud de visita cancelada.');
+      showToast('Solicitud de visita cancelada.');
     } catch (error) {
       console.error('Error deleting visit request:', error);
-      alert('Error al cancelar la solicitud.');
+      showToast('Error al cancelar la solicitud.');
     }
   };
 
@@ -507,7 +513,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           )
         }));
         
-        alert('Solicitud enviada! Tu consultor la verá en la agenda.');
+        showToast('Solicitud enviada! Tu consultor la verá en la agenda.');
       } else {
         // Create a new visit request
         const newVisitData = {
@@ -553,14 +559,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
             visits: [...prev.visits, visitWithProperty]
           }));
           
-          alert('Solicitud de visita creada! Tu consultor se pondrá en contacto contigo.');
+          showToast('Solicitud de visita creada! Tu consultor se pondrá en contacto contigo.');
         } else {
-          alert('Error al crear la solicitud. Por favor intenta de nuevo.');
+          showToast('Error al crear la solicitud. Por favor intenta de nuevo.');
         }
       }
     } catch (error) {
       console.error('Error requesting visit:', error);
-      alert('Error al solicitar visita.');
+      showToast('Error al solicitar visita.');
     } finally {
       setIsRequestModalOpen(false);
       setSelectedPropertyForRequest(null);
@@ -568,7 +574,11 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   };
 
   const existingCustomFieldKeys = Array.from<string>(new Set(
-    (data?.properties || []).flatMap((p: any) => Object.keys(p.clientCustomFields || {}))
+    (data?.properties || []).flatMap((p: any) => 
+      Object.entries(p.clientCustomFields || {}).map(([key, field]: [string, any]) => 
+        typeof field === 'object' && field !== null ? field.label : key
+      )
+    )
   ));
 
   const defaultSuggestions = ['Luz Natural', 'Nivel de Ruido', 'Estado General', 'Espacio Verde', 'Potencial de Reforma'];
@@ -608,7 +618,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
       });
     } catch (err) {
       console.error('Error saving custom field:', err);
-      alert('Error al guardar el criterio.');
+      showToast('Error al guardar el criterio.');
     }
   };
 
@@ -675,7 +685,20 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     
     // Custom filters
     for (const [key, value] of Object.entries(customFilters)) {
-      if (value && p.clientCustomFields?.[key] !== value) return false;
+      if (!value) continue;
+      
+      let foundMatch = false;
+      if (p.clientCustomFields) {
+        for (const [fKey, fValue] of Object.entries(p.clientCustomFields)) {
+          const label = typeof fValue === 'object' && fValue !== null ? (fValue as any).label : fKey;
+          const val = typeof fValue === 'object' && fValue !== null ? (fValue as any).value : fValue;
+          if (label === key && String(val) === value) {
+            foundMatch = true;
+            break;
+          }
+        }
+      }
+      if (!foundMatch) return false;
     }
     
     return true;
@@ -683,6 +706,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white px-6 py-3 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+          <Check className="w-4 h-4 text-emerald-400" />
+          {toastMessage}
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-6 flex items-center justify-between">
@@ -1494,8 +1525,16 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         {existingCustomFieldKeys.map(key => {
                           const uniqueValues = Array.from(new Set(
                             (data?.properties || [])
-                              .map((p: any) => p.clientCustomFields?.[key])
-                              .filter(Boolean)
+                              .map((p: any) => {
+                                if (!p.clientCustomFields) return null;
+                                for (const [fKey, fValue] of Object.entries(p.clientCustomFields)) {
+                                  const label = typeof fValue === 'object' && fValue !== null ? (fValue as any).label : fKey;
+                                  const val = typeof fValue === 'object' && fValue !== null ? (fValue as any).value : fValue;
+                                  if (label === key) return val;
+                                }
+                                return null;
+                              })
+                              .filter((val: any) => val !== null && val !== undefined && val !== '')
                           ));
                           
                           if (uniqueValues.length === 0) return null;
@@ -1509,7 +1548,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-500/20"
                               >
                                 <option value="">Cualquiera</option>
-                                {uniqueValues.map(val => (
+                                {uniqueValues.map((val: any) => (
                                   <option key={String(val)} value={String(val)}>{String(val)}</option>
                                 ))}
                               </select>
@@ -1663,14 +1702,23 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
                       <div className="space-y-3 mb-8 flex-1">
                          {/* Custom Fields */}
-                         {property.clientCustomFields && Object.entries(property.clientCustomFields).map(([key, value]) => (
+                         {property.clientCustomFields && Object.entries(property.clientCustomFields).map(([key, field]: [string, any]) => {
+                           const label = typeof field === 'object' && field !== null ? field.label : key;
+                           const value = typeof field === 'object' && field !== null ? field.value : field;
+                           const type = typeof field === 'object' && field !== null ? field.type : 'text';
+                           
+                           return (
                            <div key={key} className="flex justify-between items-center py-2 border-b border-indigo-50 bg-indigo-50/30 -mx-5 px-5 md:-mx-8 md:px-8">
                              <span className="text-xs font-bold text-indigo-500 uppercase tracking-wide flex items-center gap-1.5">
-                               <Star className="w-3.5 h-3.5" /> {key}
+                               <Star className="w-3.5 h-3.5" /> {label}
                              </span>
-                             <span className="text-sm font-bold text-indigo-700">{String(value)}</span>
+                             <span className="text-sm font-bold text-indigo-700">
+                               {type === 'boolean' ? (value ? 'Sí' : 'No') : 
+                                type === 'rating' ? `${value}/5` : 
+                                String(value || 'N/A')}
+                             </span>
                            </div>
-                         ))}
+                         )})}
                          
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">
                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Dormitorios</span>

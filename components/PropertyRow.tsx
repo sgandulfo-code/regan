@@ -101,11 +101,19 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
 
         {property.clientCustomFields && Object.keys(property.clientCustomFields).length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            {Object.entries(property.clientCustomFields).map(([key, value]) => (
+            {Object.entries(property.clientCustomFields).map(([key, field]: [string, any]) => {
+              const label = typeof field === 'object' && field !== null ? field.label : key;
+              const value = typeof field === 'object' && field !== null ? field.value : field;
+              const type = typeof field === 'object' && field !== null ? field.type : 'text';
+              
+              return (
               <span key={key} className="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
-                <span className="text-indigo-400">{key}:</span> {String(value)}
+                <span className="text-indigo-400">{label}:</span> 
+                {type === 'boolean' ? (value ? 'Sí' : 'No') : 
+                 type === 'rating' ? `${value}/5` : 
+                 String(value || 'N/A')}
               </span>
-            ))}
+            )})}
           </div>
         )}
 

@@ -113,26 +113,31 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                   <Layout className="w-4 h-4" /> Criterios de Evaluación
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => (
+                  {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => {
+                    const label = typeof field === 'object' && field !== null ? field.label : id;
+                    const value = typeof field === 'object' && field !== null ? field.value : field;
+                    const type = typeof field === 'object' && field !== null ? field.type : 'text';
+                    
+                    return (
                     <div key={id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
                       <div className="flex items-center gap-2">
-                        {field.type === 'boolean' ? (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${field.value ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
-                            {field.value ? 'Sí' : 'No'}
+                        {type === 'boolean' ? (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${value ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                            {value ? 'Sí' : 'No'}
                           </span>
-                        ) : field.type === 'rating' ? (
+                        ) : type === 'rating' ? (
                           <div className="flex gap-0.5">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-3 h-3 ${i < (field.value || 0) ? 'text-amber-400 fill-current' : 'text-slate-200'}`} />
+                              <Star key={i} className={`w-3 h-3 ${i < (value || 0) ? 'text-amber-400 fill-current' : 'text-slate-200'}`} />
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm font-bold text-slate-800">{field.value || 'N/A'}</p>
+                          <p className="text-sm font-bold text-slate-800">{String(value || 'N/A')}</p>
                         )}
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </section>
             )}

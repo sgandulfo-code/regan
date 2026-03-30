@@ -153,26 +153,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
               <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Criterios de Evaluación</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => (
+              {Object.entries(property.clientCustomFields).map(([id, field]: [string, any]) => {
+                const label = typeof field === 'object' && field !== null ? field.label : id;
+                const value = typeof field === 'object' && field !== null ? field.value : field;
+                const type = typeof field === 'object' && field !== null ? field.type : 'text';
+                
+                return (
                 <div key={id} className="bg-white px-3 py-2 rounded-xl border border-indigo-100 shadow-sm flex flex-col min-w-[80px]">
-                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate max-w-[100px]">{field.label}</span>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate max-w-[100px]">{label}</span>
                   <div className="flex items-center gap-1">
-                    {field.type === 'boolean' ? (
-                      <span className={`text-[10px] font-black uppercase ${field.value ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {field.value ? 'Sí' : 'No'}
+                    {type === 'boolean' ? (
+                      <span className={`text-[10px] font-black uppercase ${value ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {value ? 'Sí' : 'No'}
                       </span>
-                    ) : field.type === 'rating' ? (
+                    ) : type === 'rating' ? (
                       <div className="flex gap-0.5">
                         {[...Array(5)].map((_, i) => (
-                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (field.value || 0) ? 'bg-amber-400' : 'bg-slate-200'}`} />
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (value || 0) ? 'bg-amber-400' : 'bg-slate-200'}`} />
                         ))}
                       </div>
                     ) : (
-                      <span className="text-[10px] font-black text-indigo-700 truncate max-w-[100px]">{String(field.value || 'N/A')}</span>
+                      <span className="text-[10px] font-black text-indigo-700 truncate max-w-[100px]">{String(value || 'N/A')}</span>
                     )}
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}

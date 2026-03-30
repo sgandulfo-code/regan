@@ -137,7 +137,11 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                 {/* Custom Fields Section */}
                 {(() => {
                   const allCustomKeys = Array.from(new Set(
-                    selectedProperties.flatMap(p => Object.keys(p.clientCustomFields || {}))
+                    selectedProperties.flatMap(p => 
+                      Object.entries(p.clientCustomFields || {}).map(([key, field]: [string, any]) => 
+                        typeof field === 'object' && field !== null ? field.label : key
+                      )
+                    )
                   ));
                   
                   if (allCustomKeys.length === 0) return null;
@@ -153,13 +157,32 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                       {allCustomKeys.map(key => (
                         <tr key={key}>
                           <td className="p-4 pl-6 text-xs font-bold text-slate-500 sticky left-0 bg-white z-10">{key}</td>
-                          {selectedProperties.map(p => (
-                            <td key={p.id} className="p-4">
-                              <span className="font-medium text-indigo-600">
-                                {p.clientCustomFields?.[key] ? String(p.clientCustomFields[key]) : '-'}
-                              </span>
-                            </td>
-                          ))}
+                          {selectedProperties.map(p => {
+                            let val: any = null;
+                            let type = 'text';
+                            if (p.clientCustomFields) {
+                              for (const [fKey, fValue] of Object.entries(p.clientCustomFields)) {
+                                const label = typeof fValue === 'object' && fValue !== null ? (fValue as any).label : fKey;
+                                if (label === key) {
+                                  val = typeof fValue === 'object' && fValue !== null ? (fValue as any).value : fValue;
+                                  type = typeof fValue === 'object' && fValue !== null ? (fValue as any).type : 'text';
+                                  break;
+                                }
+                              }
+                            }
+                            
+                            return (
+                              <td key={p.id} className="p-4">
+                                <span className="font-medium text-indigo-600">
+                                  {val !== null && val !== undefined ? (
+                                    type === 'boolean' ? (val ? 'Sí' : 'No') : 
+                                    type === 'rating' ? `${val}/5` : 
+                                    String(val)
+                                  ) : '-'}
+                                </span>
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </>
