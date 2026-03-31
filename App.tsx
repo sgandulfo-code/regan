@@ -61,7 +61,7 @@ import Auth from './components/Auth';
 import CRMView from './components/CRMView';
 import CopyPropertyModal from './components/CopyPropertyModal';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
-import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason } from './types';
+import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason, getContextualStatuses } from './types';
 import { dataService, InboxLink } from './services/dataService';
 import { supabase } from './services/supabase';
 
@@ -715,7 +715,7 @@ const App: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar">
-                {(['All', ...Object.values(PropertyStatus)] as string[]).map((status) => (
+                {(['All', ...getContextualStatuses(activeFolder?.operation_type?.startsWith('Captación') || false)] as string[]).map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status as any)}
@@ -971,6 +971,7 @@ const App: React.FC = () => {
           onUpdateReno={handleUpdateReno} 
           onStatusChange={handleUpdateStatus}
           isEditable={canEdit}
+          folders={folders}
         />
       )}
       {isReportOpen && activeFolder && <ReportGenerator folder={activeFolder} properties={displayProperties} onClose={() => setIsReportOpen(false)} />}

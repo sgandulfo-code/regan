@@ -35,7 +35,7 @@ import {
   Phone as PhoneIcon
 } from 'lucide-react';
 import { parseSemanticSearch } from '../services/geminiService';
-import { Property, PropertyStatus, AcquisitionReason, SearchFolder, CriteriaTemplate } from '../types';
+import { Property, PropertyStatus, AcquisitionReason, SearchFolder, CriteriaTemplate, getContextualStatuses } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
 import { Layout, ChevronDown } from 'lucide-react';
 
@@ -151,9 +151,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [filterText, setFilterText] = useState('');
 
+  const initialFolderId = (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '';
+  const initialFolder = folders?.find(f => f.id === initialFolderId);
+  const isInitialCaptacion = initialFolder?.operation_type?.startsWith('Captación');
+
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.SUGERIDA,
-    realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '', isPublic: true
+    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
+    realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: initialFolderId, isPublic: true
   });
 
   const [templates, setTemplates] = useState<CriteriaTemplate[]>([]);
@@ -343,7 +347,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         uncoveredSqft: analysisResult.uncoveredSqft || 0,
         age: analysisResult.age || 0,
         floor: analysisResult.floor || '',
-        status: PropertyStatus.SUGERIDA,
+        status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
         folderId: (processingLink ? processingLink.folder_id : (leadToProcess ? leadToProcess.folder_id : activeFolderId)) || '',
         isPublic: true
       }));
@@ -481,7 +485,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.SUGERIDA,
+      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
       realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
@@ -761,7 +765,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                             onChange={(e) => setEditedData(prev => ({ ...prev, status: e.target.value as PropertyStatus }))}
                             className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all uppercase tracking-widest"
                           >
-                            {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
+                            {getContextualStatuses(
+                              folders?.find(f => f.id === editedData.folderId)?.operation_type?.startsWith('Captación') || 
+                              editedData.acquisitionReason === AcquisitionReason.CAPTACION
+                            ).map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
                         </div>
                       )}

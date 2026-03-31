@@ -1,5 +1,5 @@
 import React from 'react';
-import { Property, PropertyStatus, SearchFolder } from '../types';
+import { Property, PropertyStatus, SearchFolder, getContextualStatuses } from '../types';
 import { ICONS } from '../constants';
 import { ShieldCheck, Pencil, Trash2, MapPin, Building, User, Phone, Eye, EyeOff, ExternalLink, MessageCircle, FolderOpen, Copy } from 'lucide-react';
 
@@ -18,6 +18,9 @@ interface PropertyRowProps {
 
 const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = [], onSelect, onStatusChange, onToggleVisibility, onEdit, onDelete, onCopy, isEditable = true }) => {
   const folder = folders.find(f => f.id === property.folderId);
+  const isCaptacion = folder?.operation_type?.startsWith('Captación') || property.acquisitionReason === 'Captación';
+  const allowedStatuses = getContextualStatuses(isCaptacion);
+  
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* USD ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
@@ -231,7 +234,7 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
                  onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
                  onClick={(e) => e.stopPropagation()}
                >
-                 {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
+                 {allowedStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                </select>
              ) : (
                <div className="bg-slate-50 rounded-lg text-[9px] font-bold text-slate-400 py-1.5 px-2 text-center border border-slate-100 uppercase tracking-widest">

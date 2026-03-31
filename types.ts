@@ -15,6 +15,30 @@ export enum PropertyStatus {
   SUSPENDIDA = 'Suspendida'
 }
 
+export const getContextualStatuses = (isCaptacion: boolean): PropertyStatus[] => {
+  if (isCaptacion) {
+    return [
+      PropertyStatus.DISPONIBLE,
+      PropertyStatus.RESERVADA,
+      PropertyStatus.VENDIDA,
+      PropertyStatus.ALQUILADA,
+      PropertyStatus.VENDIDA_POR_OTRO,
+      PropertyStatus.ALQUILADA_POR_OTRO,
+      PropertyStatus.SUSPENDIDA
+    ];
+  } else {
+    return [
+      PropertyStatus.SUGERIDA,
+      PropertyStatus.FAVORITA,
+      PropertyStatus.CONTACTADA,
+      PropertyStatus.VISITADA,
+      PropertyStatus.OFERTADA,
+      PropertyStatus.DESCARTADA,
+      PropertyStatus.SUSPENDIDA
+    ];
+  }
+};
+
 export enum FolderStatus {
   PENDIENTE = 'Pendiente',
   ABIERTA = 'Abierta',

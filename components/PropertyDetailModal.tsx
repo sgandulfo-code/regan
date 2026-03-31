@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, MapPin, Euro, Ruler, Layers, Star, ExternalLink, Calendar, MessageSquare, Info, ShieldCheck, TrendingUp, ChevronLeft, Monitor, ImageIcon, AlertOctagon, RefreshCw, Loader2, Navigation, Car, Clock, Maximize, Building, Trash2, DollarSign, Layout } from 'lucide-react';
-import { Property, UserRole, RenovationItem, TransactionType, PropertyStatus } from '../types';
+import { Property, UserRole, RenovationItem, TransactionType, PropertyStatus, SearchFolder, getContextualStatuses } from '../types';
 import RenovationCalculator from './RenovationCalculator';
 import ClosingCostsWidget from './ClosingCostsWidget';
 import { dataService } from '../services/dataService';
@@ -13,12 +13,17 @@ interface PropertyDetailModalProps {
   onUpdateReno: (items: RenovationItem[]) => void;
   onStatusChange: (id: string, status: PropertyStatus) => void;
   isEditable?: boolean;
+  folders?: SearchFolder[];
 }
 
-const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno, onStatusChange, isEditable = true }) => {
+const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onClose, userRole, onUpdateReno, onStatusChange, isEditable = true, folders = [] }) => {
   const [activeRefTab, setActiveRefTab] = useState<'live' | 'snapshot'>('live');
   const [snapshotLoading, setSnapshotLoading] = useState(true);
   const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
+
+  const folder = folders.find(f => f.id === property.folderId);
+  const isCaptacion = folder?.operation_type?.startsWith('Captación') || property.acquisitionReason === 'Captación';
+  const allowedStatuses = getContextualStatuses(isCaptacion);
 
   useEffect(() => {
     setSnapshotLoading(true);
@@ -54,7 +59,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
                   value={property.status}
                   onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
                 >
-                  {(Object.values(PropertyStatus) as string[]).map(s => <option key={s} value={s}>{s}</option>)}
+                  {allowedStatuses.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               ) : (
                 <span className="bg-indigo-50 text-indigo-600 px-3 md:px-4 py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-indigo-100">{property.status}</span>
