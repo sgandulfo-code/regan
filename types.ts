@@ -1,19 +1,26 @@
 
 export enum PropertyStatus {
-  WISHLIST = 'Wishlist',
-  CONTACTED = 'Contacted',
-  VISITED = 'Visited',
-  OFFERED = 'Offered',
-  DISCARDED = 'Discarded',
-  SOLD = 'Vendida',
-  SOLD_BY_OTHER = 'Vendida por otra inmobiliaria',
-  CANCELLED = 'Cancelada'
+  SUGERIDA = 'Sugerida',
+  FAVORITA = 'Favorita',
+  CONTACTADA = 'Contactada',
+  VISITADA = 'Visitada',
+  OFERTADA = 'Ofertada',
+  DISPONIBLE = 'Disponible',
+  RESERVADA = 'Reservada',
+  VENDIDA = 'Vendida',
+  ALQUILADA = 'Alquilada',
+  DESCARTADA = 'Descartada',
+  VENDIDA_POR_OTRO = 'Vendida por otra inmobiliaria',
+  ALQUILADA_POR_OTRO = 'Alquilada por otra inmobiliaria',
+  SUSPENDIDA = 'Suspendida'
 }
 
 export enum FolderStatus {
   PENDIENTE = 'Pendiente',
   ABIERTA = 'Abierta',
-  CERRADA = 'Cerrada'
+  GANADA = 'Ganada',
+  PERDIDA = 'Perdida',
+  CANCELADA = 'Cancelada'
 }
 
 export enum TransactionType {

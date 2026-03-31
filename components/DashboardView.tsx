@@ -103,10 +103,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const folderData = useMemo(() => {
     const stats: Record<string, any> = {
-      'Búsqueda Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
-      'Búsqueda Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
-      'Captación Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
-      'Captación Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.CERRADA]: 0, totalDays: 0 },
+      'Búsqueda Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
+      'Búsqueda Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
+      'Captación Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
+      'Captación Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
     };
 
     folders.forEach(f => {
@@ -403,8 +403,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                                   <p className="text-xs font-black">{data[FolderStatus.PENDIENTE]}</p>
                                 </div>
                                 <div className="text-center">
-                                  <p className="text-[8px] font-black text-slate-400 uppercase">Cerr.</p>
-                                  <p className="text-xs font-black">{data[FolderStatus.CERRADA]}</p>
+                                  <p className="text-[8px] font-black text-slate-400 uppercase">Gan.</p>
+                                  <p className="text-xs font-black">{data[FolderStatus.GANADA]}</p>
                                 </div>
                               </div>
                             </div>
@@ -418,7 +418,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }} />
                 <Bar dataKey={FolderStatus.ABIERTA} name="Abierta" stackId="a" fill="#10b981" barSize={30} />
                 <Bar dataKey={FolderStatus.PENDIENTE} name="Pendiente" stackId="a" fill="#f59e0b" barSize={30} />
-                <Bar dataKey={FolderStatus.CERRADA} name="Cerrada" stackId="a" fill="#94a3b8" radius={[0, 10, 10, 0]} barSize={30} />
+                <Bar dataKey={FolderStatus.GANADA} name="Ganada" stackId="a" fill="#3b82f6" barSize={30} />
+                <Bar dataKey={FolderStatus.PERDIDA} name="Perdida" stackId="a" fill="#ef4444" barSize={30} />
+                <Bar dataKey={FolderStatus.CANCELADA} name="Cancelada" stackId="a" fill="#94a3b8" radius={[0, 10, 10, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -25,15 +25,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const getStatusColor = (status: PropertyStatus) => {
+  const getStatusColor = (status: PropertyStatus | string) => {
     switch (status) {
-      case PropertyStatus.VISITED: return 'bg-green-100 text-green-700';
-      case PropertyStatus.CONTACTED: return 'bg-blue-100 text-blue-700';
-      case PropertyStatus.DISCARDED: return 'bg-red-100 text-red-700';
-      case PropertyStatus.OFFERED: return 'bg-purple-100 text-purple-700';
-      case PropertyStatus.SOLD: return 'bg-emerald-100 text-emerald-700';
-      case PropertyStatus.SOLD_BY_OTHER: return 'bg-slate-800 text-slate-200';
-      case PropertyStatus.CANCELLED: return 'bg-rose-50 text-rose-700';
+      case PropertyStatus.SUGERIDA: return 'bg-slate-100 text-slate-700';
+      case PropertyStatus.FAVORITA:
+      case 'Wishlist': return 'bg-pink-100 text-pink-700';
+      case PropertyStatus.CONTACTADA:
+      case 'Contacted': return 'bg-blue-100 text-blue-700';
+      case PropertyStatus.VISITADA:
+      case 'Visited': return 'bg-green-100 text-green-700';
+      case PropertyStatus.OFERTADA:
+      case 'Offered': return 'bg-purple-100 text-purple-700';
+      case PropertyStatus.RESERVADA: return 'bg-indigo-100 text-indigo-700';
+      case PropertyStatus.DISPONIBLE: return 'bg-sky-100 text-sky-700';
+      case PropertyStatus.VENDIDA: return 'bg-emerald-100 text-emerald-700';
+      case PropertyStatus.ALQUILADA: return 'bg-teal-100 text-teal-700';
+      case PropertyStatus.DESCARTADA:
+      case 'Discarded': return 'bg-red-100 text-red-700';
+      case PropertyStatus.VENDIDA_POR_OTRO: return 'bg-slate-800 text-slate-200';
+      case PropertyStatus.ALQUILADA_POR_OTRO: return 'bg-slate-700 text-slate-300';
+      case PropertyStatus.SUSPENDIDA:
+      case 'Cancelada': return 'bg-rose-50 text-rose-700';
       default: return 'bg-slate-100 text-slate-700';
     }
   };

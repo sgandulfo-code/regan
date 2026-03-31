@@ -335,7 +335,7 @@ const App: React.FC = () => {
     if (!user) return;
     setIsSyncing(true);
     await dataService.updateVisit(visitId, { status: 'Completed' });
-    await dataService.updatePropertyStatus(propertyId, PropertyStatus.VISITED);
+    await dataService.updatePropertyStatus(propertyId, PropertyStatus.VISITADA);
     const v = await dataService.getVisits(user.id, activeFolderId);
     setVisits(v);
     await loadData();
@@ -420,7 +420,7 @@ const App: React.FC = () => {
       filtered = filtered.filter(p => p.status === statusFilter);
     } else {
       // Ocultar por defecto las propiedades vendidas por otra inmobiliaria
-      filtered = filtered.filter(p => p.status !== PropertyStatus.SOLD_BY_OTHER);
+      filtered = filtered.filter(p => p.status !== PropertyStatus.VENDIDA_POR_OTRO);
     }
 
     // 3.5 Filtro por origen (AcquisitionReason)

@@ -47,6 +47,8 @@ const FolderRow: React.FC<FolderRowProps> = ({ folder, propertiesCount, daysActi
             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
                 folder.status === FolderStatus.ABIERTA ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 
                 folder.status === FolderStatus.PENDIENTE ? 'bg-amber-50 text-amber-600 border border-amber-100' : 
+                folder.status === FolderStatus.GANADA ? 'bg-blue-50 text-blue-600 border border-blue-100' : 
+                folder.status === FolderStatus.PERDIDA ? 'bg-red-50 text-red-600 border border-red-100' : 
                 'bg-slate-50 text-slate-500 border border-slate-100'
             }`}>
                 {folder.status}

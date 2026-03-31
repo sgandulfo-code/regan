@@ -152,7 +152,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const [filterText, setFilterText] = useState('');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
+    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.SUGERIDA,
     realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: (leadToProcess ? leadToProcess.folder_id : activeFolderId) || '', isPublic: true
   });
 
@@ -304,7 +304,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         notes: propertyToEdit.notes || '',
         rating: propertyToEdit.rating || 3,
         acquisitionReason: propertyToEdit.acquisitionReason || AcquisitionReason.BUSQUEDA,
-        status: propertyToEdit.status || PropertyStatus.WISHLIST,
+        status: propertyToEdit.status || PropertyStatus.SUGERIDA,
         realEstateAgency: propertyToEdit.realEstateAgency || '',
         agentName: propertyToEdit.agentName || '',
         agentWhatsapp: propertyToEdit.agentWhatsapp || '',
@@ -343,7 +343,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         uncoveredSqft: analysisResult.uncoveredSqft || 0,
         age: analysisResult.age || 0,
         floor: analysisResult.floor || '',
-        status: PropertyStatus.WISHLIST,
+        status: PropertyStatus.SUGERIDA,
         folderId: (processingLink ? processingLink.folder_id : (leadToProcess ? leadToProcess.folder_id : activeFolderId)) || '',
         isPublic: true
       }));
@@ -449,7 +449,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         isPublic: editedData.isPublic,
         url: processingLink.url || '',
         address: editedData.location || 'Unknown Address',
-        status: PropertyStatus.WISHLIST,
+        status: PropertyStatus.SUGERIDA,
         rating: Math.round((analysisResult.dealScore || 50) / 20) || 3,
         notes: analysisResult.analysis?.strategy || editedData.notes || '',
         renovationCosts: [],
@@ -481,7 +481,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.WISHLIST,
+      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: AcquisitionReason.BUSQUEDA, status: PropertyStatus.SUGERIDA,
       realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
