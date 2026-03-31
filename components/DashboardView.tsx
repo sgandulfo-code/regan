@@ -103,7 +103,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const folderData = useMemo(() => {
     const stats: Record<string, any> = {
-      'Búsqueda Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
+      'Búsqueda Compra': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
       'Búsqueda Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
       'Captación Venta': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
       'Captación Alquiler': { total: 0, budget: 0, [FolderStatus.ABIERTA]: 0, [FolderStatus.PENDIENTE]: 0, [FolderStatus.GANADA]: 0, [FolderStatus.PERDIDA]: 0, [FolderStatus.CANCELADA]: 0, totalDays: 0 },
@@ -111,7 +111,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
     folders.forEach(f => {
       const folderProps = properties.filter(p => p.folderId === f.id);
-      const isCaptacion = folderProps.some(p => p.acquisitionReason === AcquisitionReason.CAPTACION);
+      const isCaptacion = folderProps.some(p => p.acquisitionReason === AcquisitionReason.CAPTACION) || f.operation_type?.startsWith('Captación');
       
       const isVenta = f.transactionType === TransactionType.VENTA || f.transactionType === TransactionType.COMPRA;
       const isAlquiler = f.transactionType === TransactionType.ALQUILER || f.transactionType === TransactionType.ALQUILER_TEMPORARIO;
@@ -120,7 +120,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       if (isCaptacion) {
         typeKey = isVenta ? 'Captación Venta' : 'Captación Alquiler';
       } else {
-        typeKey = isVenta ? 'Búsqueda Venta' : 'Búsqueda Alquiler';
+        typeKey = isVenta ? 'Búsqueda Compra' : 'Búsqueda Alquiler';
       }
 
       if (stats[typeKey]) {

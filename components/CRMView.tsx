@@ -11,7 +11,7 @@ interface CRMViewProps {
   onRefresh: () => void;
 }
 
-const STAGES_COMPRA = [
+const STAGES_BUSQUEDA_COMPRA = [
   'Búsqueda',
   'Visitas',
   'Reserva',
@@ -19,7 +19,14 @@ const STAGES_COMPRA = [
   'Escritura'
 ];
 
-const STAGES_VENTA = [
+const STAGES_BUSQUEDA_ALQUILER = [
+  'Búsqueda',
+  'Visitas',
+  'Reserva',
+  'Contrato'
+];
+
+const STAGES_CAPTACION_VENTA = [
   'Tasación',
   'Autorización',
   'Comercialización',
@@ -28,11 +35,19 @@ const STAGES_VENTA = [
   'Escritura'
 ];
 
+const STAGES_CAPTACION_ALQUILER = [
+  'Tasación',
+  'Autorización',
+  'Comercialización',
+  'Reserva',
+  'Contrato'
+];
+
 export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelect, onRefresh }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'kanban' | 'clients'>('kanban');
-  const [pipelineType, setPipelineType] = useState<'compra' | 'venta'>('compra');
+  const [pipelineType, setPipelineType] = useState<'busqueda_compra' | 'busqueda_alquiler' | 'captacion_venta' | 'captacion_alquiler'>('busqueda_compra');
   const [searchTerm, setSearchTerm] = useState('');
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -65,7 +80,8 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
         'Escritura': 'escritura',
         'Tasación': 'tasacion',
         'Autorización': 'autorizacion',
-        'Comercialización': 'comercializacion'
+        'Comercialización': 'comercializacion',
+        'Contrato': 'contrato'
       };
       
       const newStageId = stageIdMap[newStage] || newStage.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -132,18 +148,30 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
   };
 
   const renderKanban = () => {
-    const currentStages = pipelineType === 'venta' ? STAGES_VENTA : STAGES_COMPRA;
+    let currentStages: string[];
+    switch (pipelineType) {
+      case 'busqueda_compra': currentStages = STAGES_BUSQUEDA_COMPRA; break;
+      case 'busqueda_alquiler': currentStages = STAGES_BUSQUEDA_ALQUILER; break;
+      case 'captacion_venta': currentStages = STAGES_CAPTACION_VENTA; break;
+      case 'captacion_alquiler': currentStages = STAGES_CAPTACION_ALQUILER; break;
+      default: currentStages = STAGES_BUSQUEDA_COMPRA;
+    }
     const defaultStage = currentStages[0];
     
     const filteredFolders = folders.filter(f => {
-      // Si la operación es Venta, va al pipeline de Venta.
-      // Si es Compra, Alquiler, Alquiler Temporario o no está definido, va al pipeline de Compra.
       const isCaptacion = f.operation_type?.startsWith('Captación');
-      if (pipelineType === 'venta') {
-        return f.transactionType === TransactionType.VENTA || isCaptacion;
-      } else {
-        return f.transactionType !== TransactionType.VENTA && !isCaptacion;
+      const isAlquiler = f.transactionType === TransactionType.ALQUILER || f.transactionType === TransactionType.ALQUILER_TEMPORARIO;
+      
+      if (pipelineType === 'busqueda_compra') {
+        return !isCaptacion && !isAlquiler;
+      } else if (pipelineType === 'busqueda_alquiler') {
+        return !isCaptacion && isAlquiler;
+      } else if (pipelineType === 'captacion_venta') {
+        return isCaptacion && !isAlquiler;
+      } else if (pipelineType === 'captacion_alquiler') {
+        return isCaptacion && isAlquiler;
       }
+      return false;
     });
 
     return (
@@ -339,20 +367,34 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
         
         <div className="flex items-center gap-4 flex-wrap">
           {viewMode === 'kanban' && (
-            <div className="bg-white p-1 rounded-2xl border border-slate-200 flex shadow-sm">
+            <div className="bg-white p-1 rounded-2xl border border-slate-200 flex shadow-sm flex-wrap gap-1">
               <button 
-                onClick={() => setPipelineType('compra')}
-                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'compra' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+                onClick={() => setPipelineType('busqueda_compra')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'busqueda_compra' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
               >
                 <Home className="w-4 h-4" />
-                Compra / Alquiler
+                Búsqueda Compra
               </button>
               <button 
-                onClick={() => setPipelineType('venta')}
-                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'venta' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+                onClick={() => setPipelineType('busqueda_alquiler')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'busqueda_alquiler' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              >
+                <Home className="w-4 h-4" />
+                Búsqueda Alquiler
+              </button>
+              <button 
+                onClick={() => setPipelineType('captacion_venta')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'captacion_venta' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
               >
                 <Building className="w-4 h-4" />
-                Venta
+                Captación Venta
+              </button>
+              <button 
+                onClick={() => setPipelineType('captacion_alquiler')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${pipelineType === 'captacion_alquiler' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
+              >
+                <Building className="w-4 h-4" />
+                Captación Alquiler
               </button>
             </div>
           )}

@@ -30,7 +30,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
     stageId: 'busqueda',
     budget_min: 0,
     budget_max: 0,
-    operation_type: 'Búsqueda'
+    operation_type: 'Búsqueda Compra'
   });
 
   const [uploading, setUploading] = useState(false);
@@ -72,7 +72,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         stageId: initialData.stageId || (initialData.transactionType === TransactionType.VENTA ? 'tasacion' : 'busqueda'),
         budget_min: initialData.budget_min || 0,
         budget_max: initialData.budget_max || 0,
-        operation_type: initialData.operation_type || 'Búsqueda'
+        operation_type: (initialData.operation_type === 'Búsqueda' ? 'Búsqueda Compra' : initialData.operation_type) || 'Búsqueda Compra'
       });
     } else {
       setFormData({ 
@@ -90,7 +90,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         stageId: 'busqueda',
         budget_min: 0,
         budget_max: 0,
-        operation_type: 'Búsqueda'
+        operation_type: 'Búsqueda Compra'
       });
     }
   }, [initialData, isOpen]);
@@ -168,8 +168,9 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                   Operación
                 </label>
                 <div className="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                  {['Búsqueda', 'Captación Venta', 'Captación Alquiler'].map((type) => {
+                  {['Búsqueda Compra', 'Búsqueda Alquiler', 'Captación Venta', 'Captación Alquiler'].map((type) => {
                     const isCaptacion = type.startsWith('Captación');
+                    const isAlquiler = type.includes('Alquiler');
                     return (
                     <button
                       key={type}
@@ -179,7 +180,7 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                         operation_type: type,
                         stage: isCaptacion ? 'Tasación' : 'Búsqueda',
                         stageId: isCaptacion ? 'tasacion' : 'busqueda',
-                        transactionType: isCaptacion ? TransactionType.VENTA : TransactionType.COMPRA
+                        transactionType: isAlquiler ? TransactionType.ALQUILER : (isCaptacion ? TransactionType.VENTA : TransactionType.COMPRA)
                       })}
                       className={`py-3 px-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
                     >
