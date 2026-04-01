@@ -1,7 +1,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { ShieldCheck, MapPin, Building, User, Phone, ExternalLink, Calendar, CheckSquare, Square, Plus, ChevronDown } from 'lucide-react';
+import { ShieldCheck, MapPin, Building, User, Phone, ExternalLink, Calendar, CheckSquare, Square, Plus, ChevronDown, Heart } from 'lucide-react';
 
 interface SharedPropertyRowProps {
   property: Property;
@@ -51,15 +51,24 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
 
   const renoTotal = property.renovationCosts?.reduce((acc, curr) => acc + curr.estimatedCost, 0) || 0;
 
+  const isElegida = property.status === PropertyStatus.ELEGIDA || (property.status as string) === 'Elegida';
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex flex-col gap-4 hover:shadow-md transition-all group">
+    <div className={`rounded-2xl shadow-sm border p-4 flex flex-col gap-4 hover:shadow-md transition-all duration-300 group ${
+      isElegida 
+        ? 'bg-pink-50/30 border-pink-300 ring-4 ring-pink-50' 
+        : 'bg-white border-slate-200'
+    }`}>
       {/* Title & Address - Full Width */}
       <div className="flex justify-between items-start w-full gap-4">
         <div className="flex-1 min-w-0">
           {property.code && (
             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">{property.code}</span>
           )}
-          <h3 className="font-bold text-lg md:text-xl text-slate-800 pr-2 cursor-pointer hover:text-indigo-600 transition-colors leading-snug" onClick={() => onSelect(property)} title={property.title}>{property.title}</h3>
+          <h3 className="font-bold text-lg md:text-xl text-slate-800 pr-2 cursor-pointer hover:text-indigo-600 transition-colors leading-snug flex items-center gap-2" onClick={() => onSelect(property)} title={property.title}>
+            <span>{property.title}</span>
+            {isElegida && <Heart className="w-5 h-5 text-pink-500 fill-pink-500 shrink-0" />}
+          </h3>
           <div className="flex items-start gap-2 mt-1.5 text-slate-500">
             <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
             <p className="text-xs font-bold uppercase tracking-wider leading-relaxed break-words">{property.address}</p>
@@ -97,7 +106,11 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                 {onStatusChange && (property.status === PropertyStatus.SUGERIDA || property.status === PropertyStatus.ELEGIDA) ? (
                   <div className="relative inline-block">
                     <select
-                      className={`pl-2.5 pr-6 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer outline-none appearance-none ${getStatusColor(property.status)}`}
+                      className={`pl-2.5 pr-6 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer outline-none appearance-none transition-colors ${
+                        isElegida 
+                          ? 'bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200' 
+                          : 'bg-slate-100 text-slate-700 border-transparent hover:bg-slate-200'
+                      }`}
                       value={property.status}
                       onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
                       onClick={(e) => e.stopPropagation()}
@@ -105,7 +118,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                       <option value={PropertyStatus.SUGERIDA}>{PropertyStatus.SUGERIDA}</option>
                       <option value={PropertyStatus.ELEGIDA}>{PropertyStatus.ELEGIDA}</option>
                     </select>
-                    <ChevronDown className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
+                    <ChevronDown className={`w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none ${isElegida ? 'text-pink-500' : 'text-slate-400'}`} />
                   </div>
                 ) : (
                   <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getStatusColor(property.status)}`}>

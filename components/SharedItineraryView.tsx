@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, ChevronDown, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, ChevronDown, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb, Heart } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
@@ -683,8 +683,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
   const sortedProperties = properties ? [...properties].sort((a: any, b: any) => {
     // First, sort by status 'Elegida'
-    const aIsElegida = a.status === 'Elegida';
-    const bIsElegida = b.status === 'Elegida';
+    const aIsElegida = a.status === PropertyStatus.ELEGIDA || a.status === 'Elegida';
+    const bIsElegida = b.status === PropertyStatus.ELEGIDA || b.status === 'Elegida';
     if (aIsElegida && !bIsElegida) return -1;
     if (!aIsElegida && bIsElegida) return 1;
 
@@ -1639,8 +1639,17 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                     );
                   }
 
+                  const isElegida = property.status === PropertyStatus.ELEGIDA || (property.status as string) === 'Elegida';
+                  
                   return (
-                    <div key={property.id} className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all group flex flex-col">
+                    <div 
+                      key={property.id} 
+                      className={`rounded-[2rem] md:rounded-[2.5rem] border overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col ${
+                        isElegida 
+                          ? 'bg-pink-50/30 border-pink-300 ring-4 ring-pink-50' 
+                          : 'bg-white border-slate-200'
+                      }`}
+                    >
                       <div className="h-56 md:h-64 relative overflow-hidden shrink-0">
                         <img 
                           src={property.images[0] || 'https://picsum.photos/seed/prop/800/600'} 
@@ -1693,18 +1702,22 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             )}
                             Comparar
                           </button>
-                          {(property.status === 'Sugerida' || property.status === 'Elegida') ? (
+                          {(property.status === PropertyStatus.SUGERIDA || property.status === PropertyStatus.ELEGIDA || (property.status as string) === 'Sugerida' || (property.status as string) === 'Elegida') ? (
                             <div className="relative inline-block">
                               <select
-                                className="bg-white/90 backdrop-blur-sm pl-2.5 pr-6 py-1 md:pl-3 md:pr-7 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100 cursor-pointer outline-none appearance-none"
+                                className={`pl-2.5 pr-6 py-1 md:pl-3 md:pr-7 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border cursor-pointer outline-none appearance-none transition-colors ${
+                                  isElegida 
+                                    ? 'bg-pink-100 text-pink-700 border-pink-200 hover:bg-pink-200' 
+                                    : 'bg-white/90 backdrop-blur-sm text-slate-600 border-slate-100 hover:bg-slate-50'
+                                }`}
                                 value={property.status}
                                 onChange={(e) => handleStatusChange(property.id, e.target.value as PropertyStatus)}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <option value="Sugerida">Sugerida</option>
-                                <option value="Elegida">Elegida</option>
+                                <option value={PropertyStatus.SUGERIDA}>{PropertyStatus.SUGERIDA}</option>
+                                <option value={PropertyStatus.ELEGIDA}>{PropertyStatus.ELEGIDA}</option>
                               </select>
-                              <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                              <ChevronDown className={`w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none ${isElegida ? 'text-pink-500' : 'text-slate-400'}`} />
                             </div>
                           ) : (
                             <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100">
@@ -1728,7 +1741,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       {property.code && (
                         <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1 block">{property.code}</span>
                       )}
-                      <h3 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight">{property.title}</h3>
+                      <h3 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight mb-1 md:mb-2 leading-tight flex items-start gap-2">
+                        <span>{property.title}</span>
+                        {isElegida && <Heart className="w-5 h-5 text-pink-500 fill-pink-500 shrink-0 mt-0.5" />}
+                      </h3>
                       <div className="flex items-start gap-1.5 mb-4 md:mb-6">
                         <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 text-indigo-500 shrink-0 mt-0.5" />
                         <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider leading-relaxed break-words">
