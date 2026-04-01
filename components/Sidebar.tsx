@@ -23,6 +23,7 @@ interface SidebarProps {
   onSelectProperty?: (property: Property) => void;
   pendingVisitsCount?: number;
   feedbackCount?: number;
+  pendingUsersCount?: number;
   onRefresh?: () => void;
 }
 
@@ -45,6 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectProperty,
   pendingVisitsCount = 0,
   feedbackCount = 0,
+  pendingUsersCount = 0,
   onRefresh
 }) => {
   
@@ -89,7 +91,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Pencil className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
-    { id: 'admin', label: 'Administración', icon: <Shield className="w-5 h-5" />, hidden: userRole !== UserRole.ADMIN },
+    { 
+      id: 'admin', 
+      label: 'Administración', 
+      icon: <Shield className="w-5 h-5" />, 
+      hidden: userRole !== UserRole.ADMIN,
+      badge: pendingUsersCount > 0 ? pendingUsersCount : undefined
+    },
   ];
 
   return (

@@ -105,6 +105,7 @@ const App: React.FC = () => {
   const [leadToProcess, setLeadToProcess] = useState<InboxLink | null>(null);
   const [sharedId, setSharedId] = useState<string | null>(null);
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
+  const [pendingUsersCount, setPendingUsersCount] = useState(0);
 
   const loadData = async () => {
     if (!user) return;
@@ -120,6 +121,13 @@ const App: React.FC = () => {
       setProperties(p);
       setVisits(v);
       setInboxLinks(il);
+
+      if (user.role === UserRole.ADMIN) {
+        const pendingUsers = await dataService.getPendingUsers();
+        setPendingUsersCount(pendingUsers.length);
+      } else {
+        setPendingUsersCount(0);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -862,6 +870,7 @@ const App: React.FC = () => {
             }}
             onNewLead={() => setActiveTab('search')}
             onNewFolder={() => setIsFolderModalOpen(true)}
+            pendingUsersCount={pendingUsersCount}
           />
         )}
 

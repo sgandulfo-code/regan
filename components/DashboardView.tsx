@@ -16,7 +16,8 @@ import {
   Clock,
   User as UserIcon,
   ExternalLink,
-  Loader2
+  Loader2,
+  Shield
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -31,7 +32,7 @@ import {
   CartesianGrid,
   Legend
 } from 'recharts';
-import { Property, SearchFolder, Visit, PropertyStatus, User, AcquisitionReason, TransactionType, FolderStatus } from '../types';
+import { Property, SearchFolder, Visit, PropertyStatus, User, AcquisitionReason, TransactionType, FolderStatus, UserRole } from '../types';
 import { InboxLink, dataService } from '../services/dataService';
 import PendingLeadsList from './PendingLeadsList';
 
@@ -48,6 +49,7 @@ interface DashboardViewProps {
   onRejectLead: (leadId: string) => void;
   onNewLead: () => void;
   onNewFolder: () => void;
+  pendingUsersCount?: number;
 }
 
 const DashboardView: React.FC<DashboardViewProps> = ({ 
@@ -62,7 +64,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   onProcessLead,
   onRejectLead,
   onNewLead,
-  onNewFolder
+  onNewFolder,
+  pendingUsersCount = 0
 }) => {
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
   const [loadingCalendar, setLoadingCalendar] = useState(false);
@@ -197,6 +200,27 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Admin Notification Banner */}
+      {user.role === UserRole.ADMIN && pendingUsersCount > 0 && (
+        <div 
+          onClick={() => onSetActiveTab('admin')}
+          className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-amber-100 transition-colors shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-amber-800 font-bold">Solicitudes de acceso pendientes</h3>
+              <p className="text-amber-700 text-sm">Tienes {pendingUsersCount} {pendingUsersCount === 1 ? 'usuario' : 'usuarios'} esperando aprobación para acceder a la plataforma.</p>
+            </div>
+          </div>
+          <div className="text-amber-600">
+            <ChevronRight className="w-5 h-5" />
+          </div>
+        </div>
+      )}
+
       {/* Quick Access Hero */}
       <section className="bg-slate-900 rounded-[3.5rem] p-10 text-white relative overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 p-10 opacity-10">
