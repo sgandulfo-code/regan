@@ -1,7 +1,7 @@
 
 export enum PropertyStatus {
   SUGERIDA = 'Sugerida',
-  FAVORITA = 'Favorita',
+  ELEGIDA = 'Elegida',
   CONTACTADA = 'Contactada',
   VISITADA = 'Visitada',
   OFERTADA = 'Ofertada',
@@ -29,7 +29,7 @@ export const getContextualStatuses = (isCaptacion: boolean): PropertyStatus[] =>
   } else {
     return [
       PropertyStatus.SUGERIDA,
-      PropertyStatus.FAVORITA,
+      PropertyStatus.ELEGIDA,
       PropertyStatus.CONTACTADA,
       PropertyStatus.VISITADA,
       PropertyStatus.OFERTADA,
@@ -158,7 +158,8 @@ export enum ActivityType {
   VISIT_FEEDBACK = 'visit_feedback',
   PROPERTY_CRITERIA = 'property_criteria',
   NEW_LEAD = 'new_lead',
-  VISIT_REQUESTED = 'visit_requested'
+  VISIT_REQUESTED = 'visit_requested',
+  STATUS_CHANGED = 'status_changed'
 }
 
 export interface Activity {

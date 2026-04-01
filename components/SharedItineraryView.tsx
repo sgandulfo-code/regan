@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, ChevronDown, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
-import { FeedbackItem, FunnelStage, ActivityType } from '../types';
+import { FeedbackItem, FunnelStage, ActivityType, PropertyStatus } from '../types';
 
 import SharedPropertyRow from './SharedPropertyRow';
 import ClientProgressBar from './ClientProgressBar';
@@ -622,6 +622,36 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     }
   };
 
+  const handleStatusChange = async (propertyId: string, newStatus: PropertyStatus) => {
+    try {
+      await dataService.updatePropertyStatus(propertyId, newStatus);
+      
+      // Update local state
+      setData((prev: any) => ({
+        ...prev,
+        properties: prev.properties.map((p: any) => 
+          p.id === propertyId ? { ...p, status: newStatus } : p
+        )
+      }));
+      
+      const property = data.properties.find((p: any) => p.id === propertyId);
+      
+      // Log activity
+      dataService.logActivity({
+        folderId: data.itinerary.folderId,
+        agentId: data.itinerary.folder.userId,
+        type: ActivityType.STATUS_CHANGED,
+        content: `El cliente cambió el estado de la propiedad ${property?.title || ''} a ${newStatus}`,
+        metadata: { propertyId, newStatus }
+      });
+      
+      showToast(`Estado actualizado a ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showToast('Error al actualizar el estado');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
@@ -652,6 +682,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const pastVisits = sortedVisits.filter((v: any) => v.status === 'Completed' || v.status === 'Cancelled');
 
   const sortedProperties = properties ? [...properties].sort((a: any, b: any) => {
+    // First, sort by status 'Elegida'
+    const aIsElegida = a.status === 'Elegida';
+    const bIsElegida = b.status === 'Elegida';
+    if (aIsElegida && !bIsElegida) return -1;
+    if (!aIsElegida && bIsElegida) return 1;
+
     let valA, valB;
     switch (sortBy) {
       case 'price':
@@ -1592,6 +1628,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                         onCompare={toggleComparison}
                         isCompared={comparisonIds.includes(property.id)}
                         onRequestVisit={handleRequestVisit}
+                        onStatusChange={handleStatusChange}
                         onAddCustomField={(p) => {
                           setSelectedPropertyForCustomField(p);
                           setCustomFieldName('');
@@ -1656,9 +1693,24 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             )}
                             Comparar
                           </button>
-                          <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100">
-                            {property.status}
-                          </div>
+                          {(property.status === 'Sugerida' || property.status === 'Elegida') ? (
+                            <div className="relative inline-block">
+                              <select
+                                className="bg-white/90 backdrop-blur-sm pl-2.5 pr-6 py-1 md:pl-3 md:pr-7 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100 cursor-pointer outline-none appearance-none"
+                                value={property.status}
+                                onChange={(e) => handleStatusChange(property.id, e.target.value as PropertyStatus)}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <option value="Sugerida">Sugerida</option>
+                                <option value="Elegida">Elegida</option>
+                              </select>
+                              <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            </div>
+                          ) : (
+                            <div className="bg-white/90 backdrop-blur-sm px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-600 shadow-sm border border-slate-100">
+                              {property.status}
+                            </div>
+                          )}
                         {property.acquisitionReason && (
                           <div className="bg-slate-900/80 backdrop-blur-sm text-white px-2.5 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold uppercase tracking-wider shadow-sm border border-white/10">
                             {property.acquisitionReason}

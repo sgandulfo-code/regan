@@ -30,7 +30,7 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
   const getStatusColor = (status: PropertyStatus | string) => {
     switch (status) {
       case PropertyStatus.SUGERIDA: return 'bg-slate-100 text-slate-700';
-      case PropertyStatus.FAVORITA:
+      case PropertyStatus.ELEGIDA:
       case 'Wishlist': return 'bg-pink-100 text-pink-700';
       case PropertyStatus.CONTACTADA:
       case 'Contacted': return 'bg-blue-100 text-blue-700';

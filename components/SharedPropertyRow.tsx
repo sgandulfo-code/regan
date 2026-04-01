@@ -1,7 +1,7 @@
 import React from 'react';
 import { Property, PropertyStatus } from '../types';
 import { ICONS } from '../constants';
-import { ShieldCheck, MapPin, Building, User, Phone, ExternalLink, Calendar, CheckSquare, Square, Plus } from 'lucide-react';
+import { ShieldCheck, MapPin, Building, User, Phone, ExternalLink, Calendar, CheckSquare, Square, Plus, ChevronDown } from 'lucide-react';
 
 interface SharedPropertyRowProps {
   property: Property;
@@ -11,6 +11,7 @@ interface SharedPropertyRowProps {
   isCompared: boolean;
   onRequestVisit: (p: Property) => void;
   onAddCustomField: (p: Property) => void;
+  onStatusChange?: (id: string, status: PropertyStatus) => void;
 }
 
 const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({ 
@@ -20,12 +21,13 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
   onCompare, 
   isCompared, 
   onRequestVisit,
-  onAddCustomField
+  onAddCustomField,
+  onStatusChange
 }) => {
   const getStatusColor = (status: PropertyStatus | string) => {
     switch (status) {
       case PropertyStatus.SUGERIDA: return 'bg-slate-100 text-slate-700';
-      case PropertyStatus.FAVORITA:
+      case PropertyStatus.ELEGIDA:
       case 'Wishlist': return 'bg-pink-100 text-pink-700';
       case PropertyStatus.CONTACTADA:
       case 'Contacted': return 'bg-blue-100 text-blue-700';
@@ -92,9 +94,24 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-3">
-                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getStatusColor(property.status)}`}>
-                  {property.status}
-                </span>
+                {onStatusChange && (property.status === PropertyStatus.SUGERIDA || property.status === PropertyStatus.ELEGIDA) ? (
+                  <div className="relative inline-block">
+                    <select
+                      className={`pl-2.5 pr-6 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider cursor-pointer outline-none appearance-none ${getStatusColor(property.status)}`}
+                      value={property.status}
+                      onChange={(e) => onStatusChange(property.id, e.target.value as PropertyStatus)}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <option value={PropertyStatus.SUGERIDA}>{PropertyStatus.SUGERIDA}</option>
+                      <option value={PropertyStatus.ELEGIDA}>{PropertyStatus.ELEGIDA}</option>
+                    </select>
+                    <ChevronDown className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
+                  </div>
+                ) : (
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${getStatusColor(property.status)}`}>
+                    {property.status}
+                  </span>
+                )}
                 <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 text-slate-600">
                   {ICONS.Star} {property.rating}
                 </span>
