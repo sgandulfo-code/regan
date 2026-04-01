@@ -105,7 +105,10 @@ export const dataService = {
       .select('*')
       .eq('status', 'pending');
     
-    if (error) return [];
+    if (error) {
+      console.error("Error fetching pending users:", error);
+      return [];
+    }
     return data.map(d => ({
       id: d.id,
       name: d.full_name,
