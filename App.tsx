@@ -60,6 +60,7 @@ import PendingLeadsList from './components/PendingLeadsList';
 import Auth from './components/Auth';
 import CRMView from './components/CRMView';
 import CopyPropertyModal from './components/CopyPropertyModal';
+import AdminView from './components/AdminView';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason, getContextualStatuses } from './types';
 import { dataService, InboxLink } from './services/dataService';
@@ -473,6 +474,50 @@ const App: React.FC = () => {
   if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
+
+  if (user.status === 'pending') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Clock className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Cuenta en Revisión</h2>
+          <p className="text-slate-600 mb-8">
+            Gracias por registrarte. Tu cuenta está siendo revisada por un administrador. Te avisaremos cuando tengas acceso.
+          </p>
+          <button 
+            onClick={() => supabase.auth.signOut()}
+            className="text-slate-500 hover:text-slate-800 font-medium"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <X className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Acceso Denegado</h2>
+          <p className="text-slate-600 mb-8">
+            Tu solicitud de acceso ha sido rechazada por un administrador.
+          </p>
+          <button 
+            onClick={() => supabase.auth.signOut()}
+            className="text-slate-500 hover:text-slate-800 font-medium"
+          >
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative overflow-x-hidden">
@@ -956,6 +1001,8 @@ const App: React.FC = () => {
         {activeTab === 'activity' && <ActivityFeed user={user} />}
 
         {activeTab === 'criteria-templates' && <CriteriaTemplateManager user={user} />}
+        
+        {activeTab === 'admin' && user?.role === UserRole.ADMIN && <AdminView />}
 
         {activeTab === 'settings' && user && (
           <SettingsView user={user} onUpdateUser={setUser} />

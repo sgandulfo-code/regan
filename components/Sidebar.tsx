@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UserRole, SearchFolder, User, Property } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin, Inbox } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin, Inbox, Shield } from 'lucide-react';
 import { dataService, InboxLink } from '../services/dataService';
 
 interface SidebarProps {
@@ -63,13 +63,13 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-    { id: 'crm', label: 'CRM & Pipeline', icon: <Users className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
-    { id: 'activity', label: 'Feed de Actividad', icon: <Activity className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
+    { id: 'crm', label: 'CRM & Pipeline', icon: <Users className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT && userRole !== UserRole.ADMIN },
+    { id: 'activity', label: 'Feed de Actividad', icon: <Activity className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT && userRole !== UserRole.ADMIN },
     { 
       id: 'search', 
       label: 'Inbox Global', 
       icon: <Inbox className="w-5 h-5" />, 
-      hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT,
+      hidden: userRole !== UserRole.BUYER && userRole !== UserRole.AGENT && userRole !== UserRole.ADMIN,
       badge: unassignedLeadsCount > 0 ? unassignedLeadsCount : undefined
     },
     { id: 'properties', label: 'Propiedades', icon: <Heart className="w-5 h-5" /> },
@@ -83,12 +83,13 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'google-calendar', label: 'Calendario', icon: <Calendar className="w-5 h-5" />, hidden: !user?.googleAuth },
     { id: 'request-visits', label: 'Pedir Visitas', icon: <MessageSquare className="w-5 h-5" /> },
     { id: 'comparison', label: 'Comparador', icon: <ArrowLeftRight className="w-5 h-5" /> },
-    { id: 'valuations', label: 'Dossier de Tasación', icon: <TrendingUp className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
-    { id: 'criteria-templates', label: 'Plantillas', icon: <Layout className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT },
+    { id: 'valuations', label: 'Dossier de Tasación', icon: <TrendingUp className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT && userRole !== UserRole.ADMIN },
+    { id: 'criteria-templates', label: 'Plantillas', icon: <Layout className="w-5 h-5" />, hidden: userRole !== UserRole.AGENT && userRole !== UserRole.ADMIN },
     { id: 'tax-calculator', label: 'Calculadora de Gastos', icon: <Calculator className="w-5 h-5" /> },
     { id: 'financials', label: 'Análisis Financiero', icon: <Calculator className="w-5 h-5" /> },
     { id: 'calculator', label: 'Estimador Reformas', icon: <Pencil className="w-5 h-5" /> },
     { id: 'settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
+    { id: 'admin', label: 'Administración', icon: <Shield className="w-5 h-5" />, hidden: userRole !== UserRole.ADMIN },
   ];
 
   return (

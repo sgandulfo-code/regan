@@ -59,7 +59,8 @@ export enum UserRole {
   ARCHITECT = 'Architect',
   CONTRACTOR = 'Contractor',
   AGENT = 'Agent',
-  CLIENT = 'Client'
+  CLIENT = 'Client',
+  ADMIN = 'Admin'
 }
 
 export enum SharePermission {
@@ -232,6 +233,7 @@ export interface User {
   email: string;
   whatsappNumber?: string;
   googleAuth?: any;
+  status?: 'pending' | 'active' | 'rejected';
 }
 
 // Added missing PropertyDocument interface for the DocumentVault functionality

@@ -31,7 +31,8 @@ export const dataService = {
       email: data.email,
       role: data.role as UserRole,
       whatsappNumber: data.whatsapp_number,
-      googleAuth: data.google_auth
+      googleAuth: data.google_auth,
+      status: data.status || 'active'
     } as User;
   },
 
@@ -89,11 +90,38 @@ export const dataService = {
         full_name: name, 
         email, 
         role,
-        whatsapp_number: whatsappNumber 
+        whatsapp_number: whatsappNumber,
+        status: 'pending'
       }])
       .select()
       .single();
     return data;
+  },
+
+  // Admin functions
+  async getPendingUsers() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('status', 'pending');
+    
+    if (error) return [];
+    return data.map(d => ({
+      id: d.id,
+      name: d.full_name,
+      email: d.email,
+      role: d.role as UserRole,
+      whatsappNumber: d.whatsapp_number,
+      status: d.status
+    } as User));
+  },
+
+  async updateUserStatus(id: string, status: 'active' | 'rejected') {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw error;
   },
 
   // Folders
