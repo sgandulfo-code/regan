@@ -28,6 +28,11 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   const [sellTransferTaxPct, setSellTransferTaxPct] = useState(1.5); // ITI or similar
   const [sellNotaryFeePct, setSellNotaryFeePct] = useState(0); // Usually 0 for seller in some jurisdictions, but editable
   const [sellOtherPct, setSellOtherPct] = useState(0);
+
+  // Shared Operation
+  const [isSharedOperation, setIsSharedOperation] = useState(false);
+  const [splitPct1, setSplitPct1] = useState(45);
+  const [splitPct2, setSplitPct2] = useState(55);
   
   const selectedProperty = properties.find(p => p.id === selectedPropertyId);
 
@@ -129,6 +134,9 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
 
   // Agent Result
   const totalCommission = buyAgencyFee + sellAgencyFee;
+  const sharedCommission = isSharedOperation ? totalCommission / 2 : totalCommission;
+  const split1Result = sharedCommission * (splitPct1 / 100);
+  const split2Result = sharedCommission * (splitPct2 / 100);
 
   // Metrics
   const buyerTotalPct = transactionPrice > 0 ? (totalBuyerCost / transactionPrice) * 100 : 0;
@@ -342,22 +350,95 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
         </div>
 
         {/* AGENT RESULT */}
-        <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm">
-              <Briefcase className="w-8 h-8 text-emerald-400" />
+        <div className="lg:col-span-2 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl flex flex-col gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-sm">
+                <Briefcase className="w-8 h-8 text-emerald-400" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black tracking-tight">Resultado del Agente</h3>
+                <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Total Honorarios (Comprador + Vendedor)</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-2xl font-black tracking-tight">Resultado del Agente</h3>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mt-1">Total Honorarios (Comprador + Vendedor)</p>
+            
+            <div className="text-right">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comisión Total</p>
+              <p className="text-5xl font-black text-emerald-400">
+                {formatCurrency(totalCommission)}
+              </p>
             </div>
           </div>
-          
-          <div className="text-right">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comisión Total</p>
-            <p className="text-5xl font-black text-emerald-400">
-              {formatCurrency(totalCommission)}
-            </p>
+
+          <div className="pt-6 border-t border-white/10 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <input 
+                  type="checkbox" 
+                  id="sharedOperation"
+                  checked={isSharedOperation}
+                  onChange={(e) => setIsSharedOperation(e.target.checked)}
+                  className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900"
+                />
+                <label htmlFor="sharedOperation" className="text-sm font-bold text-slate-300 cursor-pointer">
+                  Operación Compartida (Divide el total en 2)
+                </label>
+              </div>
+              {isSharedOperation && (
+                <div className="text-right">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a Repartir</p>
+                  <p className="text-2xl font-black text-emerald-400">
+                    {formatCurrency(sharedCommission)}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-800/50 p-4 rounded-2xl border border-white/5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-400">Parte 1</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      value={splitPct1}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setSplitPct1(val);
+                        setSplitPct2(100 - val);
+                      }}
+                      className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-sm font-bold text-white outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-slate-400 text-sm font-bold">%</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-white text-right">
+                  {formatCurrency(split1Result)}
+                </p>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-2xl border border-white/5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-bold text-slate-400">Parte 2</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      value={splitPct2}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setSplitPct2(val);
+                        setSplitPct1(100 - val);
+                      }}
+                      className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-right text-sm font-bold text-white outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-slate-400 text-sm font-bold">%</span>
+                  </div>
+                </div>
+                <p className="text-2xl font-black text-white text-right">
+                  {formatCurrency(split2Result)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
