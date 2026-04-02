@@ -27,6 +27,7 @@ const STAGES_BUSQUEDA_ALQUILER = [
 ];
 
 const STAGES_CAPTACION_VENTA = [
+  'Pre-captación',
   'Tasación',
   'Autorización',
   'Comercialización',
@@ -36,6 +37,7 @@ const STAGES_CAPTACION_VENTA = [
 ];
 
 const STAGES_CAPTACION_ALQUILER = [
+  'Pre-captación',
   'Tasación',
   'Autorización',
   'Comercialización',
@@ -78,6 +80,7 @@ export const CRMView: React.FC<CRMViewProps> = ({ userId, folders, onFolderSelec
         'Reserva': 'reserva',
         'Boleto': 'boleto',
         'Escritura': 'escritura',
+        'Pre-captación': 'precaptacion',
         'Tasación': 'tasacion',
         'Autorización': 'autorizacion',
         'Comercialización': 'comercializacion',

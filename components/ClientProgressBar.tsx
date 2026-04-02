@@ -68,6 +68,16 @@ export const STAGES_COMPRA: StageInfo[] = [
 
 export const STAGES_VENTA: StageInfo[] = [
   {
+    id: 'precaptacion',
+    title: 'Pre-captación',
+    status: 'completed',
+    description: 'Primer contacto y evaluación inicial de las necesidades del propietario.',
+    requirements: {
+      docs: [],
+      money: []
+    }
+  },
+  {
     id: 'tasacion',
     title: 'Tasación',
     status: 'completed',

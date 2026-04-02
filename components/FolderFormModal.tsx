@@ -68,8 +68,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
         imageUrl: initialData.imageUrl || '',
         isImagePublic: initialData.isImagePublic ?? true,
         client_id: initialData.client_id || '',
-        stage: initialData.stage || (initialData.transactionType === TransactionType.VENTA ? 'Tasación' : 'Búsqueda'),
-        stageId: initialData.stageId || (initialData.transactionType === TransactionType.VENTA ? 'tasacion' : 'busqueda'),
+        stage: initialData.stage || (initialData.transactionType === TransactionType.VENTA ? 'Pre-captación' : 'Búsqueda'),
+        stageId: initialData.stageId || (initialData.transactionType === TransactionType.VENTA ? 'precaptacion' : 'busqueda'),
         budget_min: initialData.budget_min || 0,
         budget_max: initialData.budget_max || 0,
         operation_type: (initialData.operation_type === 'Búsqueda' ? 'Búsqueda Compra' : initialData.operation_type) || 'Búsqueda Compra'
@@ -178,8 +178,8 @@ const FolderFormModal: React.FC<FolderFormModalProps> = ({ isOpen, onClose, onCo
                       onClick={() => setFormData({ 
                         ...formData, 
                         operation_type: type,
-                        stage: isCaptacion ? 'Tasación' : 'Búsqueda',
-                        stageId: isCaptacion ? 'tasacion' : 'busqueda',
+                        stage: isCaptacion ? 'Pre-captación' : 'Búsqueda',
+                        stageId: isCaptacion ? 'precaptacion' : 'busqueda',
                         transactionType: isAlquiler ? TransactionType.ALQUILER : (isCaptacion ? TransactionType.VENTA : TransactionType.COMPRA)
                       })}
                       className={`py-3 px-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${formData.operation_type === type ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600 hover:bg-white/50'}`}
