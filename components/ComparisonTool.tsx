@@ -50,8 +50,10 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
     return val === Math.max(...values);
   };
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   const formatNumber = (val: number) => {
@@ -201,7 +203,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   {selectedProperties.map(p => (
                     <td key={p.id} className="p-4">
                       <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${isBest(p, 'price', 'min') ? 'bg-emerald-100 text-emerald-700' : 'text-slate-700'}`}>
-                        <span className="font-bold text-lg">{formatCurrency(p.price)}</span>
+                        <span className="font-bold text-lg">{formatCurrency(p.price, p.currency)}</span>
                         {isBest(p, 'price', 'min') && <Trophy className="w-3 h-3 fill-emerald-700" />}
                       </div>
                     </td>
@@ -215,7 +217,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                     return (
                       <td key={p.id} className="p-4">
                         <div className={`inline-flex items-center gap-2 px-2 py-1 rounded-lg ${isWinner ? 'bg-emerald-50 text-emerald-600' : 'text-slate-600'}`}>
-                          <span className="font-bold">{formatCurrency(val)}</span>
+                          <span className="font-bold">{formatCurrency(val, p.currency)}</span>
                           {isWinner && <Check className="w-3 h-3" />}
                         </div>
                       </td>
@@ -226,7 +228,7 @@ const ComparisonTool: React.FC<ComparisonToolProps> = ({ properties, folder }) =
                   <td className="p-4 pl-6 text-xs font-bold text-slate-500 sticky left-0 bg-white z-10">Expensas</td>
                   {selectedProperties.map(p => (
                     <td key={p.id} className="p-4">
-                      <span className="font-medium text-slate-600">{p.fees ? formatCurrency(p.fees) : '-'}</span>
+                      <span className="font-medium text-slate-600">{p.fees ? formatCurrency(p.fees, p.feesCurrency) : '-'}</span>
                     </td>
                   ))}
                 </tr>

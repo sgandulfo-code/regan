@@ -100,7 +100,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                   <Building className="w-6 h-6 text-slate-400 group-hover:text-indigo-500" />
                 </div>
                 <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors">
-                  ${property.price.toLocaleString()}
+                  {property.currency === 'ARS' ? '$' : 'U$S'} {property.price.toLocaleString()}
                 </span>
               </div>
               {property.code && (
@@ -146,8 +146,10 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
   const sellerNetPerSqft = selectedProperty.sqft > 0 ? netSellerProceeds / selectedProperty.sqft : 0;
 
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   const handleShare = (type: 'buyer' | 'seller') => {
@@ -158,29 +160,29 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
     if (type === 'buyer') {
       text = `*Análisis de Compra - ${selectedProperty.title}*\n` +
              `📍 ${selectedProperty.address}\n\n` +
-             `Precio Propiedad: ${formatCurrency(transactionPrice)}\n` +
+             `Precio Propiedad: ${formatCurrency(transactionPrice, selectedProperty.currency)}\n` +
              `------------------\n` +
              `Gastos:\n` +
-             `• Honorarios (${buyAgencyFeePct}%): ${formatCurrency(buyAgencyFee)}\n` +
-             `• Escribanía (${buyNotaryFeePct}%): ${formatCurrency(buyNotaryFee)}\n` +
-             `• Sellos (${buyStampTaxPct}%): ${formatCurrency(buyStampTax)}\n` +
-             `• Otros: ${formatCurrency(buyOtherCost)}\n` +
+             `• Honorarios (${buyAgencyFeePct}%): ${formatCurrency(buyAgencyFee, selectedProperty.currency)}\n` +
+             `• Escribanía (${buyNotaryFeePct}%): ${formatCurrency(buyNotaryFee, selectedProperty.currency)}\n` +
+             `• Sellos (${buyStampTaxPct}%): ${formatCurrency(buyStampTax, selectedProperty.currency)}\n` +
+             `• Otros: ${formatCurrency(buyOtherCost, selectedProperty.currency)}\n` +
              `------------------\n` +
-             `*TOTAL A DESEMBOLSAR: ${formatCurrency(totalBuyerCost)}*\n` +
-             `(${buyerTotalPct.toFixed(2)}% sobre valor - ${formatCurrency(buyerTotalPerSqft)}/m²)`;
+             `*TOTAL A DESEMBOLSAR: ${formatCurrency(totalBuyerCost, selectedProperty.currency)}*\n` +
+             `(${buyerTotalPct.toFixed(2)}% sobre valor - ${formatCurrency(buyerTotalPerSqft, selectedProperty.currency)}/m²)`;
     } else {
       text = `*Análisis de Venta - ${selectedProperty.title}*\n` +
              `📍 ${selectedProperty.address}\n\n` +
-             `Precio Venta: ${formatCurrency(transactionPrice)}\n` +
+             `Precio Venta: ${formatCurrency(transactionPrice, selectedProperty.currency)}\n` +
              `------------------\n` +
              `Descuentos:\n` +
-             `• Honorarios (${sellAgencyFeePct}%): -${formatCurrency(sellAgencyFee)}\n` +
-             `• ITI/Impuestos (${sellTransferTaxPct}%): -${formatCurrency(sellTransferTax)}\n` +
-             `• Escritura (${sellNotaryFeePct}%): -${formatCurrency(sellNotaryFee)}\n` +
-             `• Otros: -${formatCurrency(sellOtherCost)}\n` +
+             `• Honorarios (${sellAgencyFeePct}%): -${formatCurrency(sellAgencyFee, selectedProperty.currency)}\n` +
+             `• ITI/Impuestos (${sellTransferTaxPct}%): -${formatCurrency(sellTransferTax, selectedProperty.currency)}\n` +
+             `• Escritura (${sellNotaryFeePct}%): -${formatCurrency(sellNotaryFee, selectedProperty.currency)}\n` +
+             `• Otros: -${formatCurrency(sellOtherCost, selectedProperty.currency)}\n` +
              `------------------\n` +
-             `*NETO A RECIBIR: ${formatCurrency(netSellerProceeds)}*\n` +
-             `(${sellerNetPct.toFixed(2)}% del valor - ${formatCurrency(sellerNetPerSqft)}/m²)`;
+             `*NETO A RECIBIR: ${formatCurrency(netSellerProceeds, selectedProperty.currency)}*\n` +
+             `(${sellerNetPct.toFixed(2)}% del valor - ${formatCurrency(sellerNetPerSqft, selectedProperty.currency)}/m²)`;
     }
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -208,7 +210,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
         </div>
       </div>
       <span className={`text-xs font-black ${isNegative ? 'text-rose-500' : 'text-slate-900'}`}>
-        {isNegative ? '-' : ''}{formatCurrency(value)}
+        {isNegative ? '-' : ''}{formatCurrency(value, selectedProperty?.currency)}
       </span>
     </div>
   );
@@ -281,7 +283,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-xs font-bold text-slate-600">Precio Propiedad</span>
-                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice)}</span>
+                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice, selectedProperty.currency)}</span>
               </div>
               <CostRow label="Honorarios Inmobiliaria" value={buyAgencyFee} pct={buyAgencyFeePct} onChangePct={setBuyAgencyFeePct} color="rose" />
               <CostRow label="Escribanía (s/ Escritura)" value={buyNotaryFee} pct={buyNotaryFeePct} onChangePct={setBuyNotaryFeePct} color="emerald" />
@@ -292,11 +294,11 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="pt-6 border-t border-slate-100">
               <div className="flex justify-between items-end mb-2">
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Total Operación</span>
-                <span className="text-3xl font-black text-slate-900">{formatCurrency(totalBuyerCost)}</span>
+                <span className="text-3xl font-black text-slate-900">{formatCurrency(totalBuyerCost, selectedProperty.currency)}</span>
               </div>
               <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
                 <span>{buyerTotalPct.toFixed(2)}% del valor</span>
-                <span>{formatCurrency(buyerTotalPerSqft)} / m²</span>
+                <span>{formatCurrency(buyerTotalPerSqft, selectedProperty.currency)} / m²</span>
               </div>
             </div>
           </div>
@@ -328,7 +330,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="space-y-3">
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
                 <span className="text-xs font-bold text-slate-600">Precio Venta</span>
-                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice)}</span>
+                <span className="text-xs font-black text-slate-900">{formatCurrency(transactionPrice, selectedProperty.currency)}</span>
               </div>
               <CostRow label="Honorarios Inmobiliaria" value={sellAgencyFee} pct={sellAgencyFeePct} onChangePct={setSellAgencyFeePct} color="rose" isNegative />
               <CostRow label="ITI / Impuestos (s/ Escritura)" value={sellTransferTax} pct={sellTransferTaxPct} onChangePct={setSellTransferTaxPct} color="amber" isNegative />
@@ -339,11 +341,11 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="pt-6 border-t border-slate-100 space-y-4">
               <div className="flex justify-between items-end mb-2">
                 <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Neto en Mano</span>
-                <span className="text-3xl font-black text-indigo-600">{formatCurrency(netSellerProceeds)}</span>
+                <span className="text-3xl font-black text-indigo-600">{formatCurrency(netSellerProceeds, selectedProperty.currency)}</span>
               </div>
               <div className="flex justify-between items-center text-[10px] font-bold text-slate-400">
                 <span>{sellerNetPct.toFixed(2)}% del valor</span>
-                <span>{formatCurrency(sellerNetPerSqft)} / m²</span>
+                <span>{formatCurrency(sellerNetPerSqft, selectedProperty.currency)} / m²</span>
               </div>
             </div>
           </div>
@@ -365,7 +367,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
             <div className="text-right">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Comisión Total</p>
               <p className="text-5xl font-black text-emerald-400">
-                {formatCurrency(totalCommission)}
+                {formatCurrency(totalCommission, selectedProperty.currency)}
               </p>
             </div>
           </div>
@@ -388,7 +390,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                 <div className="text-right">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total a Repartir</p>
                   <p className="text-2xl font-black text-emerald-400">
-                    {formatCurrency(sharedCommission)}
+                    {formatCurrency(sharedCommission, selectedProperty.currency)}
                   </p>
                 </div>
               )}
@@ -413,7 +415,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                   </div>
                 </div>
                 <p className="text-2xl font-black text-white text-right">
-                  {formatCurrency(split1Result)}
+                  {formatCurrency(split1Result, selectedProperty.currency)}
                 </p>
               </div>
 
@@ -435,7 +437,7 @@ const FinancialAnalysisView: React.FC<FinancialAnalysisViewProps> = ({ propertie
                   </div>
                 </div>
                 <p className="text-2xl font-black text-white text-right">
-                  {formatCurrency(split2Result)}
+                  {formatCurrency(split2Result, selectedProperty.currency)}
                 </p>
               </div>
             </div>

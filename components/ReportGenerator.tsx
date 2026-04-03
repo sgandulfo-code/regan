@@ -12,8 +12,10 @@ interface ReportGeneratorProps {
 }
 
 const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, onClose }) => {
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   const metadata = [
@@ -67,15 +69,15 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ folder, properties, o
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Precio</p>
-                      <p className="text-lg font-black text-slate-900">{formatCurrency(p.price)}</p>
+                      <p className="text-lg font-black text-slate-900">{formatCurrency(p.price, p.currency)}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor m²</p>
-                      <p className="text-lg font-black text-slate-900">{p.sqft > 0 ? formatCurrency(p.price / p.sqft) : '-'}</p>
+                      <p className="text-lg font-black text-slate-900">{p.sqft > 0 ? formatCurrency(p.price / p.sqft, p.currency) : '-'}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Expensas</p>
-                      <p className="text-sm font-bold text-slate-600">{p.fees ? formatCurrency(p.fees) : '-'}</p>
+                      <p className="text-sm font-bold text-slate-600">{p.fees ? formatCurrency(p.fees, p.feesCurrency) : '-'}</p>
                     </div>
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sup. Total</p>

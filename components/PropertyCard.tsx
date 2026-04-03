@@ -24,7 +24,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
   
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* USD ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
+    const pricePrefix = property.currency === 'ARS' ? '$' : 'USD';
+    const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* ${pricePrefix} ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -142,6 +143,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
                 {property.code}
               </div>
             )}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl font-black text-slate-900">
+                {property.currency === 'ARS' ? '$' : 'U$S'} {property.price.toLocaleString()}
+              </span>
+            </div>
             <h3 className="font-bold text-lg text-slate-800 truncate mb-1" title={property.title}>
               {property.title}
             </h3>
@@ -234,12 +240,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
 
         <div className="flex items-center gap-3 mb-4">
           <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">
-            ${Math.round(property.price / property.sqft).toLocaleString()}/m²
+            {property.currency === 'ARS' ? '$' : 'U$S'} {Math.round(property.price / property.sqft).toLocaleString()}/m²
           </p>
           {property.fees && property.fees > 0 && (
             <div className="flex items-center gap-1 text-[10px] text-amber-600 font-black uppercase tracking-widest">
               <ShieldCheck className="w-3 h-3" />
-              ${property.fees} expensas
+              {property.feesCurrency === 'USD' ? 'U$S' : '$'} {property.fees} expensas
             </div>
           )}
         </div>

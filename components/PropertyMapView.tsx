@@ -196,7 +196,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
                   <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
                     selectedProperty?.id === p.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-200 text-slate-500'
                   }`}>
-                    ${p.price.toLocaleString()}
+                    {p.currency === 'ARS' ? '$' : 'U$S'} {p.price.toLocaleString()}
                   </span>
                 </div>
                 {p.geocodeFailed ? (
@@ -256,7 +256,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
                 <div className="flex items-center gap-5 mt-3">
                   <div className="flex items-center gap-1.5">
                     <DollarSign className="w-3.5 h-3.5 text-indigo-600" />
-                    <span className="text-sm font-bold text-slate-900">${selectedProperty.price.toLocaleString()}</span>
+                    <span className="text-sm font-bold text-slate-900">{selectedProperty.currency === 'ARS' ? '$' : 'U$S'} {selectedProperty.price.toLocaleString()}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Home className="w-3.5 h-3.5 text-indigo-600" />

@@ -91,12 +91,12 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({ property, onC
               <div className="bg-indigo-600 p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] shadow-xl text-white">
                 <DollarSign className="w-4 h-4 md:w-5 md:h-5 mb-3 opacity-60" />
                 <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest opacity-60">Price</p>
-                <p className="text-xl md:text-2xl font-black">${property.price.toLocaleString()}</p>
+                <p className="text-xl md:text-2xl font-black">{property.currency === 'ARS' ? '$' : 'U$S'} {property.price.toLocaleString()}</p>
               </div>
               <div className="bg-white p-5 md:p-6 rounded-[2rem] md:rounded-[2.5rem] border border-slate-200 shadow-sm">
                 <ShieldCheck className="w-4 h-4 md:w-5 md:h-5 mb-3 text-indigo-600" />
                 <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">Monthly Fees</p>
-                <p className="text-xl md:text-2xl font-black text-slate-800">${property.fees || 0}</p>
+                <p className="text-xl md:text-2xl font-black text-slate-800">{property.feesCurrency === 'USD' ? 'U$S' : '$'} {property.fees || 0}</p>
               </div>
             </div>
 

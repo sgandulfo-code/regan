@@ -93,15 +93,15 @@ const RenovationCalculator: React.FC<RenoCalcProps> = ({ property, userRole, onU
         <div className={`rounded-2xl p-4 md:p-5 space-y-3 shadow-inner ${isArchitect ? 'bg-orange-50' : 'bg-slate-900 text-white'}`}>
           <div className="flex justify-between text-[10px] md:text-xs font-semibold opacity-70 uppercase tracking-widest">
             <span>Purchase Price</span>
-            <span>${property.price.toLocaleString()}</span>
+            <span>{property.currency === 'ARS' ? '$' : 'U$S'} {property.price.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-[10px] md:text-xs font-semibold uppercase tracking-widest">
             <span>Renovation Budget</span>
-            <span className={isArchitect ? 'text-orange-600' : 'text-orange-400'}>+${totalReno.toLocaleString()}</span>
+            <span className={isArchitect ? 'text-orange-600' : 'text-orange-400'}>+{property.currency === 'ARS' ? '$' : 'U$S'} {totalReno.toLocaleString()}</span>
           </div>
           <div className={`pt-3 border-t flex justify-between font-bold text-lg md:text-xl ${isArchitect ? 'border-orange-200 text-slate-800' : 'border-white/10 text-white'}`}>
             <span className="text-[10px] md:text-sm self-center">TOTAL PROJECT</span>
-            <span>${(property.price + totalReno).toLocaleString()}</span>
+            <span>{property.currency === 'ARS' ? '$' : 'U$S'} {(property.price + totalReno).toLocaleString()}</span>
           </div>
         </div>
         

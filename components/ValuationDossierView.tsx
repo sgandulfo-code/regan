@@ -100,8 +100,8 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
       return (
         <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs border border-slate-700">
           <p className="font-bold mb-1">{data.name}</p>
-          <p className="text-slate-300">Precio Total: <span className="text-white font-bold">${data.price?.toLocaleString()}</span></p>
-          <p className="text-slate-300">Valor m²: <span className="text-white font-bold">${data.pricePerSqft?.toLocaleString()}</span></p>
+          <p className="text-slate-300">Precio Total: <span className="text-white font-bold">{subjectProperty?.currency === 'ARS' ? '$' : 'U$S'} {data.price?.toLocaleString()}</span></p>
+          <p className="text-slate-300">Valor m²: <span className="text-white font-bold">{subjectProperty?.currency === 'ARS' ? '$' : 'U$S'} {data.pricePerSqft?.toLocaleString()}</span></p>
           <p className="text-slate-300">Superficie: <span className="text-white font-bold">{data.sqft} m²</span></p>
           <p className="text-slate-300 mt-1 uppercase tracking-widest text-[9px] font-black">
             {data.type === 'subject' ? 'Tu Propiedad' : data.type === 'sold' ? 'Vendido' : 'En Venta'}
@@ -257,7 +257,7 @@ const ValuationDossierView: React.FC<ValuationDossierViewProps> = ({ dossier, su
                   height={60}
                 />
                 <YAxis 
-                  tickFormatter={(value) => chartMetric === 'price' ? `$${(value / 1000)}k` : `$${value}`}
+                  tickFormatter={(value) => chartMetric === 'price' ? `${subjectProperty?.currency === 'ARS' ? '$' : 'U$S'}${(value / 1000)}k` : `${subjectProperty?.currency === 'ARS' ? '$' : 'U$S'}${value}`}
                   tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
                   axisLine={false}
                   tickLine={false}

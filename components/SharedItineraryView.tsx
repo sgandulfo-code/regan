@@ -1139,7 +1139,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
                           {itinerary.settings.showPrices && (
                             <p className="text-indigo-600 font-bold text-lg mb-4">
-                              ${visit.property.price.toLocaleString()}
+                              {visit.property.currency === 'ARS' ? '$' : 'U$S'} {visit.property.price.toLocaleString()}
                             </p>
                           )}
 
@@ -1732,7 +1732,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                       </div>
                       {itinerary.settings.showPrices && (
                         <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 bg-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs md:text-sm font-bold shadow-lg">
-                          ${property.price.toLocaleString()}
+                          {property.currency === 'ARS' ? '$' : 'U$S'} {property.price.toLocaleString()}
                         </div>
                       )}
                     </div>
@@ -1811,7 +1811,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                          <div className={`flex justify-between items-center py-2 border-b transition-colors ${sortBy === 'pricePerSqft' ? 'border-indigo-100 bg-indigo-50/50 -mx-5 px-5 md:-mx-8 md:px-8' : 'border-slate-50'}`}>
                            <span className={`text-xs font-bold uppercase tracking-wide ${sortBy === 'pricePerSqft' ? 'text-indigo-600' : 'text-slate-400'}`}>Valor m²</span>
                            <span className={`text-sm font-bold ${sortBy === 'pricePerSqft' ? 'text-indigo-700' : 'text-slate-700'}`}>
-                             ${property.sqft > 0 ? Math.round(property.price / property.sqft).toLocaleString() : 'N/A'}
+                             {property.currency === 'ARS' ? '$' : 'U$S'} {property.sqft > 0 ? Math.round(property.price / property.sqft).toLocaleString() : 'N/A'}
                            </span>
                          </div>
                          <div className="flex justify-between items-center py-2 border-b border-slate-50">

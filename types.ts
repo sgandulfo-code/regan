@@ -199,7 +199,9 @@ export interface Property {
   address: string;
   exactAddress?: string;
   price: number;
+  currency?: 'USD' | 'ARS';
   fees?: number;
+  feesCurrency?: 'USD' | 'ARS';
   environments: number;
   rooms: number;
   bathrooms: number;

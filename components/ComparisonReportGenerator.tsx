@@ -11,8 +11,10 @@ interface ComparisonReportGeneratorProps {
 }
 
 const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ properties, folder, onClose }) => {
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   // Calculate best values for highlighting
@@ -101,7 +103,7 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
                   <td key={p.id} className={`p-6 border-r border-slate-100 last:border-r-0 ${p.price === bestPrice ? 'bg-emerald-50/50' : ''}`}>
                     <div className="flex items-center gap-2">
                       <span className={`text-lg font-black ${p.price === bestPrice ? 'text-emerald-700' : 'text-slate-900'}`}>
-                        {formatCurrency(p.price)}
+                        {formatCurrency(p.price, p.currency)}
                       </span>
                       {p.price === bestPrice && <Trophy className="w-4 h-4 text-emerald-500 fill-emerald-500" />}
                     </div>
@@ -118,7 +120,7 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
                     <td key={p.id} className={`p-6 border-r border-slate-100 last:border-r-0 ${isBest ? 'bg-emerald-50/50' : ''}`}>
                       <div className="flex items-center gap-2">
                         <span className={`font-bold ${isBest ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded' : 'text-slate-600'}`}>
-                          {formatCurrency(pricePerSqft)}
+                          {formatCurrency(pricePerSqft, p.currency)}
                         </span>
                         {isBest && <Check className="w-3 h-3 text-emerald-600" />}
                       </div>
@@ -131,7 +133,7 @@ const ComparisonReportGenerator: React.FC<ComparisonReportGeneratorProps> = ({ p
                 <td className="p-6 font-bold text-slate-500 text-xs border-r border-slate-100 bg-slate-50/30">Expensas</td>
                 {properties.map(p => (
                   <td key={p.id} className="p-6 border-r border-slate-100 last:border-r-0 text-slate-600 font-medium">
-                    {p.fees ? formatCurrency(p.fees) : '-'}
+                    {p.fees ? formatCurrency(p.fees, p.feesCurrency) : '-'}
                   </td>
                 ))}
               </tr>

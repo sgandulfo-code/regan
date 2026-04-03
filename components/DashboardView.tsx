@@ -492,7 +492,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                     <p className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
                       <MapPin className="w-2.5 h-2.5" /> {p.address.split(',')[0]}
                     </p>
-                    <p className="text-[10px] font-black text-slate-900">${p.price.toLocaleString()}</p>
+                    <p className="text-[10px] font-black text-slate-900">{p.currency === 'ARS' ? '$' : 'U$S'} {p.price.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">

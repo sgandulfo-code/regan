@@ -167,7 +167,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                   </>
                 )}
                  <span className="w-px h-3 bg-slate-200"></span>
-                 <span className="flex items-center gap-1"><span className="font-bold text-slate-700">${Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
+                 <span className="flex items-center gap-1"><span className="font-bold text-slate-700">{property.currency === 'ARS' ? '$' : 'U$S'} {Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ const SharedPropertyRow: React.FC<SharedPropertyRowProps> = ({
                 <div className="bg-slate-50 px-3 py-2 rounded-xl border border-slate-100 w-full sm:w-auto flex justify-between sm:block items-center">
                   <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Total Project Cost</p>
                   <p className="text-lg font-black text-slate-900 leading-none tracking-tight">
-                    ${(property.price + renoTotal).toLocaleString()}
+                    {property.currency === 'ARS' ? '$' : 'U$S'} {(property.price + renoTotal).toLocaleString()}
                   </p>
                 </div>
             </div>

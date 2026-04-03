@@ -54,7 +54,9 @@ interface PropertyFormData {
   title: string;
   imageUrl: string;
   price: number;
+  currency: 'USD' | 'ARS';
   fees: number;
+  feesCurrency: 'USD' | 'ARS';
   location: string;
   exactAddress: string;
   environments: number;
@@ -156,7 +158,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
   const isInitialCaptacion = initialFolder?.operation_type?.startsWith('Captación');
 
   const [editedData, setEditedData] = useState<PropertyFormData>({
-    code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
+    code: '', title: '', imageUrl: '', price: 0, currency: 'USD', fees: 0, feesCurrency: 'ARS', location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
     realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: initialFolderId, isPublic: true
   });
 
@@ -292,7 +294,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         title: propertyToEdit.title || '',
         imageUrl: propertyToEdit.images?.[0] || '',
         price: propertyToEdit.price || 0,
+        currency: propertyToEdit.currency || 'USD',
         fees: propertyToEdit.fees || 0,
+        feesCurrency: propertyToEdit.feesCurrency || 'ARS',
         location: propertyToEdit.address || '',
         exactAddress: propertyToEdit.exactAddress || '',
         environments: propertyToEdit.environments || 0,
@@ -485,7 +489,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     setAddressStatus('idle');
     setResolvedAddress(null);
     setEditedData({
-      code: '', title: '', imageUrl: '', price: 0, fees: 0, location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
+      code: '', title: '', imageUrl: '', price: 0, fees: 0, currency: 'USD', feesCurrency: 'ARS', location: '', exactAddress: '', environments: 0, rooms: 0, bathrooms: 0, toilets: 0, parking: 0, sqft: 0, coveredSqft: 0, uncoveredSqft: 0, age: 0, floor: '', notes: '', rating: 3, acquisitionReason: isInitialCaptacion ? AcquisitionReason.CAPTACION : AcquisitionReason.BUSQUEDA, status: isInitialCaptacion ? PropertyStatus.DISPONIBLE : PropertyStatus.SUGERIDA,
       realEstateAgency: '', agentName: '', agentWhatsapp: '', folderId: activeFolderId || '', isPublic: true
     });
   };
@@ -777,8 +781,42 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
                     <FormField label="Visual Media URL" type="text" value={editedData.imageUrl} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, imageUrl: v}))} icon={ImageIcon} placeholder="https://example.com/property-photo.jpg" />
 
                     <div className="grid grid-cols-2 gap-6">
-                      <FormField label="Acquisition Price" prefix="$" value={editedData.price} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, price: v}))} icon={DollarSign} />
-                      <FormField label="Monthly Expensas" prefix="$" value={editedData.fees} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, fees: v}))} icon={ShieldCheck} />
+                      <div className="flex gap-2">
+                        <div className="w-24">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2 mb-2">
+                            Moneda
+                          </label>
+                          <select
+                            value={editedData.currency}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, currency: e.target.value as 'USD' | 'ARS' }))}
+                            className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all uppercase tracking-widest"
+                          >
+                            <option value="USD">U$S</option>
+                            <option value="ARS">$</option>
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <FormField label="Acquisition Price" prefix={editedData.currency === 'USD' ? 'U$S' : '$'} value={editedData.price} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, price: v}))} icon={DollarSign} />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="w-24">
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-2 mb-2">
+                            Moneda
+                          </label>
+                          <select
+                            value={editedData.feesCurrency}
+                            onChange={(e) => setEditedData(prev => ({ ...prev, feesCurrency: e.target.value as 'USD' | 'ARS' }))}
+                            className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none font-bold text-slate-700 text-xs transition-all uppercase tracking-widest"
+                          >
+                            <option value="USD">U$S</option>
+                            <option value="ARS">$</option>
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <FormField label="Monthly Expensas" prefix={editedData.feesCurrency === 'USD' ? 'U$S' : '$'} value={editedData.fees} onChange={(v:any) => setEditedData((prev: PropertyFormData) => ({...prev, fees: v}))} icon={ShieldCheck} />
+                        </div>
+                      </div>
                     </div>
                   </div>
 

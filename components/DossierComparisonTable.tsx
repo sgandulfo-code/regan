@@ -19,8 +19,10 @@ const DossierComparisonTable: React.FC<DossierComparisonTableProps> = ({ subject
     ...compProps
   ];
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   const formatNumber = (val: number) => {
@@ -81,7 +83,7 @@ const DossierComparisonTable: React.FC<DossierComparisonTableProps> = ({ subject
             {allPropsToCompare.map((p) => (
               <td key={p.id} className="p-4 border-b border-slate-100 text-center">
                 <span className={`text-lg font-black ${p.compType === 'subject' ? 'text-indigo-600' : 'text-slate-800'}`}>
-                  {formatCurrency(getPricePerSqft(p))}
+                  {formatCurrency(getPricePerSqft(p), p.currency)}
                 </span>
               </td>
             ))}
@@ -97,7 +99,7 @@ const DossierComparisonTable: React.FC<DossierComparisonTableProps> = ({ subject
             {allPropsToCompare.map((p) => (
               <td key={p.id} className="p-4 border-b border-slate-100 text-center">
                 <span className={`text-lg font-black ${p.compType === 'subject' ? 'text-indigo-600' : 'text-slate-800'}`}>
-                  {formatCurrency(p.compType === 'sold' && p.soldPrice ? p.soldPrice : p.price)}
+                  {formatCurrency(p.compType === 'sold' && p.soldPrice ? p.soldPrice : p.price, p.currency)}
                 </span>
               </td>
             ))}

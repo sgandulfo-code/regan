@@ -158,7 +158,7 @@ const DossierComparablesMap: React.FC<DossierComparablesMapProps> = ({ subjectPr
           <h3 class="font-bold text-slate-800 text-sm leading-tight mb-1">${p.title}</h3>
           <p class="text-xs text-slate-500 mb-2 truncate">${p.address}</p>
           <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-            <span class="font-black text-slate-800">$${p.price.toLocaleString()}</span>
+            <span class="font-black text-slate-800">${p.currency === 'ARS' ? '$' : 'U$S'} ${p.price.toLocaleString()}</span>
             <span class="text-xs font-bold text-slate-400">${p.coveredSqft || p.sqft} m²</span>
           </div>
         </div>

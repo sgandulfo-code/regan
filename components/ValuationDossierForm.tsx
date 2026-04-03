@@ -159,7 +159,7 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-slate-800 text-sm truncate">{p.title}</h4>
                           <p className="text-xs text-slate-500 truncate mt-1"><MapPin className="w-3 h-3 inline" /> {p.address}</p>
-                          <p className="text-xs font-black text-indigo-600 mt-1">${p.price.toLocaleString()}</p>
+                          <p className="text-xs font-black text-indigo-600 mt-1">{p.currency === 'ARS' ? '$' : 'U$S'} {p.price.toLocaleString()}</p>
                         </div>
                       </div>
                     ))}
@@ -192,7 +192,7 @@ const ValuationDossierForm: React.FC<ValuationDossierFormProps> = ({ folders, pr
                           </div>
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-slate-800 text-sm truncate">{p.title}</h4>
-                            <p className="text-xs font-black text-slate-500 mt-1">${p.price.toLocaleString()} • {p.coveredSqft || p.sqft} m²</p>
+                            <p className="text-xs font-black text-slate-500 mt-1">{p.currency === 'ARS' ? '$' : 'U$S'} {p.price.toLocaleString()} • {p.coveredSqft || p.sqft} m²</p>
                           </div>
                         </div>
 

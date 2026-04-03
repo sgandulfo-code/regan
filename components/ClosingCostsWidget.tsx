@@ -71,8 +71,10 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
     ...(otherCosts > 0 ? [{ name: 'Otros', value: otherCosts, color: '#64748b' }] : []), // Slate 500
   ];
 
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val: number, currency: 'USD' | 'ARS' = 'USD') => {
+    const symbol = currency === 'ARS' ? '$' : 'U$S';
+    const formatted = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val);
+    return `${symbol} ${formatted}`;
   };
 
   return (
@@ -114,14 +116,14 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value: number) => formatCurrency(value)}
+                formatter={(value: number) => formatCurrency(value, property.currency)}
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
               />
             </RechartsPie>
           </ResponsiveContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</span>
-            <span className="text-xl font-black text-slate-900">{formatCurrency(totalCashNeeded)}</span>
+            <span className="text-xl font-black text-slate-900">{formatCurrency(totalCashNeeded, property.currency)}</span>
           </div>
         </div>
 
@@ -133,7 +135,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                 <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
                 <span className="text-xs font-bold text-slate-600">Precio Propiedad</span>
               </div>
-              <span className="text-xs font-black text-slate-900">{formatCurrency(price)}</span>
+              <span className="text-xs font-black text-slate-900">{formatCurrency(price, property.currency)}</span>
             </div>
 
             {isOpen && isPurchase && (
@@ -166,7 +168,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                   )}
                 </div>
               </div>
-              <span className="text-xs font-black text-slate-900">{formatCurrency(agencyFee)}</span>
+              <span className="text-xs font-black text-slate-900">{formatCurrency(agencyFee, property.currency)}</span>
             </div>
 
             {isPurchase && (
@@ -186,7 +188,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                       )}
                     </div>
                   </div>
-                  <span className="text-xs font-black text-slate-900">{formatCurrency(notaryFee)}</span>
+                  <span className="text-xs font-black text-slate-900">{formatCurrency(notaryFee, property.currency)}</span>
                 </div>
 
                 <div className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -204,7 +206,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                       )}
                     </div>
                   </div>
-                  <span className="text-xs font-black text-slate-900">{formatCurrency(stampTax)}</span>
+                  <span className="text-xs font-black text-slate-900">{formatCurrency(stampTax, property.currency)}</span>
                 </div>
               </>
             )}
@@ -215,7 +217,7 @@ const ClosingCostsWidget: React.FC<ClosingCostsWidgetProps> = ({ property, trans
                   <div className="w-2 h-2 rounded-full bg-violet-500"></div>
                   <span className="text-xs font-bold text-slate-600">Reformas Est.</span>
                 </div>
-                <span className="text-xs font-black text-slate-900">{formatCurrency(renovationCost)}</span>
+                <span className="text-xs font-black text-slate-900">{formatCurrency(renovationCost, property.currency)}</span>
               </div>
             )}
             

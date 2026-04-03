@@ -139,7 +139,7 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
             <span className="w-px h-2.5 bg-slate-200"></span>
             <span className="flex items-center gap-1"><span className="font-black text-slate-700">{property.parking || 0}</span> Coch</span>
              <span className="w-px h-2.5 bg-slate-200"></span>
-             <span className="flex items-center gap-1"><span className="font-black text-slate-700">${Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
+             <span className="flex items-center gap-1"><span className="font-black text-slate-700">{property.currency === 'ARS' ? '$' : 'U$S'} {Math.round(property.price / property.sqft).toLocaleString()}</span>/m²</span>
         </div>
       </div>
 
@@ -181,7 +181,7 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
         <div className="text-left md:text-right">
             <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Total</p>
             <p className="text-base font-black text-slate-900 leading-none tracking-tight">
-              ${(property.price + renoTotal).toLocaleString()}
+              {property.currency === 'ARS' ? '$' : 'U$S'} {(property.price + renoTotal).toLocaleString()}
             </p>
         </div>
 
