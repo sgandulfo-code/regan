@@ -57,6 +57,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
   const [customFieldValue, setCustomFieldValue] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Client info state for visit requests
+  const [clientName, setClientName] = useState('');
+  const [clientPhone, setClientPhone] = useState('');
+
   const showToast = (message: string) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 3000);
@@ -452,12 +456,16 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
     
     setSelectedPropertyForRequest(visit.property);
     setRequestMessage(firstMessage);
+    setClientName(visit.contactName === 'Solicitud Web' ? '' : (visit.contactName || ''));
+    setClientPhone(visit.contactPhone || '');
     setIsRequestModalOpen(true);
   };
 
   const handleRequestVisit = (property: any) => {
     setSelectedPropertyForRequest(property);
     setRequestMessage('');
+    setClientName('');
+    setClientPhone('');
     setIsRequestModalOpen(true);
   };
 
@@ -492,6 +500,14 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           existingVisit.rating
         );
 
+        // Update contact info if provided
+        if (clientName.trim() || clientPhone.trim()) {
+          await dataService.updateVisit(existingVisit.id, {
+            contactName: clientName.trim() || existingVisit.contactName,
+            contactPhone: clientPhone.trim() || existingVisit.contactPhone
+          });
+        }
+
         // Log activity: Visit requested (existing)
         dataService.logActivity({
           folderId: data.itinerary.folderId,
@@ -521,8 +537,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           folderId: data.itinerary.folderId,
           date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
           time: '09:00:00', // Default time
-          contactName: 'Solicitud Web',
-          contactPhone: '',
+          contactName: clientName.trim() || 'Solicitud Web',
+          contactPhone: clientPhone.trim() || '',
           checklist: [],
           notes: 'Solicitud de visita desde portal del cliente',
           status: 'Pending',
@@ -2093,6 +2109,33 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Nombre y Apellido *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    placeholder="Ej. Juan Pérez"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    Teléfono / WhatsApp *
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    placeholder="Ej. +54 9 11 1234-5678"
+                    value={clientPhone}
+                    onChange={(e) => setClientPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                   Mensaje para tu consultor
@@ -2120,7 +2163,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </button>
               <button
                 onClick={submitVisitRequest}
-                className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-wider shadow-lg shadow-indigo-200 flex items-center gap-2"
+                disabled={!clientName.trim() || !clientPhone.trim()}
+                className="px-6 py-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors uppercase tracking-wider shadow-lg shadow-indigo-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-3.5 h-3.5" /> Enviar Solicitud
               </button>
