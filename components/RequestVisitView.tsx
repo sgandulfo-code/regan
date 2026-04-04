@@ -8,9 +8,10 @@ interface RequestVisitViewProps {
   visits: Visit[];
   folders: SearchFolder[];
   onUpdateVisitStatus?: (visitId: string, status: string) => void;
+  onEditVisit?: (visit: Visit) => void;
 }
 
-const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, visits, folders, onUpdateVisitStatus }) => {
+const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, visits, folders, onUpdateVisitStatus, onEditVisit }) => {
   const [activeTab, setActiveTab] = useState<'pendientes' | 'historial'>('pendientes');
 
   // Filter properties that have agent info
@@ -168,7 +169,13 @@ const RequestVisitView: React.FC<RequestVisitViewProps> = ({ properties, user, v
                   )}
                   {(visit?.status === 'Pending' || visit?.status === 'Requested') && (
                     <button 
-                      onClick={() => handleStatusChange(property.id, 'Confirmed')}
+                      onClick={() => {
+                        if (visit && onEditVisit) {
+                          onEditVisit({ ...visit, status: 'Confirmed' });
+                        } else {
+                          handleStatusChange(property.id, 'Confirmed');
+                        }
+                      }}
                       className="flex-1 bg-indigo-50 text-indigo-600 border border-indigo-200 px-4 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-100 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5" /> Marcar como Confirmada

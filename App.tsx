@@ -985,6 +985,7 @@ const App: React.FC = () => {
             visits={visits} 
             folders={folders} 
             onUpdateVisitStatus={handleUpdateVisitStatus}
+            onEditVisit={(visit) => { setEditingVisit(visit); setIsVisitModalOpen(true); }}
           />
         )}
 
