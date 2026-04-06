@@ -638,8 +638,16 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 className="bg-white p-6 rounded-[2.5rem] border border-slate-200 hover:shadow-xl hover:border-indigo-100 transition-all text-left group relative overflow-hidden flex flex-col h-full"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <div className={`w-12 h-12 ${folder.color} rounded-2xl shadow-lg flex items-center justify-center text-white`}>
-                    <FolderOpen className="w-6 h-6" />
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 ${folder.color} rounded-2xl shadow-lg flex items-center justify-center text-white shrink-0`}>
+                      <FolderOpen className="w-6 h-6" />
+                    </div>
+                    {folder.client?.name && (
+                      <div className="flex flex-col items-start">
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Cliente</span>
+                        <span className="text-xs font-bold text-slate-700 text-left line-clamp-2">{folder.client.name}</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
