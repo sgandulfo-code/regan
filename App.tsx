@@ -29,7 +29,8 @@ import {
   Eye,
   EyeOff,
   FolderOpen,
-  Layout
+  Layout,
+  Link as LinkIcon
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -39,6 +40,7 @@ import PropertyForm from './components/PropertyForm';
 import RenovationCalculator from './components/RenovationCalculator';
 import ComparisonTool from './components/ComparisonTool';
 import FolderFormModal from './components/FolderFormModal';
+import FolderCleanupModal from './components/FolderCleanupModal';
 import PropertyMapView from './components/PropertyMapView';
 import PropertyDetailModal from './components/PropertyDetailModal';
 import ReportGenerator from './components/ReportGenerator';
@@ -93,6 +95,7 @@ const App: React.FC = () => {
 
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
   const [editingFolder, setEditingFolder] = useState<SearchFolder | null>(null);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [propertyToCopy, setPropertyToCopy] = useState<Property | null>(null);
@@ -821,6 +824,14 @@ const App: React.FC = () => {
               </div>
 
               <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-1"></div>
+              
+              <button
+                onClick={() => setIsCleanupModalOpen(true)}
+                className="flex items-center gap-2 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-5 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all"
+                title="Verificar si los links siguen activos"
+              >
+                <LinkIcon className="w-3.5 h-3.5" /> Auditoría
+              </button>
 
               <div className="relative group">
                 <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl text-[9px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover:border-indigo-200 transition-all">
@@ -1020,6 +1031,12 @@ const App: React.FC = () => {
       </main>
 
       <FolderFormModal isOpen={isFolderModalOpen} onClose={() => { setIsFolderModalOpen(false); setEditingFolder(null); }} onConfirm={handleFolderConfirm} initialData={editingFolder} />
+      <FolderCleanupModal 
+        isOpen={isCleanupModalOpen} 
+        onClose={() => setIsCleanupModalOpen(false)} 
+        properties={displayProperties} 
+        onUpdatePropertyStatus={handleUpdateStatus} 
+      />
       {selectedProperty && (
         <PropertyDetailModal 
           property={selectedProperty} 
