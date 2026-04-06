@@ -919,6 +919,10 @@ const App: React.FC = () => {
                 await dataService.removeInboxLink(leadId);
                 loadData();
               }}
+              onUpdateLeadAvailability={async (leadId, isUnavailable) => {
+                await dataService.updateInboxLink(leadId, { isUnavailable });
+                loadData();
+              }}
             />
           </div>
         )}

@@ -12,6 +12,7 @@ export interface InboxLink {
   created_at: string;
   status?: string;
   added_by_client?: boolean;
+  isUnavailable?: boolean;
 }
 
 export const dataService = {
@@ -624,6 +625,14 @@ export const dataService = {
       if (status === 'procesado' || status === 'rechazado') {
         await supabase.from('link_inbox').delete().eq('id', id);
       }
+    }
+  },
+
+  async updateInboxLink(id: string, updates: Partial<InboxLink>) {
+    const { error } = await supabase.from('link_inbox').update(updates).eq('id', id);
+    if (error) {
+      console.error('Error updating inbox link:', error);
+      throw error;
     }
   },
 
