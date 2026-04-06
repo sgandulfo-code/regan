@@ -875,7 +875,7 @@ export const dataService = {
     // This is a public method
     const { data: itinerary, error: itinError } = await supabase
       .from('shared_itineraries')
-      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status, welcome_message, image_url, is_image_public)')
+      .select('*, folder:folders(user_id, name, description, color, budget, transaction_type, start_date, status, welcome_message, image_url, is_image_public, client_id, client:clients(name))')
       .eq('id', id)
       .eq('is_active', true)
       .single();

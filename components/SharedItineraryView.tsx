@@ -1235,7 +1235,9 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {/* Intro / Folder Details */}
         <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-slate-200 shadow-xl shadow-slate-200/50 relative overflow-hidden">
           <div className="relative z-10">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 tracking-tight text-slate-900">¡Hola! 👋</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 tracking-tight text-slate-900">
+              ¡Hola{itinerary.folder.client?.name ? ` ${itinerary.folder.client.name}` : ''}! 👋
+            </h2>
             
             {itinerary.folder.welcomeMessage && (
               <div className="bg-indigo-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-indigo-100 shadow-sm mb-6">

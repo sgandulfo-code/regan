@@ -626,7 +626,14 @@ const App: React.FC = () => {
                       >
                         <ArrowLeft className="w-5 h-5" />
                       </button>
-                      {activeFolder.name}
+                      <div className="flex flex-col">
+                        <span>{activeFolder.name}</span>
+                        {activeFolder.client?.name && (
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mt-1">
+                            Cliente: {activeFolder.client.name}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   ) : (activeTab === 'dashboard' ? 'Dashboard Estratégico' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1))}
                   {activeFolder?.isShared && (
