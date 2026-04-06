@@ -6,12 +6,12 @@ interface FolderCleanupModalProps {
   isOpen: boolean;
   onClose: () => void;
   properties: Property[];
-  onUpdatePropertyStatus: (propertyId: string, status: PropertyStatus) => void;
+  onAuditProperties: (propertyIds: string[], statuses: Record<string, PropertyStatus>) => void;
 }
 
 const BATCH_SIZE = 10;
 
-const FolderCleanupModal: React.FC<FolderCleanupModalProps> = ({ isOpen, onClose, properties, onUpdatePropertyStatus }) => {
+const FolderCleanupModal: React.FC<FolderCleanupModalProps> = ({ isOpen, onClose, properties, onAuditProperties }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [localStatuses, setLocalStatuses] = useState<Record<string, PropertyStatus>>({});
 
@@ -52,11 +52,8 @@ const FolderCleanupModal: React.FC<FolderCleanupModalProps> = ({ isOpen, onClose
 
   const handleSaveAndNext = () => {
     // Apply changes for the current batch
-    currentBatch.forEach(p => {
-      if (localStatuses[p.id] !== p.status) {
-        onUpdatePropertyStatus(p.id, localStatuses[p.id]);
-      }
-    });
+    const propertyIds = currentBatch.map(p => p.id);
+    onAuditProperties(propertyIds, localStatuses);
 
     if (currentIndex + BATCH_SIZE < activeProperties.length) {
       setCurrentIndex(currentIndex + BATCH_SIZE);

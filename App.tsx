@@ -89,6 +89,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'All'>('All');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [auditFilter, setAuditFilter] = useState<'all' | 'today' | 'week' | 'never'>('all');
   const [acquisitionFilter, setAcquisitionFilter] = useState<AcquisitionReason | 'All'>('All');
   const [folderTransactionFilter, setFolderTransactionFilter] = useState<TransactionType | 'All'>('All');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -218,6 +219,32 @@ const App: React.FC = () => {
   const handleUpdateStatus = async (id: string, status: PropertyStatus) => {
     setIsSyncing(true);
     await dataService.updatePropertyStatus(id, status);
+    await loadData();
+    setIsSyncing(false);
+  };
+
+  const handleAuditProperties = async (propertyIds: string[], statuses: Record<string, PropertyStatus>) => {
+    setIsSyncing(true);
+    const now = new Date().toISOString();
+    for (const id of propertyIds) {
+      await dataService.updateProperty(id, { 
+        status: statuses[id],
+        lastAuditedAt: now
+      });
+    }
+    await loadData();
+    setIsSyncing(false);
+  };
+
+  const handleAuditLeads = async (leadIds: string[], unavailabilities: Record<string, boolean>) => {
+    setIsSyncing(true);
+    const now = new Date().toISOString();
+    for (const id of leadIds) {
+      await dataService.updateInboxLink(id, { 
+        isUnavailable: unavailabilities[id],
+        lastAuditedAt: now
+      });
+    }
     await loadData();
     setIsSyncing(false);
   };
@@ -445,6 +472,22 @@ const App: React.FC = () => {
       filtered = filtered.filter(p => p.isPublic !== false);
     } else if (visibilityFilter === 'hidden') {
       filtered = filtered.filter(p => p.isPublic === false);
+    }
+
+    // 4.5 Filtro por auditoría
+    if (auditFilter !== 'all') {
+      const now = new Date();
+      filtered = filtered.filter(p => {
+        if (!p.lastAuditedAt) return auditFilter === 'never';
+        
+        const auditDate = new Date(p.lastAuditedAt);
+        const diffTime = Math.abs(now.getTime() - auditDate.getTime());
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (auditFilter === 'today') return diffDays === 0;
+        if (auditFilter === 'week') return diffDays <= 7;
+        return false;
+      });
     }
 
     // 5. Ordenamiento
@@ -836,6 +879,29 @@ const App: React.FC = () => {
               <div className="relative group">
                 <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl text-[9px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover:border-indigo-200 transition-all">
                   <div className="flex items-center gap-2">
+                    <LinkIcon className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Auditoría: {
+                      auditFilter === 'all' ? 'Todas' : 
+                      auditFilter === 'today' ? 'Hoy' : 
+                      auditFilter === 'week' ? 'Últimos 7 días' : 'Nunca'
+                    }</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 ml-1 group-hover:rotate-180 transition-transform" />
+                </div>
+                
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 overflow-hidden">
+                  <button onClick={() => setAuditFilter('all')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Todas</button>
+                  <button onClick={() => setAuditFilter('today')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Auditadas Hoy</button>
+                  <button onClick={() => setAuditFilter('week')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors border-b border-slate-50">Últimos 7 días</button>
+                  <button onClick={() => setAuditFilter('never')} className="w-full text-left px-5 py-4 text-[9px] font-black text-slate-500 uppercase hover:bg-slate-50 hover:text-indigo-600 transition-colors">Nunca Auditadas</button>
+                </div>
+              </div>
+
+              <div className="hidden sm:block h-8 w-[1px] bg-slate-200 mx-1"></div>
+
+              <div className="relative group">
+                <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 px-5 py-3 rounded-2xl text-[9px] font-black text-slate-500 uppercase tracking-widest cursor-pointer group-hover:border-indigo-200 transition-all">
+                  <div className="flex items-center gap-2">
                     <Filter className="w-3.5 h-3.5 text-indigo-500" />
                     <span>Ordenar: {
                       sortBy === 'price-asc' ? 'Precio Menor' : 
@@ -919,10 +985,7 @@ const App: React.FC = () => {
                 await dataService.removeInboxLink(leadId);
                 loadData();
               }}
-              onUpdateLeadAvailability={async (leadId, isUnavailable) => {
-                await dataService.updateInboxLink(leadId, { isUnavailable });
-                loadData();
-              }}
+              onAuditLeads={handleAuditLeads}
             />
           </div>
         )}
@@ -1039,7 +1102,7 @@ const App: React.FC = () => {
         isOpen={isCleanupModalOpen} 
         onClose={() => setIsCleanupModalOpen(false)} 
         properties={displayProperties} 
-        onUpdatePropertyStatus={handleUpdateStatus} 
+        onAuditProperties={handleAuditProperties} 
       />
       {selectedProperty && (
         <PropertyDetailModal 

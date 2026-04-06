@@ -13,6 +13,7 @@ export interface InboxLink {
   status?: string;
   added_by_client?: boolean;
   isUnavailable?: boolean;
+  lastAuditedAt?: string;
 }
 
 export const dataService = {

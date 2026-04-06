@@ -6,12 +6,12 @@ interface LeadCleanupModalProps {
   isOpen: boolean;
   onClose: () => void;
   leads: InboxLink[];
-  onUpdateLeadAvailability: (leadId: string, isUnavailable: boolean) => void;
+  onAuditLeads: (leadIds: string[], unavailabilities: Record<string, boolean>) => void;
 }
 
 const BATCH_SIZE = 10;
 
-const LeadCleanupModal: React.FC<LeadCleanupModalProps> = ({ isOpen, onClose, leads, onUpdateLeadAvailability }) => {
+const LeadCleanupModal: React.FC<LeadCleanupModalProps> = ({ isOpen, onClose, leads, onAuditLeads }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [localStatuses, setLocalStatuses] = useState<Record<string, boolean>>({});
 
@@ -52,13 +52,8 @@ const LeadCleanupModal: React.FC<LeadCleanupModalProps> = ({ isOpen, onClose, le
 
   const handleSaveAndNext = () => {
     // Apply changes for the current batch
-    currentBatch.forEach(l => {
-      const isCurrentlyUnavailable = !!l.isUnavailable;
-      const willBeUnavailable = localStatuses[l.id];
-      if (isCurrentlyUnavailable !== willBeUnavailable) {
-        onUpdateLeadAvailability(l.id, willBeUnavailable);
-      }
-    });
+    const leadIds = currentBatch.map(l => l.id);
+    onAuditLeads(leadIds, localStatuses);
 
     if (currentIndex + BATCH_SIZE < activeLeads.length) {
       setCurrentIndex(currentIndex + BATCH_SIZE);

@@ -1,7 +1,7 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { UserRole, SearchFolder, User, Property } from '../types';
-import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin, Inbox, Shield } from 'lucide-react';
+import { Home, Plus, Heart, Calculator, FolderOpen, LogOut, Loader2, Pencil, Trash2, Cpu, Users, User as UserIcon, Calendar, Globe, Settings, MessageSquare, ArrowLeftRight, TrendingUp, Activity, Layout, MapPin, Inbox, Shield } from 'lucide-react';
 import { dataService, InboxLink } from '../services/dataService';
 
 interface SidebarProps {
@@ -50,6 +50,28 @@ const Sidebar: React.FC<SidebarProps> = ({
   onRefresh
 }) => {
   
+  const groupedFolders = useMemo(() => {
+    const groups: { clientName: string; folders: SearchFolder[] }[] = [];
+    const noClientFolders: SearchFolder[] = [];
+
+    folders.forEach(folder => {
+      if (folder.client?.name) {
+        const existingGroup = groups.find(g => g.clientName === folder.client!.name);
+        if (existingGroup) {
+          existingGroup.folders.push(folder);
+        } else {
+          groups.push({ clientName: folder.client!.name, folders: [folder] });
+        }
+      } else {
+        noClientFolders.push(folder);
+      }
+    });
+
+    groups.sort((a, b) => a.clientName.localeCompare(b.clientName));
+
+    return { groups, noClientFolders };
+  }, [folders]);
+
   const handleConnectGoogle = async () => {
     if (!user) return;
     try {
@@ -150,81 +172,170 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="pt-8">
           <p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Tesis Activas</p>
-          <div className="space-y-1">
-            {folders.map(folder => {
-              const folderProperties = properties.filter(p => p.folderId === folder.id);
-              const isActive = activeFolderId === folder.id;
-              const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
+          <div className="space-y-6">
+            {groupedFolders.groups.map(group => (
+              <div key={group.clientName} className="space-y-1">
+                <p className="px-4 text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <UserIcon className="w-3 h-3" /> {group.clientName}
+                </p>
+                {group.folders.map(folder => {
+                  const folderProperties = properties.filter(p => p.folderId === folder.id);
+                  const isActive = activeFolderId === folder.id;
+                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
 
-              return (
-                <div key={folder.id} className="group relative">
-                  <button
-                    onClick={() => {
-                      setActiveFolderId(folder.id);
-                      setActiveTab('properties');
-                    }}
-                    className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
-                      isActive 
-                        ? 'bg-indigo-600 text-white shadow-md' 
-                        : 'text-slate-500 hover:bg-slate-50'
-                    }`}
-                  >
-                    {folder.imageUrl ? (
-                      <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
-                        <img 
-                          src={folder.imageUrl} 
-                          alt={folder.name} 
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
+                  return (
+                    <div key={folder.id} className="group relative">
+                      <button
+                        onClick={() => {
+                          setActiveFolderId(folder.id);
+                          setActiveTab('properties');
+                        }}
+                        className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                          isActive 
+                            ? 'bg-indigo-600 text-white shadow-md' 
+                            : 'text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {folder.imageUrl ? (
+                          <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
+                            <img 
+                              src={folder.imageUrl} 
+                              alt={folder.name} 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
+                        )}
+                        <span className="truncate pr-8 flex-1 text-left">{folder.name}</span>
+                        {folderLeadsCount > 0 && (
+                          <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'}`}>
+                            {folderLeadsCount}
+                          </span>
+                        )}
+                        {folder.isShared && folderLeadsCount === 0 && (
+                          <Users className={`w-3 h-3 ml-auto ${isActive ? 'text-white/70' : 'text-slate-400'}`} />
+                        )}
+                      </button>
+                      
+                      {/* Properties under folder */}
+                      {isActive && folderProperties.length > 0 && (
+                        <div className="mt-1 ml-6 space-y-1 border-l border-indigo-200 pl-2 animate-in slide-in-from-left-2 duration-200">
+                          {folderProperties.map(prop => (
+                            <button
+                              key={prop.id}
+                              onClick={() => onSelectProperty?.(prop)}
+                              className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-400 hover:bg-slate-50 transition-all text-left"
+                            >
+                              <MapPin className="w-2.5 h-2.5 shrink-0" />
+                              <span className="truncate">{prop.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="absolute right-2 top-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onShareFolder && !folder.isShared && (
+                          <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-emerald-600'}`} title="Compartir"><Users className="w-3 h-3" /></button>
+                        )}
+                        {onShareItinerary && (
+                          <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`} title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
+                        )}
+                        {onEditFolder && !folder.isShared && (
+                          <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`}><Pencil className="w-3 h-3" /></button>
+                        )}
+                        {onDeleteFolder && (
+                          <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-rose-600'}`}><Trash2 className="w-3 h-3" /></button>
+                        )}
                       </div>
-                    ) : (
-                      <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
-                    )}
-                    <span className="truncate pr-8 flex-1 text-left">{folder.name}</span>
-                    {folderLeadsCount > 0 && (
-                      <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'}`}>
-                        {folderLeadsCount}
-                      </span>
-                    )}
-                    {folder.isShared && folderLeadsCount === 0 && (
-                      <Users className={`w-3 h-3 ml-auto ${isActive ? 'text-white/70' : 'text-slate-400'}`} />
-                    )}
-                  </button>
-                  
-                  {/* Properties under folder */}
-                  {isActive && folderProperties.length > 0 && (
-                    <div className="mt-1 ml-6 space-y-1 border-l border-indigo-200 pl-2 animate-in slide-in-from-left-2 duration-200">
-                      {folderProperties.map(prop => (
-                        <button
-                          key={prop.id}
-                          onClick={() => onSelectProperty?.(prop)}
-                          className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-400 hover:bg-slate-50 transition-all text-left"
-                        >
-                          <MapPin className="w-2.5 h-2.5 shrink-0" />
-                          <span className="truncate">{prop.title}</span>
-                        </button>
-                      ))}
                     </div>
-                  )}
+                  );
+                })}
+              </div>
+            ))}
 
-                  <div className="absolute right-2 top-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {onShareFolder && !folder.isShared && (
-                      <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-emerald-600'}`} title="Compartir"><Users className="w-3 h-3" /></button>
-                    )}
-                    {onShareItinerary && (
-                      <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`} title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
-                    )}
-                    {onEditFolder && !folder.isShared && (
-                      <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`}><Pencil className="w-3 h-3" /></button>
-                    )}
-                    {onDeleteFolder && (
-                      <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-rose-600'}`}><Trash2 className="w-3 h-3" /></button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {groupedFolders.noClientFolders.length > 0 && (
+              <div className="space-y-1">
+                <p className="px-4 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                  <FolderOpen className="w-3 h-3" /> Sin Cliente
+                </p>
+                {groupedFolders.noClientFolders.map(folder => {
+                  const folderProperties = properties.filter(p => p.folderId === folder.id);
+                  const isActive = activeFolderId === folder.id;
+                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
+
+                  return (
+                    <div key={folder.id} className="group relative">
+                      <button
+                        onClick={() => {
+                          setActiveFolderId(folder.id);
+                          setActiveTab('properties');
+                        }}
+                        className={`w-full flex items-center gap-3 p-3 px-4 rounded-xl text-xs font-bold transition-all ${
+                          isActive 
+                            ? 'bg-indigo-600 text-white shadow-md' 
+                            : 'text-slate-500 hover:bg-slate-50'
+                        }`}
+                      >
+                        {folder.imageUrl ? (
+                          <div className="w-4 h-4 rounded-md overflow-hidden shrink-0 border border-white/20">
+                            <img 
+                              src={folder.imageUrl} 
+                              alt={folder.name} 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                          </div>
+                        ) : (
+                          <div className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-white' : folder.color}`}></div>
+                        )}
+                        <span className="truncate pr-8 flex-1 text-left">{folder.name}</span>
+                        {folderLeadsCount > 0 && (
+                          <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-md ${isActive ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-600'}`}>
+                            {folderLeadsCount}
+                          </span>
+                        )}
+                        {folder.isShared && folderLeadsCount === 0 && (
+                          <Users className={`w-3 h-3 ml-auto ${isActive ? 'text-white/70' : 'text-slate-400'}`} />
+                        )}
+                      </button>
+                      
+                      {/* Properties under folder */}
+                      {isActive && folderProperties.length > 0 && (
+                        <div className="mt-1 ml-6 space-y-1 border-l border-indigo-200 pl-2 animate-in slide-in-from-left-2 duration-200">
+                          {folderProperties.map(prop => (
+                            <button
+                              key={prop.id}
+                              onClick={() => onSelectProperty?.(prop)}
+                              className="w-full flex items-center gap-2 p-2 rounded-lg text-[10px] font-bold text-indigo-400 hover:bg-slate-50 transition-all text-left"
+                            >
+                              <MapPin className="w-2.5 h-2.5 shrink-0" />
+                              <span className="truncate">{prop.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="absolute right-2 top-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onShareFolder && !folder.isShared && (
+                          <button onClick={(e) => { e.stopPropagation(); onShareFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-emerald-600'}`} title="Compartir"><Users className="w-3 h-3" /></button>
+                        )}
+                        {onShareItinerary && (
+                          <button onClick={(e) => { e.stopPropagation(); onShareItinerary(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`} title="Compartir Itinerario"><Globe className="w-3 h-3" /></button>
+                        )}
+                        {onEditFolder && !folder.isShared && (
+                          <button onClick={(e) => { e.stopPropagation(); onEditFolder(folder); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-indigo-600'}`}><Pencil className="w-3 h-3" /></button>
+                        )}
+                        {onDeleteFolder && (
+                          <button onClick={(e) => { e.stopPropagation(); onDeleteFolder(folder.id); }} className={`p-1 ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-rose-600'}`}><Trash2 className="w-3 h-3" /></button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </nav>

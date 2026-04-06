@@ -23,10 +23,10 @@ interface PendingLeadsListProps {
   folders?: SearchFolder[];
   onProcess: (lead: InboxLink) => void;
   onReject: (leadId: string) => void;
-  onUpdateLeadAvailability?: (leadId: string, isUnavailable: boolean) => void;
+  onAuditLeads?: (leadIds: string[], unavailabilities: Record<string, boolean>) => void;
 }
 
-const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = [], onProcess, onReject, onUpdateLeadAvailability }) => {
+const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = [], onProcess, onReject, onAuditLeads }) => {
   const [isCleanupModalOpen, setIsCleanupModalOpen] = useState(false);
 
   if (leads.length === 0) return null;
@@ -176,12 +176,12 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
         ))}
       </div>
 
-      {onUpdateLeadAvailability && (
+      {onAuditLeads && (
         <LeadCleanupModal
           isOpen={isCleanupModalOpen}
           onClose={() => setIsCleanupModalOpen(false)}
           leads={leads}
-          onUpdateLeadAvailability={onUpdateLeadAvailability}
+          onAuditLeads={onAuditLeads}
         />
       )}
     </div>
