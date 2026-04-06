@@ -83,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const unassignedLeadsCount = inboxLinks.filter(l => l.folder_id === null && (!l.status || l.status === 'enviado')).length;
+  const unassignedLeadsCount = inboxLinks.filter(l => l.folder_id === null && (!l.status || l.status === 'enviado' || l.status === 'caido')).length;
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
@@ -181,7 +181,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {group.folders.map(folder => {
                   const folderProperties = properties.filter(p => p.folderId === folder.id);
                   const isActive = activeFolderId === folder.id;
-                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
+                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado' || l.status === 'caido')).length;
 
                   return (
                     <div key={folder.id} className="group relative">
@@ -263,7 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 {groupedFolders.noClientFolders.map(folder => {
                   const folderProperties = properties.filter(p => p.folderId === folder.id);
                   const isActive = activeFolderId === folder.id;
-                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado')).length;
+                  const folderLeadsCount = inboxLinks.filter(l => l.folder_id === folder.id && (!l.status || l.status === 'enviado' || l.status === 'caido')).length;
 
                   return (
                     <div key={folder.id} className="group relative">

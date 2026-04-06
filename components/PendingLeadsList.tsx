@@ -83,16 +83,18 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {leads.map((lead) => (
+        {leads.map((lead) => {
+          const isCaido = lead.status === 'caido';
+          return (
           <div 
             key={lead.id} 
-            className={`bg-white rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all group flex flex-col h-full ${lead.isUnavailable ? 'border-rose-200 bg-rose-50/30' : 'border-slate-200'}`}
+            className={`bg-white rounded-3xl p-5 border shadow-sm hover:shadow-md transition-all group flex flex-col h-full ${isCaido ? 'border-rose-200 bg-rose-50/30' : 'border-slate-200'}`}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center relative ${lead.added_by_client ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-600'}`}>
                   {lead.file_url ? <FileText className="w-5 h-5" /> : <LinkIcon className="w-5 h-5" />}
-                  {lead.isUnavailable && (
+                  {isCaido && (
                     <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full">
                       <AlertCircle className="w-4 h-4 text-rose-500" />
                     </div>
@@ -102,15 +104,15 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
                   <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {formatDateTime(lead.created_at)}
                   </span>
-                  <span className={`text-xs font-black flex items-center gap-1.5 ${lead.isUnavailable ? 'text-rose-600' : 'text-slate-700'}`}>
+                  <span className={`text-xs font-black flex items-center gap-1.5 ${isCaido ? 'text-rose-600' : 'text-slate-700'}`}>
                     {lead.added_by_client ? (
                       <>
-                        <UserIcon className={`w-3 h-3 ${lead.isUnavailable ? 'text-rose-500' : 'text-indigo-500'}`} />
+                        <UserIcon className={`w-3 h-3 ${isCaido ? 'text-rose-500' : 'text-indigo-500'}`} />
                         Sugerido vía Portal Cliente
                       </>
                     ) : (
                       <>
-                        <UserIcon className={`w-3 h-3 ${lead.isUnavailable ? 'text-rose-400' : 'text-slate-400'}`} />
+                        <UserIcon className={`w-3 h-3 ${isCaido ? 'text-rose-400' : 'text-slate-400'}`} />
                         Captado vía Lead Collector (Agente)
                       </>
                     )}
@@ -137,7 +139,7 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
                   href={lead.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className={`text-sm font-bold hover:underline break-all flex items-center gap-2 ${lead.isUnavailable ? 'text-rose-600 line-through opacity-70' : 'text-indigo-600'}`}
+                  className={`text-sm font-bold hover:underline break-all flex items-center gap-2 ${isCaido ? 'text-rose-600 line-through opacity-70' : 'text-indigo-600'}`}
                 >
                   <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   {lead.url}
@@ -160,7 +162,7 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
             <div className="flex gap-2">
               <button 
                 onClick={() => onProcess(lead)}
-                className={`flex-1 text-white py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all ${lead.isUnavailable ? 'bg-slate-400 hover:bg-slate-500 shadow-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}
+                className={`flex-1 text-white py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg transition-all ${isCaido ? 'bg-slate-400 hover:bg-slate-500 shadow-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200'}`}
               >
                 <Plus className="w-3.5 h-3.5" />
                 Convertir a Propiedad
@@ -173,7 +175,7 @@ const PendingLeadsList: React.FC<PendingLeadsListProps> = ({ leads, folders = []
               </button>
             </div>
           </div>
-        ))}
+        )})}
       </div>
 
       {onAuditLeads && (

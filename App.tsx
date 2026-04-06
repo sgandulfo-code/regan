@@ -238,11 +238,9 @@ const App: React.FC = () => {
 
   const handleAuditLeads = async (leadIds: string[], unavailabilities: Record<string, boolean>) => {
     setIsSyncing(true);
-    const now = new Date().toISOString();
     for (const id of leadIds) {
       await dataService.updateInboxLink(id, { 
-        isUnavailable: unavailabilities[id],
-        lastAuditedAt: now
+        status: unavailabilities[id] ? 'caido' : 'enviado'
       });
     }
     await loadData();
@@ -423,7 +421,7 @@ const App: React.FC = () => {
     if (!activeFolderId) return [];
     return inboxLinks.filter(link => 
       link.folder_id === activeFolderId && 
-      (link.status === 'enviado' || !link.status)
+      (link.status === 'enviado' || link.status === 'caido' || !link.status)
     );
   }, [inboxLinks, activeFolderId]);
 
@@ -975,7 +973,7 @@ const App: React.FC = () => {
         {activeTab === 'properties' && activeFolderId && (
           <div className="mb-8">
             <PendingLeadsList 
-              leads={inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado'))}
+              leads={inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado' || l.status === 'caido'))}
               folders={folders}
               onProcess={(lead) => {
                 setLeadToProcess(lead);

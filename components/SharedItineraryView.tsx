@@ -1943,17 +1943,24 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                   <History className="w-4 h-4 text-slate-400" /> Historial de Sugerencias
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {inboxLinks.map((link: any) => (
-                    <div key={link.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 group">
-                      <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-50 transition-colors">
+                  {inboxLinks.map((link: any) => {
+                    const isCaido = link.status === 'caido';
+                    return (
+                    <div key={link.id} className={`bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-3 group ${isCaido ? 'border-rose-100 bg-rose-50/30' : 'border-slate-100'}`}>
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors relative ${isCaido ? 'bg-rose-50 text-rose-400 group-hover:bg-rose-100 group-hover:text-rose-500' : 'bg-slate-50 text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-500'}`}>
                         {link.file_url ? (
-                          link.file_type?.startsWith('image/') ? <Image className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" /> : <UploadCloud className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />
+                          link.file_type?.startsWith('image/') ? <Image className="w-4 h-4" /> : <UploadCloud className="w-4 h-4" />
                         ) : (
-                          <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                          <ExternalLink className="w-4 h-4" />
+                        )}
+                        {isCaido && (
+                          <div className="absolute -top-1.5 -right-1.5 bg-white rounded-full">
+                            <AlertCircle className="w-4 h-4 text-rose-500" />
+                          </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5 truncate">
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate ${isCaido ? 'text-rose-400' : 'text-slate-400'}`}>
                           {link.file_url ? (link.file_type?.startsWith('image/') ? 'Imagen' : 'Documento') : (() => {
                             try {
                               return new URL(link.url).hostname.replace('www.', '');
@@ -1962,12 +1969,12 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             }
                           })()}
                         </p>
-                        <a href={link.file_url || link.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-slate-700 hover:text-indigo-600 break-all block transition-colors">
+                        <a href={link.file_url || link.url} target="_blank" rel="noreferrer" className={`text-xs font-bold break-all block transition-colors ${isCaido ? 'text-rose-600 line-through opacity-70 hover:text-rose-700' : 'text-slate-700 hover:text-indigo-600'}`}>
                           {link.file_url ? 'Ver Archivo' : link.url}
                         </a>
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
-                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                        <div className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${isCaido ? 'text-rose-400' : 'text-slate-400'}`}>
                           <Clock className="w-3 h-3" />
                           {(() => {
                             const date = new Date(link.created_at);
@@ -1976,21 +1983,23 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
                             return `${datePart} ${timePart}`;
                           })()}
                         </div>
-                        <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                          {link.added_by_client ? 'Sugerido por ti' : 'Agregado por Agente'}
+                        <div className={`text-[8px] font-bold uppercase tracking-widest ${isCaido ? 'text-rose-500' : 'text-slate-400'}`}>
+                          {isCaido ? 'No Disponible' : (link.added_by_client ? 'Sugerido por ti' : 'Agregado por Agente')}
                         </div>
                         <div className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest ${
                           link.status === 'procesado' ? 'bg-emerald-100 text-emerald-600' :
                           link.status === 'rechazado' ? 'bg-rose-100 text-rose-600' :
+                          isCaido ? 'bg-rose-100 text-rose-600' :
                           'bg-amber-100 text-amber-600'
                         }`}>
                           {link.status === 'procesado' ? 'Procesado' :
                            link.status === 'rechazado' ? 'Rechazado' :
+                           isCaido ? 'Caída' :
                            'Enviado'}
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             )}

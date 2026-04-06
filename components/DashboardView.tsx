@@ -625,7 +625,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             // Leads pendientes de procesar
             const pendingLeads = inboxLinks.filter(link => 
               link.folder_id === folder.id && 
-              (link.status === 'enviado' || !link.status)
+              (link.status === 'enviado' || link.status === 'caido' || !link.status)
             );
             
             const clientLeads = pendingLeads.filter(l => l.added_by_client).length;

@@ -555,8 +555,8 @@ export const dataService = {
       query = query.is('folder_id', null);
     }
     
-    // Intentamos filtrar por status='enviado' o NULL
-    const { data, error } = await query.or('status.eq.enviado,status.is.null').order('created_at', { ascending: false });
+    // Intentamos filtrar por status='enviado', 'caido' o NULL
+    const { data, error } = await query.or('status.eq.enviado,status.eq.caido,status.is.null').order('created_at', { ascending: false });
     
     if (error && error.code === '42703') {
       // Si la columna status no existe, hacemos la consulta sin el filtro

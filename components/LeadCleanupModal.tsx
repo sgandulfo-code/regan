@@ -23,7 +23,7 @@ const LeadCleanupModal: React.FC<LeadCleanupModalProps> = ({ isOpen, onClose, le
       setCurrentIndex(0);
       const initialStatuses: Record<string, boolean> = {};
       activeLeads.forEach(l => {
-        initialStatuses[l.id] = !!l.isUnavailable;
+        initialStatuses[l.id] = l.status === 'caido';
       });
       setLocalStatuses(initialStatuses);
     }
