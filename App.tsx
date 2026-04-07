@@ -30,7 +30,8 @@ import {
   EyeOff,
   FolderOpen,
   Layout,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Building
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -48,6 +49,7 @@ import ShareFolderModal from './components/ShareFolderModal';
 import VisitAgenda from './components/VisitAgenda';
 import VisitFormModal from './components/VisitFormModal';
 import SharedItineraryView from './components/SharedItineraryView';
+import AppraisalFormModal from './components/AppraisalFormModal';
 import ShareItineraryModal from './components/ShareItineraryModal';
 import RequestVisitView from './components/RequestVisitView';
 import SettingsView from './components/SettingsView';
@@ -101,6 +103,7 @@ const App: React.FC = () => {
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
   const [propertyToCopy, setPropertyToCopy] = useState<Property | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isAppraisalModalOpen, setIsAppraisalModalOpen] = useState(false);
   const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [inboxLinks, setInboxLinks] = useState<InboxLink[]>([]);
@@ -654,6 +657,12 @@ const App: React.FC = () => {
               {activeFolderId && activeTab === 'properties' && (
                 <>
                   <button 
+                    onClick={() => setIsAppraisalModalOpen(true)}
+                    className="bg-emerald-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-sm"
+                  >
+                    <Building className="w-4 h-4" /> <span className="hidden sm:inline">Cargar Propiedad a Tasar</span>
+                  </button>
+                  <button 
                     onClick={() => {
                       setPropertyToEdit(null);
                       setLeadToProcess(null);
@@ -1160,6 +1169,16 @@ const App: React.FC = () => {
           }
         }}
       />
+
+      {activeFolderId && (
+        <AppraisalFormModal
+          isOpen={isAppraisalModalOpen}
+          onClose={() => setIsAppraisalModalOpen(false)}
+          onSaved={loadData}
+          folderId={activeFolderId}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 };
