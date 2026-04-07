@@ -468,6 +468,11 @@ export const dataService = {
       }])
       .select()
       .single();
+      
+    if (error) {
+      console.error('Supabase insert error:', error);
+      throw error;
+    }
     return data;
   },
 

@@ -79,6 +79,11 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
       <div className="flex-1 min-w-0 w-full">
         <div className="flex justify-between items-start mb-1">
           <div className="flex flex-col min-w-0">
+            {property.isSubjectProperty && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-md text-[8px] font-black uppercase tracking-widest mb-1 w-max">
+                <Building className="w-2.5 h-2.5" /> Propiedad a Tasar
+              </span>
+            )}
             {property.code && (
               <span className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-0.5">{property.code}</span>
             )}

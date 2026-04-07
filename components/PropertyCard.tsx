@@ -138,6 +138,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0">
+            {property.isSubjectProperty && (
+              <div className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-[9px] font-black uppercase tracking-widest mb-2">
+                <Building className="w-3 h-3" /> Propiedad a Tasar
+              </div>
+            )}
             {property.code && (
               <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">
                 {property.code}

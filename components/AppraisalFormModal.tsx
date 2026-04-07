@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Property, SearchFolder } from '../types';
+import { Property, SearchFolder, PropertyStatus } from '../types';
 import { X, Save, Building, MapPin, Ruler, DollarSign, AlertTriangle } from 'lucide-react';
 import { dataService } from '../services/dataService';
 
@@ -25,7 +25,8 @@ const AppraisalFormModal: React.FC<AppraisalFormModalProps> = ({ isOpen, onClose
     coveredSqft: 0,
     uncoveredSqft: 0,
     age: 0,
-    status: 'Pendiente' as any,
+    status: PropertyStatus.SUGERIDA,
+    rating: 0,
     isSubjectProperty: true,
     propertyType: 'Departamento',
     disposition: 'Frente',
@@ -34,6 +35,7 @@ const AppraisalFormModal: React.FC<AppraisalFormModalProps> = ({ isOpen, onClose
     luminosity: 'Buena',
     expenses: 0,
     amenities: [],
+    images: [],
     saleReason: '',
     urgency: 'Media',
     ownerExpectedPrice: 0
