@@ -227,6 +227,19 @@ export interface Property {
   isPublic?: boolean;
   clientCustomFields?: Record<string, any>;
   lastAuditedAt?: string;
+  
+  // Appraisal / Captation fields
+  isSubjectProperty?: boolean;
+  propertyType?: string;
+  disposition?: string;
+  orientation?: string;
+  condition?: string;
+  luminosity?: string;
+  expenses?: number;
+  amenities?: string[];
+  saleReason?: string;
+  urgency?: string;
+  ownerExpectedPrice?: number;
 }
 
 export interface User {

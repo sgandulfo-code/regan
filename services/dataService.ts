@@ -399,6 +399,17 @@ export const dataService = {
       agentWhatsapp: p.agent_whatsapp,
       isPublic: p.is_public !== undefined ? p.is_public : true,
       clientCustomFields: p.client_custom_fields || {},
+      isSubjectProperty: p.is_subject_property,
+      propertyType: p.property_type,
+      disposition: p.disposition,
+      orientation: p.orientation,
+      condition: p.condition,
+      luminosity: p.luminosity,
+      expenses: p.expenses ? Number(p.expenses) : undefined,
+      amenities: p.amenities || [],
+      saleReason: p.sale_reason,
+      urgency: p.urgency,
+      ownerExpectedPrice: p.owner_expected_price ? Number(p.owner_expected_price) : undefined,
       renovationCosts: (p.renovations || []).map((r: any) => ({
         id: r.id,
         category: r.category,
@@ -442,7 +453,18 @@ export const dataService = {
         real_estate_agency: property.realEstateAgency,
         agent_name: property.agentName,
         agent_whatsapp: property.agentWhatsapp,
-        is_public: property.isPublic ?? true
+        is_public: property.isPublic ?? true,
+        is_subject_property: property.isSubjectProperty,
+        property_type: property.propertyType,
+        disposition: property.disposition,
+        orientation: property.orientation,
+        condition: property.condition,
+        luminosity: property.luminosity,
+        expenses: property.expenses,
+        amenities: property.amenities,
+        sale_reason: property.saleReason,
+        urgency: property.urgency,
+        owner_expected_price: property.ownerExpectedPrice
       }])
       .select()
       .single();
@@ -509,7 +531,18 @@ export const dataService = {
         agent_name: property.agentName,
         agent_whatsapp: property.agentWhatsapp,
         client_custom_fields: property.clientCustomFields,
-        is_public: property.isPublic
+        is_public: property.isPublic,
+        is_subject_property: property.isSubjectProperty,
+        property_type: property.propertyType,
+        disposition: property.disposition,
+        orientation: property.orientation,
+        condition: property.condition,
+        luminosity: property.luminosity,
+        expenses: property.expenses,
+        amenities: property.amenities,
+        sale_reason: property.saleReason,
+        urgency: property.urgency,
+        owner_expected_price: property.ownerExpectedPrice
       })
       .eq('id', id)
       .select()
