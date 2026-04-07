@@ -492,7 +492,7 @@ export const dataService = {
     const newProperty = {
       ...propertyData,
       folder_id: targetFolderId,
-      status: 'Pendiente', // Reset status for the new folder
+      status: 'Sugerida', // Reset status for the new folder
     };
 
     // 3. Insert the new property
