@@ -32,7 +32,8 @@ import {
   Layout,
   Link as LinkIcon,
   Building,
-  MessageCircle
+  MessageCircle,
+  Share2
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -105,6 +106,7 @@ const App: React.FC = () => {
   const [propertyToCopy, setPropertyToCopy] = useState<Property | null>(null);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isAppraisalModalOpen, setIsAppraisalModalOpen] = useState(false);
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [sharingFolder, setSharingFolder] = useState<SearchFolder | null>(null);
   const [visits, setVisits] = useState<Visit[]>([]);
   const [inboxLinks, setInboxLinks] = useState<InboxLink[]>([]);
@@ -536,18 +538,20 @@ const App: React.FC = () => {
     }
 
     const folder = folders.find(f => f.id === activeFolderId);
+    const clientName = 'Cliente';
     const folderName = folder ? folder.name : 'la carpeta';
 
-    let message = `*Propiedades Sugeridas - ${folderName}*\n\n`;
+    let message = `Hola ${clientName}, te comparto un resumen de las propiedades sugeridas para tu búsqueda en ${folderName}:\n\n`;
     sugeridas.forEach((p, index) => {
       const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
       message += `*${index + 1}. ${p.title}*\n`;
-      message += `\uD83D\uDCCD ${p.address}\n`;
-      message += `\uD83D\uDCB0 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
-      message += `\uD83D\uDD17 Ver más: ${p.url}\n\n`;
+      message += `📍 ${p.address}\n`;
+      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      message += `🔗 Ver más: ${p.url}\n\n`;
     });
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+    setIsShareMenuOpen(false);
   };
 
   const handleShareSugeridasDetalladoWhatsApp = () => {
@@ -559,23 +563,25 @@ const App: React.FC = () => {
     }
 
     const folder = folders.find(f => f.id === activeFolderId);
+    const clientName = 'Cliente';
     const folderName = folder ? folder.name : 'la carpeta';
 
-    let message = `*Propiedades Sugeridas (Detalle) - ${folderName}*\n\n`;
+    let message = `Hola ${clientName}, te comparto el detalle de las propiedades sugeridas para tu búsqueda en ${folderName}:\n\n`;
     sugeridas.forEach((p, index) => {
       const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
       message += `*${index + 1}. ${p.title}*\n`;
-      message += `\uD83D\uDCCD ${p.address}\n`;
-      message += `\uD83D\uDCB0 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
-      if (p.sqft) message += `\uD83D\uDCD0 Superficie: ${p.sqft}m²\n`;
-      if (p.environments) message += `\uD83D\uDECF\uFE0F Ambientes: ${p.environments}\n`;
-      if (p.bathrooms) message += `\uD83D\uDEC1 Baños: ${p.bathrooms}\n`;
-      if (p.age !== undefined) message += `\uD83D\uDCC5 Antigüedad: ${p.age === 0 ? 'A estrenar' : `${p.age} años`}\n`;
-      if (p.expenses) message += `\uD83D\uDCB8 Expensas: $${p.expenses.toLocaleString()}\n`;
-      message += `\uD83D\uDD17 Ver más: ${p.url}\n\n`;
+      message += `📍 ${p.address}\n`;
+      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      if (p.sqft) message += `📐 Superficie: ${p.sqft}m²\n`;
+      if (p.environments) message += `🛏️ Ambientes: ${p.environments}\n`;
+      if (p.bathrooms) message += `🛁 Baños: ${p.bathrooms}\n`;
+      if (p.age !== undefined) message += `📅 Antigüedad: ${p.age === 0 ? 'A estrenar' : `${p.age} años`}\n`;
+      if (p.expenses) message += `💸 Expensas: $${p.expenses.toLocaleString()}\n`;
+      message += `🔗 Ver más: ${p.url}\n\n`;
     });
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+    setIsShareMenuOpen(false);
   };
 
   const handleSharePendingLeadsWhatsApp = () => {
@@ -588,28 +594,30 @@ const App: React.FC = () => {
     }
 
     const folder = folders.find(f => f.id === activeFolderId);
+    const clientName = 'Cliente';
     const folderName = folder ? folder.name : 'la carpeta';
 
-    let message = `*Leads Pendientes - ${folderName}*\n\n`;
+    let message = `Hola ${clientName}, te comparto los leads y opciones pendientes de revisión para tu búsqueda en ${folderName}:\n\n`;
     pendingLeads.forEach((lead, index) => {
       const date = new Date(lead.created_at);
       const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
       const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
       const source = lead.added_by_client ? 'Sugerido vía Portal Cliente' : 'Captado vía Lead Collector (Agente)';
-      const status = lead.status === 'caido' ? ' (\u26A0\uFE0F Link Caído)' : '';
+      const status = lead.status === 'caido' ? ' (⚠️ Link Caído)' : '';
       
-      message += `*${index + 1}. Lead del ${dateStr} ${timeStr}*\n`;
-      message += `\uD83D\uDC64 Origen: ${source}${status}\n`;
+      message += `*${index + 1}. Opción del ${dateStr} ${timeStr}*\n`;
+      message += `👤 Origen: ${source}${status}\n`;
       if (lead.url) {
-        message += `\uD83D\uDD17 Link: ${lead.url}\n\n`;
+        message += `🔗 Link: ${lead.url}\n\n`;
       } else if (lead.file_url) {
-        message += `\uD83D\uDCC4 Archivo adjunto: ${lead.file_url}\n\n`;
+        message += `📄 Archivo adjunto: ${lead.file_url}\n\n`;
       } else {
-        message += `\u274C Sin contenido\n\n`;
+        message += `❌ Sin contenido\n\n`;
       }
     });
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
+    setIsShareMenuOpen(false);
   };
 
   if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
@@ -764,27 +772,27 @@ const App: React.FC = () => {
                   >
                     <Printer className="w-4 h-4" /> <span className="hidden sm:inline">Informe PDF</span>
                   </button>
-                  <button 
-                    onClick={handleShareSugeridasWhatsApp}
-                    className="bg-emerald-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-sm"
-                    title="Enviar propiedades sugeridas por WhatsApp (Resumen)"
-                  >
-                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Sugeridas</span>
-                  </button>
-                  <button 
-                    onClick={handleShareSugeridasDetalladoWhatsApp}
-                    className="bg-emerald-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-sm"
-                    title="Enviar propiedades sugeridas por WhatsApp (Detallado)"
-                  >
-                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Detalle</span>
-                  </button>
-                  <button 
-                    onClick={handleSharePendingLeadsWhatsApp}
-                    className="bg-amber-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-amber-600 transition-all shadow-sm"
-                    title="Enviar leads pendientes por WhatsApp"
-                  >
-                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Leads</span>
-                  </button>
+                  <div className="relative">
+                    <button 
+                      onClick={() => setIsShareMenuOpen(!isShareMenuOpen)}
+                      className="bg-emerald-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-sm"
+                    >
+                      <Share2 className="w-4 h-4" /> <span className="hidden sm:inline">Compartir</span> <ChevronDown className="w-3 h-3" />
+                    </button>
+                    {isShareMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden z-50">
+                        <button onClick={handleShareSugeridasWhatsApp} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4 text-emerald-500" /> Sugeridas (Resumen)
+                        </button>
+                        <button onClick={handleShareSugeridasDetalladoWhatsApp} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-50">
+                          <MessageCircle className="w-4 h-4 text-emerald-600" /> Sugeridas (Detalle)
+                        </button>
+                        <button onClick={handleSharePendingLeadsWhatsApp} className="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-t border-slate-50">
+                          <MessageCircle className="w-4 h-4 text-amber-500" /> Leads Pendientes
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
               <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
