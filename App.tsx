@@ -550,6 +550,34 @@ const App: React.FC = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const handleShareSugeridasDetalladoWhatsApp = () => {
+    if (!activeFolderId) return;
+    const sugeridas = properties.filter(p => p.folderId === activeFolderId && p.status === 'Sugerida');
+    if (sugeridas.length === 0) {
+      alert('No hay propiedades sugeridas en esta carpeta para compartir.');
+      return;
+    }
+
+    const folder = folders.find(f => f.id === activeFolderId);
+    const folderName = folder ? folder.name : 'la carpeta';
+
+    let message = `*Propiedades Sugeridas (Detalle) - ${folderName}*\n\n`;
+    sugeridas.forEach((p, index) => {
+      const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
+      message += `*${index + 1}. ${p.title}*\n`;
+      message += `📍 ${p.address}\n`;
+      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      if (p.sqft) message += `📐 Superficie: ${p.sqft}m²\n`;
+      if (p.environments) message += `🛏️ Ambientes: ${p.environments}\n`;
+      if (p.bathrooms) message += `🛁 Baños: ${p.bathrooms}\n`;
+      if (p.age !== undefined) message += `📅 Antigüedad: ${p.age === 0 ? 'A estrenar' : `${p.age} años`}\n`;
+      if (p.expenses) message += `💸 Expensas: $${p.expenses.toLocaleString()}\n`;
+      message += `🔗 Ver más: ${p.url}\n\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -705,9 +733,16 @@ const App: React.FC = () => {
                   <button 
                     onClick={handleShareSugeridasWhatsApp}
                     className="bg-emerald-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-sm"
-                    title="Enviar propiedades sugeridas por WhatsApp"
+                    title="Enviar propiedades sugeridas por WhatsApp (Resumen)"
                   >
-                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Enviar Sugeridas</span>
+                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Sugeridas</span>
+                  </button>
+                  <button 
+                    onClick={handleShareSugeridasDetalladoWhatsApp}
+                    className="bg-emerald-600 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-700 transition-all shadow-sm"
+                    title="Enviar propiedades sugeridas por WhatsApp (Detallado)"
+                  >
+                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Detalle</span>
                   </button>
                 </>
               )}
