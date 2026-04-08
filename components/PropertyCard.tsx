@@ -73,12 +73,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
         />
         <div className="absolute top-4 left-14 flex flex-col gap-2 items-start">
           <div className="flex gap-2">
-            {folder && (
-              <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1 shadow-md border ${folder.color.replace('bg-', 'text-').replace('500', '600')} ${folder.color.replace('bg-', 'bg-').replace('500', '50')}`}>
-                <FolderOpen className="w-3 h-3" />
-                {folder.name}
-              </span>
-            )}
             <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-md uppercase tracking-wider ${getStatusColor(property.status)}`}>
               {property.status}
             </span>
@@ -138,11 +132,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
       <div className="p-6">
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1 min-w-0">
-            {property.isSubjectProperty && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-[9px] font-black uppercase tracking-widest mb-2">
-                <Building className="w-3 h-3" /> Propiedad a Tasar
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {property.isSubjectProperty && (
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-md text-[9px] font-black uppercase tracking-widest">
+                  <Building className="w-3 h-3" /> Propiedad a Tasar
+                </div>
+              )}
+              {folder && (
+                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${folder.color.replace('bg-', 'text-').replace('500', '600')} ${folder.color.replace('bg-', 'bg-').replace('500', '50')}`}>
+                  <FolderOpen className="w-3 h-3" />
+                  <span className="truncate max-w-[150px]" title={folder.name}>{folder.name}</span>
+                </div>
+              )}
+            </div>
             {property.code && (
               <div className="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">
                 {property.code}
