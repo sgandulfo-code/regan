@@ -25,7 +25,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
   const handleWhatsAppShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     const pricePrefix = property.currency === 'ARS' ? '$' : 'USD';
-    const message = `*Detalle de Propiedad*\n\n🏠 *${property.title}*\n📍 ${property.address}\n💰 *Precio:* ${pricePrefix} ${property.price.toLocaleString()}\n📐 *Superficie:* ${property.sqft}m²\n🛏️ *Ambientes:* ${property.environments}\n\n🔗 *Ver más:* ${property.url}`;
+    const message = `*Detalle de Propiedad*\n\n\uD83C\uDFE0 *${property.title}*\n\uD83D\uDCCD ${property.address}\n\uD83D\uDCB0 *Precio:* ${pricePrefix} ${property.price.toLocaleString()}\n\uD83D\uDCD0 *Superficie:* ${property.sqft}m²\n\uD83D\uDECF\uFE0F *Ambientes:* ${property.environments}\n\n\uD83D\uDD17 *Ver más:* ${property.url}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 

@@ -542,9 +542,9 @@ const App: React.FC = () => {
     sugeridas.forEach((p, index) => {
       const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
       message += `*${index + 1}. ${p.title}*\n`;
-      message += `📍 ${p.address}\n`;
-      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
-      message += `🔗 Ver más: ${p.url}\n\n`;
+      message += `\uD83D\uDCCD ${p.address}\n`;
+      message += `\uD83D\uDCB0 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      message += `\uD83D\uDD17 Ver más: ${p.url}\n\n`;
     });
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
@@ -565,14 +565,48 @@ const App: React.FC = () => {
     sugeridas.forEach((p, index) => {
       const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
       message += `*${index + 1}. ${p.title}*\n`;
-      message += `📍 ${p.address}\n`;
-      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
-      if (p.sqft) message += `📐 Superficie: ${p.sqft}m²\n`;
-      if (p.environments) message += `🛏️ Ambientes: ${p.environments}\n`;
-      if (p.bathrooms) message += `🛁 Baños: ${p.bathrooms}\n`;
-      if (p.age !== undefined) message += `📅 Antigüedad: ${p.age === 0 ? 'A estrenar' : `${p.age} años`}\n`;
-      if (p.expenses) message += `💸 Expensas: $${p.expenses.toLocaleString()}\n`;
-      message += `🔗 Ver más: ${p.url}\n\n`;
+      message += `\uD83D\uDCCD ${p.address}\n`;
+      message += `\uD83D\uDCB0 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      if (p.sqft) message += `\uD83D\uDCD0 Superficie: ${p.sqft}m²\n`;
+      if (p.environments) message += `\uD83D\uDECF\uFE0F Ambientes: ${p.environments}\n`;
+      if (p.bathrooms) message += `\uD83D\uDEC1 Baños: ${p.bathrooms}\n`;
+      if (p.age !== undefined) message += `\uD83D\uDCC5 Antigüedad: ${p.age === 0 ? 'A estrenar' : `${p.age} años`}\n`;
+      if (p.expenses) message += `\uD83D\uDCB8 Expensas: $${p.expenses.toLocaleString()}\n`;
+      message += `\uD83D\uDD17 Ver más: ${p.url}\n\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
+  const handleSharePendingLeadsWhatsApp = () => {
+    if (!activeFolderId) return;
+    const pendingLeads = inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado' || l.status === 'caido'));
+    
+    if (pendingLeads.length === 0) {
+      alert('No hay leads pendientes en esta carpeta para compartir.');
+      return;
+    }
+
+    const folder = folders.find(f => f.id === activeFolderId);
+    const folderName = folder ? folder.name : 'la carpeta';
+
+    let message = `*Leads Pendientes - ${folderName}*\n\n`;
+    pendingLeads.forEach((lead, index) => {
+      const date = new Date(lead.created_at);
+      const dateStr = date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      const source = lead.added_by_client ? 'Sugerido vía Portal Cliente' : 'Captado vía Lead Collector (Agente)';
+      const status = lead.status === 'caido' ? ' (\u26A0\uFE0F Link Caído)' : '';
+      
+      message += `*${index + 1}. Lead del ${dateStr} ${timeStr}*\n`;
+      message += `\uD83D\uDC64 Origen: ${source}${status}\n`;
+      if (lead.url) {
+        message += `\uD83D\uDD17 Link: ${lead.url}\n\n`;
+      } else if (lead.file_url) {
+        message += `\uD83D\uDCC4 Archivo adjunto: ${lead.file_url}\n\n`;
+      } else {
+        message += `\u274C Sin contenido\n\n`;
+      }
     });
 
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
@@ -743,6 +777,13 @@ const App: React.FC = () => {
                     title="Enviar propiedades sugeridas por WhatsApp (Detallado)"
                   >
                     <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Detalle</span>
+                  </button>
+                  <button 
+                    onClick={handleSharePendingLeadsWhatsApp}
+                    className="bg-amber-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-amber-600 transition-all shadow-sm"
+                    title="Enviar leads pendientes por WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Leads</span>
                   </button>
                 </>
               )}
