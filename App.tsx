@@ -31,7 +31,8 @@ import {
   FolderOpen,
   Layout,
   Link as LinkIcon,
-  Building
+  Building,
+  MessageCircle
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -526,6 +527,29 @@ const App: React.FC = () => {
     return visits.filter(v => v.clientFeedback || v.rating || (v.clientChecklist && v.clientChecklist.some(i => i.response))).length;
   }, [visits]);
 
+  const handleShareSugeridasWhatsApp = () => {
+    if (!activeFolderId) return;
+    const sugeridas = properties.filter(p => p.folderId === activeFolderId && p.status === 'Sugerida');
+    if (sugeridas.length === 0) {
+      alert('No hay propiedades sugeridas en esta carpeta para compartir.');
+      return;
+    }
+
+    const folder = folders.find(f => f.id === activeFolderId);
+    const folderName = folder ? folder.name : 'la carpeta';
+
+    let message = `*Propiedades Sugeridas - ${folderName}*\n\n`;
+    sugeridas.forEach((p, index) => {
+      const pricePrefix = p.currency === 'ARS' ? '$' : 'USD';
+      message += `*${index + 1}. ${p.title}*\n`;
+      message += `📍 ${p.address}\n`;
+      message += `💰 Precio: ${pricePrefix} ${p.price.toLocaleString()}\n`;
+      message += `🔗 Ver más: ${p.url}\n\n`;
+    });
+
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+  };
+
   if (sharedId) return <SharedItineraryView sharedId={sharedId} />;
   if (isSyncing && !user) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-10 h-10 text-indigo-500 animate-spin" /></div>;
   if (!user) return <Auth />;
@@ -677,6 +701,13 @@ const App: React.FC = () => {
                     className="bg-white border border-slate-200 text-indigo-600 px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-indigo-50 transition-all shadow-sm"
                   >
                     <Printer className="w-4 h-4" /> <span className="hidden sm:inline">Informe PDF</span>
+                  </button>
+                  <button 
+                    onClick={handleShareSugeridasWhatsApp}
+                    className="bg-emerald-500 text-white px-4 md:px-6 py-2 md:py-2.5 rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 transition-all shadow-sm"
+                    title="Enviar propiedades sugeridas por WhatsApp"
+                  >
+                    <MessageCircle className="w-4 h-4" /> <span className="hidden sm:inline">Enviar Sugeridas</span>
                   </button>
                 </>
               )}
