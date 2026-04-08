@@ -101,9 +101,9 @@ const PropertyRow: React.FC<PropertyRowProps> = ({ property, index, folders = []
 
         <div className="flex flex-wrap items-center gap-2 mb-2">
             {folder && (
-              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1 border ${folder.color.replace('bg-', 'text-').replace('500', '600')} ${folder.color.replace('bg-', 'bg-').replace('500', '50')}`}>
-                <FolderOpen className="w-2.5 h-2.5" />
-                {folder.name}
+              <span className="px-2 py-0.5 rounded-full text-[8px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-1.5 border border-slate-200 bg-slate-100">
+                <div className={`w-2 h-2 rounded-full ${folder.color} shadow-sm border border-black/10`}></div>
+                <span className="truncate max-w-[120px]" title={folder.name}>{folder.name}</span>
               </span>
             )}
              <span className={`px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider ${getStatusColor(property.status)}`}>

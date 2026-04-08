@@ -139,8 +139,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, index, folders = 
                 </div>
               )}
               {folder && (
-                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${folder.color.replace('bg-', 'text-').replace('500', '600')} ${folder.color.replace('bg-', 'bg-').replace('500', '50')}`}>
-                  <FolderOpen className="w-3 h-3" />
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 rounded-md text-[9px] font-black text-slate-900 uppercase tracking-widest border border-slate-200">
+                  <div className={`w-2.5 h-2.5 rounded-full ${folder.color} shadow-sm border border-black/10`}></div>
                   <span className="truncate max-w-[150px]" title={folder.name}>{folder.name}</span>
                 </div>
               )}
