@@ -160,7 +160,10 @@ export enum ActivityType {
   PROPERTY_CRITERIA = 'property_criteria',
   NEW_LEAD = 'new_lead',
   VISIT_REQUESTED = 'visit_requested',
-  STATUS_CHANGED = 'status_changed'
+  STATUS_CHANGED = 'status_changed',
+  LOG_NOTE = 'log_note',
+  LOG_DOCUMENT = 'log_document',
+  LOG_CHECKLIST = 'log_checklist'
 }
 
 export interface Activity {

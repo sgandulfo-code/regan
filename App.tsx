@@ -67,6 +67,7 @@ import Auth from './components/Auth';
 import CRMView from './components/CRMView';
 import CopyPropertyModal from './components/CopyPropertyModal';
 import AdminView from './components/AdminView';
+import CaptationLog from './components/CaptationLog';
 import { STAGES_COMPRA, STAGES_VENTA } from './components/ClientProgressBar';
 import { Property, PropertyStatus, UserRole, SearchFolder, FolderStatus, RenovationItem, SharePermission, Visit, TransactionType, AcquisitionReason, getContextualStatuses } from './types';
 import { dataService, InboxLink } from './services/dataService';
@@ -1102,7 +1103,7 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'properties' && activeFolderId && (
-          <div className="mb-8">
+          <div className="mb-8 space-y-8">
             <PendingLeadsList 
               leads={inboxLinks.filter(l => l.folder_id === activeFolderId && (!l.status || l.status === 'enviado' || l.status === 'caido'))}
               folders={folders}
@@ -1116,6 +1117,10 @@ const App: React.FC = () => {
               }}
               onAuditLeads={handleAuditLeads}
             />
+            
+            {activeFolder && (
+              <CaptationLog folder={activeFolder} userId={user.id} />
+            )}
           </div>
         )}
 

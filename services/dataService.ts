@@ -1189,6 +1189,26 @@ export const dataService = {
     }
   },
 
+  async getFolderActivities(folderId: string) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('folder_id', folderId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return data.map(d => ({
+      id: d.id,
+      folderId: d.folder_id,
+      agentId: d.agent_id,
+      type: d.type as ActivityType,
+      content: d.content,
+      metadata: d.metadata,
+      createdAt: d.created_at
+    }));
+  },
+
   async getActivities(agentId: string, limit = 50) {
     const { data, error } = await supabase
       .from('activities')
