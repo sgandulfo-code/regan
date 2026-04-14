@@ -355,21 +355,31 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
         {/* Folder Distribution */}
         <div className="lg:col-span-8 bg-white p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col h-[450px]">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <FolderOpen className="w-4 h-4 text-indigo-500" /> Distribución de Carpetas
-              </h3>
-              <div className="flex gap-4 mt-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Presupuesto Total: <span className="text-indigo-600">${folders.reduce((acc, f) => acc + (f.budget || 0), 0).toLocaleString()}</span>
-                </p>
-                <p className="text-[10px] font-bold text-slate-400 uppercase">
-                  Promedio Permanencia: <span className="text-amber-600">{Math.round(folders.reduce((acc, f) => acc + calculateDays(f.statusUpdatedAt || f.createdAt), 0) / (folders.length || 1))} días</span>
-                </p>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <FolderOpen className="w-4 h-4 text-indigo-500" /> Distribución de Carpetas
+                </h3>
+                <div className="flex gap-4 mt-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">
+                    Presupuesto Total: <span className="text-indigo-600">${folders.reduce((acc, f) => acc + (f.budget || 0), 0).toLocaleString()}</span>
+                  </p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">
+                    Promedio Permanencia: <span className="text-amber-600">{Math.round(folders.reduce((acc, f) => acc + calculateDays(f.statusUpdatedAt || f.createdAt), 0) / (folders.length || 1))} días</span>
+                  </p>
+                </div>
               </div>
             </div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Búsqueda vs Captación</p>
+            
+            <div className="grid grid-cols-4 gap-3">
+              {folderData.map(data => (
+                <div key={data.name} className="bg-slate-50 rounded-2xl p-3 border border-slate-100 flex flex-col items-center justify-center text-center">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{data.name}</p>
+                  <p className="text-2xl font-black text-slate-800">{data.total}</p>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
