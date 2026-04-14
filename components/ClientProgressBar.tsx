@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ChevronRight, FileText, DollarSign, Info, X } from 'lucide-react';
 import { TransactionType } from '../types';
+import { dataService } from '../services/dataService';
 
 export interface StageInfo {
   id: string;
@@ -146,8 +147,33 @@ interface ClientProgressBarProps {
 
 export default function ClientProgressBar({ transactionType = TransactionType.COMPRA, currentStageId }: ClientProgressBarProps) {
   const [selectedStage, setSelectedStage] = useState<StageInfo | null>(null);
+  const [baseStages, setBaseStages] = useState<StageInfo[]>(transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
   
-  const baseStages = transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+  useEffect(() => {
+    const loadStages = async () => {
+      try {
+        const templates = await dataService.getStageTemplates(transactionType);
+        if (templates && templates.length > 0) {
+          const mappedStages: StageInfo[] = templates.map(t => ({
+            id: t.stage_id,
+            title: t.title,
+            status: 'upcoming', // Will be calculated below
+            description: t.description,
+            requirements: {
+              docs: t.requirements_docs || [],
+              money: t.requirements_money || []
+            }
+          }));
+          setBaseStages(mappedStages);
+        } else {
+          setBaseStages(transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+        }
+      } catch (error) {
+        console.error('Error loading custom stages:', error);
+      }
+    };
+    loadStages();
+  }, [transactionType]);
   
   // Find the index of the current stage. If not found, default to 0.
   const currentIndex = currentStageId 

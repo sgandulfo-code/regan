@@ -117,21 +117,25 @@ const App: React.FC = () => {
   const [sharedId, setSharedId] = useState<string | null>(null);
   const [isShareItineraryModalOpen, setIsShareItineraryModalOpen] = useState(false);
   const [pendingUsersCount, setPendingUsersCount] = useState(0);
+  const [stageTemplates, setStageTemplates] = useState<any[]>([]);
 
   const loadData = async () => {
     if (!user) return;
     setIsSyncing(true);
     try {
-      const [f, p, v, il] = await Promise.all([
+      const [f, p, v, il, stCompra, stVenta] = await Promise.all([
         dataService.getFolders(user.id),
         dataService.getProperties(user.id),
         dataService.getVisits(user.id, activeFolderId),
-        dataService.getAllInboxLinks(user.id)
+        dataService.getAllInboxLinks(user.id),
+        dataService.getStageTemplates(TransactionType.COMPRA),
+        dataService.getStageTemplates(TransactionType.VENTA)
       ]);
       setFolders(f);
       setProperties(p);
       setVisits(v);
       setInboxLinks(il);
+      setStageTemplates([...stCompra, ...stVenta]);
 
       if (user.role === UserRole.ADMIN) {
         const pendingUsers = await dataService.getPendingUsers();
@@ -258,7 +262,11 @@ const App: React.FC = () => {
     setIsSyncing(true);
     const folder = folders.find(f => f.id === folderId);
     if (folder) {
-      const stages = folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+      const dbStages = stageTemplates.filter(t => t.transaction_type === folder.transactionType);
+      const stages = dbStages.length > 0 
+        ? dbStages.map(t => ({ id: t.stage_id, title: t.title }))
+        : (folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+      
       const stageObj = stages.find(s => s.id === stageId);
       await dataService.updateFolder(folderId, { 
         stageId,
@@ -892,9 +900,15 @@ const App: React.FC = () => {
                       className="text-xs font-black text-slate-700 leading-none uppercase bg-transparent border-none p-0 focus:ring-0 cursor-pointer"
                     >
                       <option value="">Seleccionar Etapa</option>
-                      {(activeFolder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA).map(stage => (
-                        <option key={stage.id} value={stage.id}>{stage.title}</option>
-                      ))}
+                      {(() => {
+                        const dbStages = stageTemplates.filter(t => t.transaction_type === activeFolder.transactionType);
+                        const stages = dbStages.length > 0 
+                          ? dbStages.map(t => ({ id: t.stage_id, title: t.title }))
+                          : (activeFolder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+                        return stages.map(stage => (
+                          <option key={stage.id} value={stage.id}>{stage.title}</option>
+                        ));
+                      })()}
                     </select>
                   </div>
                 </div>

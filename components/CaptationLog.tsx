@@ -3,7 +3,7 @@ import { SearchFolder, Activity, ActivityType, TransactionType } from '../types'
 import { dataService } from '../services/dataService';
 import { supabase } from '../services/supabase';
 import { FileText, MessageSquare, CheckSquare, Upload, Plus, Clock, Check, BookOpen } from 'lucide-react';
-import { STAGES_VENTA, STAGES_COMPRA } from './ClientProgressBar';
+import { STAGES_VENTA, STAGES_COMPRA, StageInfo } from './ClientProgressBar';
 
 interface CaptationLogProps {
   folder: SearchFolder;
@@ -15,17 +15,43 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
   const [newNote, setNewNote] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  const stages = folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
-  const currentStage = stages.find(s => s.id === folder.stageId) || stages[0];
+  const [stages, setStages] = useState<StageInfo[]>(folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
 
   useEffect(() => {
-    loadActivities();
-  }, [folder.id]);
+    loadData();
+  }, [folder.id, folder.transactionType]);
 
-  const loadActivities = async () => {
+  const loadData = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
+      // Load stages
+      const templates = await dataService.getStageTemplates(folder.transactionType || TransactionType.COMPRA);
+      if (templates && templates.length > 0) {
+        const mappedStages: StageInfo[] = templates.map(t => ({
+          id: t.stage_id,
+          title: t.title,
+          status: 'upcoming',
+          description: t.description,
+          requirements: {
+            docs: t.requirements_docs || [],
+            money: t.requirements_money || []
+          }
+        }));
+        setStages(mappedStages);
+      } else {
+        setStages(folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+      }
+
+      await loadActivities(false);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const loadActivities = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    try {
       const data = await dataService.getFolderActivities(folder.id);
       setActivities(data.filter(a => 
         a.type === ActivityType.LOG_NOTE || 
@@ -38,6 +64,8 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
       setIsLoading(false);
     }
   };
+
+  const currentStage = stages.find(s => s.id === folder.stageId) || stages[0];
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return;

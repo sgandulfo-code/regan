@@ -1209,6 +1209,49 @@ export const dataService = {
     }));
   },
 
+  async getStageTemplates(transactionType: string) {
+    const { data, error } = await supabase
+      .from('stage_templates')
+      .select('*')
+      .eq('transaction_type', transactionType)
+      .order('order_index', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching stage templates:', error);
+      return [];
+    }
+    return data;
+  },
+
+  async saveStageTemplate(template: any) {
+    if (template.id) {
+      const { error } = await supabase
+        .from('stage_templates')
+        .update({
+          title: template.title,
+          description: template.description,
+          requirements_docs: template.requirements_docs,
+          requirements_money: template.requirements_money,
+          order_index: template.order_index
+        })
+        .eq('id', template.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase
+        .from('stage_templates')
+        .insert([template]);
+      if (error) throw error;
+    }
+  },
+
+  async deleteStageTemplate(id: string) {
+    const { error } = await supabase
+      .from('stage_templates')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
   async getActivities(agentId: string, limit = 50) {
     const { data, error } = await supabase
       .from('activities')
