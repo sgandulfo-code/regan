@@ -30,7 +30,8 @@ import {
   YAxis, 
   Tooltip, 
   CartesianGrid,
-  Legend
+  Legend,
+  LabelList
 } from 'recharts';
 import { Property, SearchFolder, Visit, PropertyStatus, User, AcquisitionReason, TransactionType, FolderStatus, UserRole } from '../types';
 import { InboxLink, dataService } from '../services/dataService';
@@ -333,33 +334,22 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
+              <BarChart data={statusData} layout="vertical" margin={{ top: 10, right: 30, left: 0, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748b', fontWeight: 'bold' }} width={90} />
+                <Tooltip 
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={24}>
                   {statusData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-              </PieChart>
+                  <LabelList dataKey="value" position="right" style={{ fontSize: '12px', fontWeight: '900', fill: '#475569' }} />
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
-          </div>
-          <div className="grid grid-cols-2 gap-2 mt-4">
-            {statusData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase truncate">{entry.name}</span>
-              </div>
-            ))}
           </div>
         </div>
 
