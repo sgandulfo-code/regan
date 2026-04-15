@@ -293,11 +293,9 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
                         {/* Actions */}
                         {activity.agentId === userId && (
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                            {activity.type === ActivityType.LOG_NOTE && (
-                              <button onClick={() => handleEditClick(activity)} className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded">
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                            <button onClick={() => handleEditClick(activity)} className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded">
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
                             <button onClick={() => handleDeleteActivity(activity.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
