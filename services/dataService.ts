@@ -1209,6 +1209,22 @@ export const dataService = {
     }));
   },
 
+  async updateActivity(id: string, content: string) {
+    const { error } = await supabase
+      .from('activities')
+      .update({ content })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async deleteActivity(id: string) {
+    const { error } = await supabase
+      .from('activities')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
   async getStageTemplates(transactionType: string) {
     const { data, error } = await supabase
       .from('stage_templates')

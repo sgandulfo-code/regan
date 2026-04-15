@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SearchFolder, Activity, ActivityType, TransactionType } from '../types';
 import { dataService } from '../services/dataService';
 import { supabase } from '../services/supabase';
-import { FileText, MessageSquare, CheckSquare, Upload, Plus, Clock, Check, BookOpen } from 'lucide-react';
+import { FileText, MessageSquare, CheckSquare, Upload, Plus, Clock, Check, BookOpen, Edit2, Trash2, X, Save } from 'lucide-react';
 import { STAGES_VENTA, STAGES_COMPRA, StageInfo } from './ClientProgressBar';
 
 interface CaptationLogProps {
@@ -16,6 +16,10 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [stages, setStages] = useState<StageInfo[]>(folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+  
+  // Edit state
+  const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
 
   useEffect(() => {
     loadData();
@@ -81,6 +85,34 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
       loadActivities();
     } catch (error) {
       console.error('Error adding note:', error);
+    }
+  };
+
+  const handleEditClick = (activity: Activity) => {
+    setEditingActivityId(activity.id);
+    setEditContent(activity.content);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editContent.trim()) return;
+    try {
+      await dataService.updateActivity(id, editContent);
+      setEditingActivityId(null);
+      loadActivities(false);
+    } catch (error) {
+      console.error('Error updating activity:', error);
+      alert('Error al actualizar el registro');
+    }
+  };
+
+  const handleDeleteActivity = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de eliminar este registro?')) return;
+    try {
+      await dataService.deleteActivity(id);
+      loadActivities(false);
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      alert('Error al eliminar el registro');
     }
   };
 
@@ -158,7 +190,7 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
     <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
       <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
         <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-indigo-600" /> Bitácora de Captación
+          <BookOpen className="w-5 h-5 text-indigo-600" /> Bitácora
         </h3>
       </div>
 
@@ -239,7 +271,7 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
               <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div></div>
             ) : activities.length > 0 ? (
               activities.map(activity => (
-                <div key={activity.id} className="flex gap-4">
+                <div key={activity.id} className="flex gap-4 group">
                   <div className="mt-1">
                     {activity.type === ActivityType.LOG_NOTE ? (
                       <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center"><MessageSquare className="w-4 h-4" /></div>
@@ -249,26 +281,62 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
                       <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center"><CheckSquare className="w-4 h-4" /></div>
                     )}
                   </div>
-                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 relative">
                     <div className="flex justify-between items-start mb-1">
                       <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                         {activity.type === ActivityType.LOG_NOTE ? 'Anotación' : activity.type === ActivityType.LOG_DOCUMENT ? 'Documento' : 'Checklist'}
                       </span>
-                      <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {new Date(activity.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {new Date(activity.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
+                        </span>
+                        {/* Actions */}
+                        {activity.agentId === userId && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            {activity.type === ActivityType.LOG_NOTE && (
+                              <button onClick={() => handleEditClick(activity)} className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded">
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <button onClick={() => handleDeleteActivity(activity.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-700 whitespace-pre-wrap">{activity.content}</p>
                     
-                    {activity.type === ActivityType.LOG_DOCUMENT && activity.metadata?.fileUrl && (
-                      <a 
-                        href={activity.metadata.fileUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
-                      >
-                        <FileText className="w-3.5 h-3.5" /> Ver Documento
-                      </a>
+                    {editingActivityId === activity.id ? (
+                      <div className="mt-2">
+                        <textarea
+                          value={editContent}
+                          onChange={(e) => setEditContent(e.target.value)}
+                          className="w-full bg-white border border-indigo-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
+                        />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <button onClick={() => setEditingActivityId(null)} className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
+                            Cancelar
+                          </button>
+                          <button onClick={() => handleSaveEdit(activity.id)} className="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1">
+                            <Save className="w-3.5 h-3.5" /> Guardar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-700 whitespace-pre-wrap">{activity.content}</p>
+                        
+                        {activity.type === ActivityType.LOG_DOCUMENT && activity.metadata?.fileUrl && (
+                          <a 
+                            href={activity.metadata.fileUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5" /> Ver Documento
+                          </a>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
