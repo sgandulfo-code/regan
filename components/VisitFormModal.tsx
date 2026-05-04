@@ -57,12 +57,15 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
       });
     } else {
       const initialFolderId = activeFolderId || (folders.length > 0 ? folders[0].id : '');
+      const initialFolder = folders.find(f => f.id === initialFolderId);
       const folderProperties = properties.filter(p => p.folderId === initialFolderId);
       setFormData(prev => ({
         ...prev,
         userId: userId,
         folderId: initialFolderId,
         propertyId: folderProperties.length > 0 ? folderProperties[0].id : '',
+        clientName: initialFolder?.client?.name || '',
+        clientPhone: initialFolder?.client?.phone || '',
         clientChecklist: [
           { id: crypto.randomUUID(), label: '¿Tiene buena luz natural?', response: null },
           { id: crypto.randomUUID(), label: '¿Estado general de pintura?', response: null },
@@ -155,10 +158,13 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                   onChange={(e) => {
                     const newFolderId = e.target.value;
                     const folderProps = properties.filter(p => p.folderId === newFolderId);
+                    const newFolder = folders.find(f => f.id === newFolderId);
                     setFormData({ 
                       ...formData, 
                       folderId: newFolderId,
-                      propertyId: folderProps.length > 0 ? folderProps[0].id : ''
+                      propertyId: folderProps.length > 0 ? folderProps[0].id : '',
+                      clientName: newFolder?.client?.name || '',
+                      clientPhone: newFolder?.client?.phone || '',
                     });
                   }}
                 >
@@ -199,9 +205,9 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as Visit['status'] })}
                 >
-                  <option value="Pending">Pedido del Cliente</option>
-                  <option value="Requested">Pedida a Inmo</option>
-                  <option value="Confirmed">Confirmada</option>
+                  <option value="Pending">Pedido de Visita (A coordinar)</option>
+                  <option value="Requested">Pedida a Inmo (Esperando)</option>
+                  <option value="Confirmed">Confirmada (Próxima a realizar)</option>
                   <option value="Completed">Realizada</option>
                   <option value="Cancelled">Cancelada</option>
                 </select>
@@ -238,14 +244,14 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-2 flex items-center gap-2">
-                  <User className="w-3 h-3" /> Nombre del Cliente
+                  <User className="w-3 h-3" /> Nombre del Cliente (De la carpeta)
                 </label>
                 <input
+                  readOnly
                   type="text"
-                  placeholder="ej: María García"
-                  className="w-full p-5 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl font-bold text-slate-700 outline-none"
+                  placeholder="Se carga al seleccionar carpeta"
+                  className="w-full p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl font-bold text-slate-500 outline-none cursor-not-allowed"
                   value={formData.clientName}
-                  onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
@@ -253,11 +259,11 @@ const VisitFormModal: React.FC<VisitFormModalProps> = ({ isOpen, onClose, proper
                   <Phone className="w-3 h-3" /> WhatsApp del Cliente
                 </label>
                 <input
+                  readOnly
                   type="text"
-                  placeholder="ej: +549..."
-                  className="w-full p-5 bg-emerald-50/30 border border-emerald-100/50 rounded-2xl font-bold text-slate-700 outline-none"
+                  placeholder="Se carga al seleccionar carpeta"
+                  className="w-full p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl font-bold text-slate-500 outline-none cursor-not-allowed"
                   value={formData.clientPhone}
-                  onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
                 />
               </div>
             </div>
