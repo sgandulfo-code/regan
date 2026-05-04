@@ -727,7 +727,7 @@ export const dataService = {
     console.log('Fetching visits for user:', userId, 'folder:', folderId);
     let query = supabase
       .from('visits')
-      .select('*, property:properties(title, address, images)');
+      .select('*, property:properties(title, address, images), folder:folders(client:clients(name, phone))');
     
     if (folderId) {
       query = query.eq('folder_id', folderId);
@@ -755,6 +755,16 @@ export const dataService = {
     console.log('Raw visits from Supabase:', data);
 
     return (data || []).map(v => {
+      let folderClientName = '';
+      let folderClientPhone = '';
+      if (v.folder && v.folder.client) {
+        const clientObj = Array.isArray(v.folder.client) ? v.folder.client[0] : v.folder.client;
+        if (clientObj) {
+          folderClientName = clientObj.name || '';
+          folderClientPhone = clientObj.phone || '';
+        }
+      }
+
       const mapped = {
         id: v.id,
         propertyId: v.property_id,
@@ -764,8 +774,8 @@ export const dataService = {
         time: v.visit_time || v.time,
         contactName: v.contact_name,
         contactPhone: v.contact_phone,
-        clientName: v.client_name,
-        clientPhone: v.client_phone,
+        clientName: v.client_name || folderClientName,
+        clientPhone: v.client_phone || folderClientPhone,
         notes: v.notes,
         status: v.status,
         checklist: v.checklist,
