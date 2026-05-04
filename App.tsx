@@ -1310,11 +1310,11 @@ const App: React.FC = () => {
       )}
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
-        <div className="flex justify-around items-center h-16 px-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.1)]">
+        <div className="flex justify-around items-center h-16 px-2 relative">
           <button 
             onClick={() => { setActiveTab('dashboard'); setActiveFolderId(null); }}
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'dashboard' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'dashboard' && !activeFolderId ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-500 transition-colors'}`}
           >
             <Home className="w-5 h-5" />
             <span className="text-[10px] font-bold">Inicio</span>
@@ -1323,27 +1323,45 @@ const App: React.FC = () => {
           {(user.role === UserRole.AGENT || user.role === UserRole.ADMIN) && (
             <button 
               onClick={() => { setActiveTab('crm'); setActiveFolderId(null); }}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'crm' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'crm' && !activeFolderId ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-500 transition-colors'}`}
             >
               <Users className="w-5 h-5" />
               <span className="text-[10px] font-bold">CRM</span>
             </button>
           )}
 
+          {/* Quick Action Button - Floating in Center */}
+          <div className="flex items-center justify-center -mt-6">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-lg shadow-indigo-200 transition-transform active:scale-95 border-4 border-white"
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
+
           <button 
-            onClick={() => { setActiveTab('properties'); setActiveFolderId(null); }}
-            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'properties' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+            onClick={() => { setActiveTab('visits'); setActiveFolderId(null); }}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'visits' && !activeFolderId ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-500 transition-colors'} relative`}
           >
-            <Heart className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Inmuebles</span>
+            <div className="relative">
+              <CalendarDays className="w-5 h-5" />
+              {visits.filter(v => v.status === 'Pending').length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-bold">Agenda</span>
           </button>
 
           <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-500 hover:text-indigo-500"
+            onClick={() => { setActiveTab('properties'); setActiveFolderId(null); }}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'properties' && !activeFolderId ? 'text-indigo-600' : 'text-slate-400 hover:text-indigo-500 transition-colors'}`}
           >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Menú</span>
+            <Heart className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Inmuebles</span>
           </button>
         </div>
       </div>

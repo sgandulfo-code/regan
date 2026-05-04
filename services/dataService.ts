@@ -167,30 +167,36 @@ export const dataService = {
     const allFolders = [...(owned || []), ...shared];
     const uniqueFolders = Array.from(new Map(allFolders.map(f => [f.id, f])).values());
 
-    return uniqueFolders.map(f => ({
-      id: f.id,
-      name: f.name,
-      description: f.description,
-      color: f.color,
-      status: f.status as FolderStatus,
-      transactionType: f.transaction_type as TransactionType,
-      budget: Number(f.budget),
-      startDate: f.start_date,
-      statusUpdatedAt: f.status_updated_at,
-      createdAt: f.created_at,
-      isShared: f.user_id !== userId,
-      permission: f.permission || SharePermission.ADMIN,
-      welcomeMessage: f.welcome_message,
-      stageId: f.stage_id,
-      imageUrl: f.image_url,
-      isImagePublic: f.is_image_public !== false, // Default to true if null
-      client_id: f.client_id,
-      stage: f.stage,
-      budget_min: Number(f.budget_min),
-      budget_max: Number(f.budget_max),
-      operation_type: f.operation_type,
-      client: f.client
-    }));
+    return uniqueFolders.map(f => {
+      let mappedClient = f.client;
+      if (Array.isArray(f.client)) {
+        mappedClient = f.client.length > 0 ? f.client[0] : undefined;
+      }
+      return {
+        id: f.id,
+        name: f.name,
+        description: f.description,
+        color: f.color,
+        status: f.status as FolderStatus,
+        transactionType: f.transaction_type as TransactionType,
+        budget: Number(f.budget),
+        startDate: f.start_date,
+        statusUpdatedAt: f.status_updated_at,
+        createdAt: f.created_at,
+        isShared: f.user_id !== userId,
+        permission: f.permission || SharePermission.ADMIN,
+        welcomeMessage: f.welcome_message,
+        stageId: f.stage_id,
+        imageUrl: f.image_url,
+        isImagePublic: f.is_image_public !== false, // Default to true if null
+        client_id: f.client_id,
+        stage: f.stage,
+        budget_min: Number(f.budget_min),
+        budget_max: Number(f.budget_max),
+        operation_type: f.operation_type,
+        client: mappedClient
+      };
+    });
   },
 
   async uploadFolderImage(file: File) {
@@ -758,6 +764,8 @@ export const dataService = {
         time: v.visit_time || v.time,
         contactName: v.contact_name,
         contactPhone: v.contact_phone,
+        clientName: v.client_name,
+        clientPhone: v.client_phone,
         notes: v.notes,
         status: v.status,
         checklist: v.checklist,
@@ -797,6 +805,8 @@ export const dataService = {
         visit_time: formattedTime,
         contact_name: visit.contactName,
         contact_phone: visit.contactPhone,
+        client_name: visit.clientName,
+        client_phone: visit.clientPhone,
         notes: visit.notes,
         status: visit.status || 'Pending',
         checklist: visit.checklist || [],
@@ -829,6 +839,8 @@ export const dataService = {
     if (formattedTime !== undefined) updates.visit_time = formattedTime;
     if (visit.contactName !== undefined) updates.contact_name = visit.contactName;
     if (visit.contactPhone !== undefined) updates.contact_phone = visit.contactPhone;
+    if (visit.clientName !== undefined) updates.client_name = visit.clientName;
+    if (visit.clientPhone !== undefined) updates.client_phone = visit.clientPhone;
     if (visit.notes !== undefined) updates.notes = visit.notes;
     if (visit.status !== undefined) {
       updates.status = visit.status;

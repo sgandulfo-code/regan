@@ -1,0 +1,3 @@
+ALTER TABLE public.visits 
+ALTER COLUMN visit_date DROP NOT NULL,
+ALTER COLUMN visit_time DROP NOT NULL;
