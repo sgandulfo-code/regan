@@ -33,7 +33,8 @@ import {
   Link as LinkIcon,
   Building,
   MessageCircle,
-  Share2
+  Share2,
+  Users
 } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import PropertyCard from './components/PropertyCard';
@@ -711,16 +712,10 @@ const App: React.FC = () => {
         />
       </div>
       
-      <main className="flex-1 p-4 md:p-10 overflow-y-auto custom-scrollbar w-full">
+      <main className="flex-1 p-4 pb-24 lg:pb-10 md:p-10 overflow-y-auto custom-scrollbar w-full">
         <header className="mb-6 md:mb-10 space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start gap-4">
             <div className="flex items-center gap-4 w-full md:w-auto">
-              <button 
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 bg-white border border-slate-200 rounded-xl lg:hidden text-slate-600"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
               <div className="flex-1">
                 <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight flex flex-wrap items-center gap-2">
                   {activeFolder ? (
@@ -1313,6 +1308,45 @@ const App: React.FC = () => {
           userId={user.id}
         />
       )}
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)]">
+        <div className="flex justify-around items-center h-16 px-2">
+          <button 
+            onClick={() => { setActiveTab('dashboard'); setActiveFolderId(null); }}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'dashboard' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Inicio</span>
+          </button>
+
+          {(user.role === UserRole.AGENT || user.role === UserRole.ADMIN) && (
+            <button 
+              onClick={() => { setActiveTab('crm'); setActiveFolderId(null); }}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'crm' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+            >
+              <Users className="w-5 h-5" />
+              <span className="text-[10px] font-bold">CRM</span>
+            </button>
+          )}
+
+          <button 
+            onClick={() => { setActiveTab('properties'); setActiveFolderId(null); }}
+            className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${activeTab === 'properties' && !activeFolderId ? 'text-indigo-600' : 'text-slate-500 hover:text-indigo-500'}`}
+          >
+            <Heart className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Inmuebles</span>
+          </button>
+
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex flex-col items-center justify-center w-full h-full space-y-1 text-slate-500 hover:text-indigo-500"
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Menú</span>
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
