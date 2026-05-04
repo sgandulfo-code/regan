@@ -70,6 +70,24 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 }) => {
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
   const [loadingCalendar, setLoadingCalendar] = useState(false);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+
+  const searchResults = useMemo(() => {
+    if (!globalSearchQuery.trim()) return null;
+    const query = globalSearchQuery.toLowerCase();
+    
+    return {
+      properties: properties.filter(p => 
+        p.title?.toLowerCase().includes(query) || 
+        p.address?.toLowerCase().includes(query)
+      ).slice(0, 5),
+      folders: folders.filter(f => 
+        f.client?.name?.toLowerCase().includes(query) || 
+        f.client?.email?.toLowerCase().includes(query) ||
+        f.client?.phone?.toLowerCase().includes(query)
+      ).slice(0, 5)
+    };
+  }, [globalSearchQuery, properties, folders]);
 
   useEffect(() => {
     const fetchGoogleEvents = async () => {
@@ -200,7 +218,115 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#059669', '#94a3b8', '#f43f5e'];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
+    <div className="space-y-10 animate-in fade-in duration-700 relative">
+      {/* Global Search */}
+      <div className="relative z-50">
+        <div className="relative">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-400" />
+          <input
+            type="text"
+            placeholder="Buscar propiedades, clientes o carpetas rápidamente..."
+            className="w-full bg-white border border-slate-200 rounded-[2rem] pl-14 pr-6 py-4 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-shadow hover:shadow-md"
+            value={globalSearchQuery}
+            onChange={(e) => setGlobalSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Search Results Dropdown */}
+        {searchResults && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden z-50">
+            {searchResults.properties.length === 0 && searchResults.folders.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50">
+                <Search className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 font-medium">No se encontraron resultados para "{globalSearchQuery}"</p>
+              </div>
+            ) : (
+              <div className="max-h-[60vh] overflow-y-auto custom-scrollbar">
+                {searchResults.folders.length > 0 && (
+                  <div className="p-4">
+                    <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                      <FolderOpen className="w-3.5 h-3.5" /> Carpetas de Inversión
+                    </h3>
+                    <div className="space-y-1">
+                      {searchResults.folders.map(f => (
+                        <div 
+                          key={f.id} 
+                          className="flex items-center justify-between p-3 rounded-2xl hover:bg-indigo-50 border border-transparent hover:border-indigo-100 cursor-pointer transition-all"
+                          onClick={() => {
+                            setGlobalSearchQuery('');
+                            onSelectFolder(f.id);
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-indigo-100/50 flex items-center justify-center text-indigo-600">
+                              <UserIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-slate-800">{f.client?.name || 'Cliente desconocido'}</p>
+                              <p className="text-xs text-slate-500 flex items-center gap-2">
+                                <span className={f.transactionType === TransactionType.VENTA ? 'text-amber-600 font-medium' : 'text-emerald-600 font-medium'}>
+                                  {f.transactionType === TransactionType.VENTA ? 'Venta' : 'Compra'}
+                                </span>
+                                • {f.client?.email || f.client?.phone || 'Sin datos de contacto'}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`text-[10px] px-2.5 py-1 rounded-full font-black uppercase tracking-widest ${
+                            f.status === FolderStatus.GANADA ? 'bg-emerald-100 text-emerald-700' :
+                            f.status === FolderStatus.PERDIDA ? 'bg-rose-100 text-rose-700' :
+                            f.status === FolderStatus.CANCELADA ? 'bg-slate-100 text-slate-700' :
+                            f.status === FolderStatus.PENDIENTE ? 'bg-amber-100 text-amber-700' :
+                            'bg-indigo-100 text-indigo-700'
+                          }`}>
+                            {f.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {searchResults.properties.length > 0 && (
+                  <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+                    <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3 ml-2 flex items-center gap-2">
+                      <Home className="w-3.5 h-3.5" /> Propiedades
+                    </h3>
+                    <div className="space-y-1">
+                      {searchResults.properties.map(p => (
+                        <div 
+                          key={p.id} 
+                          className="flex items-center gap-4 p-3 rounded-2xl hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-sm cursor-pointer transition-all"
+                          onClick={() => {
+                            setGlobalSearchQuery('');
+                            onSelectProperty(p);
+                          }}
+                        >
+                          {p.images && p.images.length > 0 ? (
+                            <img src={p.images[0]} alt={p.title} className="w-12 h-12 rounded-xl object-cover shadow-sm" />
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center shadow-sm">
+                              <Home className="w-5 h-5 text-slate-400" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-bold text-slate-800 line-clamp-1">{p.title}</p>
+                            <p className="text-xs text-slate-500 line-clamp-1">{p.address}</p>
+                          </div>
+                          <div className="text-right shrink-0">
+                            <p className="text-sm font-black text-indigo-600">${p.price.toLocaleString()}</p>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">{p.status}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Admin Notification Banner */}
       {user.role === UserRole.ADMIN && pendingUsersCount > 0 && (
         <div 
