@@ -516,6 +516,11 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         showToast('Solicitud enviada! Tu consultor la verá en la agenda.');
       } else {
         // Create a new visit request
+        let clientData = data.itinerary.folder?.client;
+        if (Array.isArray(clientData)) {
+          clientData = clientData.length > 0 ? clientData[0] : undefined;
+        }
+
         const newVisitData = {
           propertyId: property.id,
           folderId: data.itinerary.folderId,
@@ -523,6 +528,8 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           time: '09:00:00', // Default time
           contactName: 'Solicitud Web',
           contactPhone: '',
+          clientName: clientData?.name || '',
+          clientPhone: clientData?.phone || '',
           checklist: [],
           notes: 'Solicitud de visita desde portal del cliente',
           status: 'Pending',
