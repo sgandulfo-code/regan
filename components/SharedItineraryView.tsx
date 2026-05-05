@@ -894,11 +894,11 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               </div>
               <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><User className="w-3 h-3" /> Contacto</p>
-                <p className="text-xs md:text-sm font-bold text-slate-700 truncate">{visit.contactName || 'N/A'}</p>
+                <p className="text-xs md:text-sm font-bold text-slate-700 truncate">{agentProfile?.name || visit.contactName || 'N/A'}</p>
               </div>
               <div className="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border border-slate-100">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5"><Phone className="w-3 h-3" /> Teléfono</p>
-                <p className="text-xs md:text-sm font-bold text-indigo-600">{visit.contactPhone || 'N/A'}</p>
+                <p className="text-xs md:text-sm font-bold text-indigo-600">{agentProfile?.whatsappNumber || visit.contactPhone || 'N/A'}</p>
               </div>
             </div>
 
