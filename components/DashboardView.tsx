@@ -74,6 +74,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   
   // States for 'Tesis de Inversión' Tab Option 4 filtering
   const [folderFilterState, setFolderFilterState] = useState<'Todas' | 'Activas' | 'Cerradas'>('Activas');
+  const [folderTypeFilter, setFolderTypeFilter] = useState<'Todas' | 'Búsqueda' | 'Captación'>('Todas');
+  const [folderTransFilter, setFolderTransFilter] = useState<'Todas' | 'Venta' | 'Alquiler'>('Todas');
   const [folderSearchQuery, setFolderSearchQuery] = useState('');
   const [visibleFoldersCount, setVisibleFoldersCount] = useState(6);
 
@@ -228,6 +230,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       result = result.filter(f => f.status === 'Pendiente' || f.status === 'Abierta');
     } else if (folderFilterState === 'Cerradas') {
       result = result.filter(f => f.status === 'Ganada' || f.status === 'Perdida' || f.status === 'Cancelada');
+    }
+
+    // Type Filter
+    if (folderTypeFilter === 'Búsqueda') {
+      result = result.filter(f => f.operation_type?.startsWith('Búsqueda'));
+    } else if (folderTypeFilter === 'Captación') {
+      result = result.filter(f => f.operation_type?.startsWith('Captación') || f.transactionType === 'Venta');
+    }
+
+    // Trans Filter
+    if (folderTransFilter === 'Venta') {
+      result = result.filter(f => f.operation_type?.includes('Compra') || f.operation_type?.includes('Venta') || f.transactionType === 'Venta' || f.transactionType === 'Compra'); 
+    } else if (folderTransFilter === 'Alquiler') {
+      result = result.filter(f => f.operation_type?.includes('Alquiler') || f.transactionType === 'Alquiler' || f.transactionType === 'Alquiler Temporario');
     }
 
     // Text Search
@@ -785,6 +801,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                   {tab}
                 </button>
               ))}
+            </div>
+            <div className="flex gap-2">
+              <select 
+                value={folderTypeFilter}
+                onChange={e => { setFolderTypeFilter(e.target.value as any); setVisibleFoldersCount(6); }}
+                className="bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 uppercase tracking-wider px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Todas">Toda Operación</option>
+                <option value="Búsqueda">Solo Búsquedas</option>
+                <option value="Captación">Solo Captaciones</option>
+              </select>
+              <select 
+                value={folderTransFilter}
+                onChange={e => { setFolderTransFilter(e.target.value as any); setVisibleFoldersCount(6); }}
+                className="bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 uppercase tracking-wider px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="Todas">Todo Tipo</option>
+                <option value="Venta">Solo Ventas</option>
+                <option value="Alquiler">Solo Alquileres</option>
+              </select>
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
