@@ -266,7 +266,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     });
 
     return result;
-  }, [folders, folderFilterState, folderSearchQuery]);
+  }, [folders, folderFilterState, folderSearchQuery, folderTypeFilter, folderTransFilter]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#059669', '#94a3b8', '#f43f5e'];
 
