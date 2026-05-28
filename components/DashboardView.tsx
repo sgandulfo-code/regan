@@ -71,6 +71,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [googleEvents, setGoogleEvents] = useState<any[]>([]);
   const [loadingCalendar, setLoadingCalendar] = useState(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
+  
+  // States for 'Tesis de Inversión' Tab Option 4 filtering
+  const [folderFilterState, setFolderFilterState] = useState<'Todas' | 'Activas' | 'Cerradas'>('Activas');
+  const [folderSearchQuery, setFolderSearchQuery] = useState('');
+  const [visibleFoldersCount, setVisibleFoldersCount] = useState(6);
 
   const searchResults = useMemo(() => {
     if (!globalSearchQuery.trim()) return null;
@@ -214,6 +219,36 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     
     return combined.sort((a, b) => a.time.localeCompare(b.time));
   }, [visits, googleEvents, properties]);
+
+  const filteredDashboardFolders = useMemo(() => {
+    let result = folders;
+    
+    // Status Filter
+    if (folderFilterState === 'Activas') {
+      result = result.filter(f => f.status === 'Pendiente' || f.status === 'Abierta');
+    } else if (folderFilterState === 'Cerradas') {
+      result = result.filter(f => f.status === 'Ganada' || f.status === 'Perdida' || f.status === 'Cancelada');
+    }
+
+    // Text Search
+    if (folderSearchQuery.trim()) {
+      const q = folderSearchQuery.toLowerCase();
+      result = result.filter(f => 
+        f.name?.toLowerCase().includes(q) || 
+        f.client?.name?.toLowerCase().includes(q) ||
+        f.description?.toLowerCase().includes(q)
+      );
+    }
+    
+    // Sort by recent by default
+    result.sort((a, b) => {
+      const dateA = new Date(a.startDate || a.createdAt || 0).getTime();
+      const dateB = new Date(b.startDate || b.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+
+    return result;
+  }, [folders, folderFilterState, folderSearchQuery]);
 
   const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#059669', '#94a3b8', '#f43f5e'];
 
@@ -728,23 +763,58 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* Folders Section */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between px-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between px-4 gap-4">
           <div>
             <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
               <FolderOpen className="w-4 h-4 text-indigo-500" /> Tesis de Inversión
             </h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestiona tus carpetas activas</p>
           </div>
-          <button 
-            onClick={onNewFolder}
-            className="flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
-          >
-            <Plus className="w-3.5 h-3.5" /> Nueva Tesis
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <div className="flex bg-slate-100 p-1 rounded-xl">
+              {(['Todas', 'Activas', 'Cerradas'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => { setFolderFilterState(tab); setVisibleFoldersCount(6); }}
+                  className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                    folderFilterState === tab 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar carpeta..."
+                value={folderSearchQuery}
+                onChange={e => { setFolderSearchQuery(e.target.value); setVisibleFoldersCount(6); }}
+                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-48"
+              />
+            </div>
+            <button 
+              onClick={onNewFolder}
+              className="flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-sm w-full sm:w-auto"
+            >
+              <Plus className="w-3.5 h-3.5" /> Nueva Tesis
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {folders.map(folder => {
+        {filteredDashboardFolders.length === 0 ? (
+          <div className="bg-slate-50 border border-slate-100 rounded-3xl p-12 text-center text-slate-500 flex flex-col items-center justify-center">
+            <FolderOpen className="w-12 h-12 text-slate-300 mb-4" />
+            <h4 className="text-sm font-bold text-slate-700 mb-2">No se encontraron carpetas</h4>
+            <p className="text-xs text-slate-400 max-w-sm">No hay resultados para los filtros seleccionados o la búsqueda actual.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredDashboardFolders.slice(0, visibleFoldersCount).map(folder => {
             const folderProperties = properties.filter(p => p.folderId === folder.id);
             const days = calculateDays(folder.startDate);
             
@@ -859,7 +929,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             );
           })}
-        </div>
+            </div>
+            {filteredDashboardFolders.length > visibleFoldersCount && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setVisibleFoldersCount(prev => prev + 6)}
+                  className="bg-white border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-sm flex items-center gap-2"
+                >
+                  Cargar más carpetas <ArrowUpRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
