@@ -73,7 +73,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   
   // States for 'Tesis de Inversión' Tab Option 4 filtering
-  const [folderFilterState, setFolderFilterState] = useState<'Todas' | 'Activas' | 'Cerradas'>('Activas');
+  const [folderFilterState, setFolderFilterState] = useState<'Todas' | 'Pendientes' | 'Activas' | 'Cerradas'>('Activas');
   const [folderTypeFilter, setFolderTypeFilter] = useState<'Todas' | 'Búsqueda' | 'Captación'>('Todas');
   const [folderTransFilter, setFolderTransFilter] = useState<'Todas' | 'Venta' | 'Alquiler'>('Todas');
   const [folderSearchQuery, setFolderSearchQuery] = useState('');
@@ -226,8 +226,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     let result = folders;
     
     // Status Filter
-    if (folderFilterState === 'Activas') {
-      result = result.filter(f => f.status === 'Pendiente' || f.status === 'Abierta');
+    if (folderFilterState === 'Pendientes') {
+      result = result.filter(f => f.status === 'Pendiente');
+    } else if (folderFilterState === 'Activas') {
+      result = result.filter(f => f.status === 'Abierta');
     } else if (folderFilterState === 'Cerradas') {
       result = result.filter(f => f.status === 'Ganada' || f.status === 'Perdida' || f.status === 'Cancelada');
     }
@@ -788,7 +790,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="flex bg-slate-100 p-1 rounded-xl">
-              {(['Todas', 'Activas', 'Cerradas'] as const).map(tab => (
+              {(['Todas', 'Pendientes', 'Activas', 'Cerradas'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => { setFolderFilterState(tab); setVisibleFoldersCount(6); }}
