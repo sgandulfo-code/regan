@@ -1290,6 +1290,18 @@ export const dataService = {
     if (error) throw error;
   },
 
+  async updateStageOrders(updates: { id: string, order_index: number }[]) {
+    // Supabase JS doesn't have a bulk update by default, so we can do it in a loop
+    for (const update of updates) {
+      if (!update.id.startsWith('temp_')) {
+        await supabase
+          .from('stage_templates')
+          .update({ order_index: update.order_index })
+          .eq('id', update.id);
+      }
+    }
+  },
+
   async getActivities(agentId: string, limit = 50) {
     const { data, error } = await supabase
       .from('activities')

@@ -102,7 +102,27 @@ export const STAGES_VENTA: StageInfo[] = [
     id: 'comercializacion',
     title: 'Comercialización',
     status: 'current',
-    description: 'Publicación en portales, difusión en la red y realización de visitas con clientes interesados.',
+    description: 'Publicación en portales, difusión en la red.',
+    requirements: {
+      docs: [],
+      money: []
+    }
+  },
+  {
+    id: 'visitas',
+    title: 'Visitas',
+    status: 'upcoming',
+    description: 'Realización de visitas con clientes interesados (Open House y visitas individuales).',
+    requirements: {
+      docs: [],
+      money: []
+    }
+  },
+  {
+    id: 'negociacion',
+    title: 'Negociación',
+    status: 'upcoming',
+    description: 'Recepción y contraofertas con posibles compradores.',
     requirements: {
       docs: [],
       money: []
@@ -112,7 +132,7 @@ export const STAGES_VENTA: StageInfo[] = [
     id: 'reserva',
     title: 'Reserva',
     status: 'upcoming',
-    description: 'Recepción de una oferta formal por parte de un comprador interesado.',
+    description: 'Aceptación formal de la oferta y retiro de la propiedad del mercado.',
     requirements: {
       docs: [],
       money: []
