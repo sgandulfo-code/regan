@@ -169,11 +169,20 @@ interface ClientProgressBarProps {
 export default function ClientProgressBar({ transactionType = TransactionType.COMPRA, operationType, currentStageId }: ClientProgressBarProps) {
   const [selectedStage, setSelectedStage] = useState<StageInfo | null>(null);
   
-  // Determine actual transaction type for templates based on operation_type if available
-  const isVentaOperation = operationType?.startsWith('Captación') || transactionType === TransactionType.VENTA;
-  const effectiveTransactionType = isVentaOperation ? TransactionType.VENTA : TransactionType.COMPRA;
-  
-  const [baseStages, setBaseStages] = useState<StageInfo[]>(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+  let effectiveTransactionType = 'Compra';
+  if (operationType === 'Captación Alquiler') {
+    effectiveTransactionType = 'Captación Alquiler';
+  } else if (operationType === 'Búsqueda Alquiler') {
+    effectiveTransactionType = 'Búsqueda Alquiler';
+  } else if (operationType?.startsWith('Captación') || transactionType === TransactionType.VENTA) {
+    effectiveTransactionType = 'Venta';
+  }
+
+  const [baseStages, setBaseStages] = useState<StageInfo[]>(
+    effectiveTransactionType === 'Venta' || effectiveTransactionType === 'Captación Alquiler' 
+      ? STAGES_VENTA 
+      : STAGES_COMPRA
+  );
   
   useEffect(() => {
     const loadStages = async () => {
@@ -192,7 +201,7 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
           }));
           setBaseStages(mappedStages);
         } else {
-          setBaseStages(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+          setBaseStages(effectiveTransactionType === 'Venta' || effectiveTransactionType === 'Captación Alquiler' ? STAGES_VENTA : STAGES_COMPRA);
         }
       } catch (error) {
         console.error('Error loading custom stages:', error);

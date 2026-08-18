@@ -16,10 +16,20 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  const isVentaOperation = folder.operation_type?.startsWith('Captación') || folder.transactionType === TransactionType.VENTA;
-  const effectiveTransactionType = isVentaOperation ? TransactionType.VENTA : TransactionType.COMPRA;
+  let effectiveTransactionType = 'Compra';
+  if (folder.operation_type === 'Captación Alquiler') {
+    effectiveTransactionType = 'Captación Alquiler';
+  } else if (folder.operation_type === 'Búsqueda Alquiler') {
+    effectiveTransactionType = 'Búsqueda Alquiler';
+  } else if (folder.operation_type?.startsWith('Captación') || folder.transactionType === TransactionType.VENTA) {
+    effectiveTransactionType = 'Venta';
+  }
   
-  const [stages, setStages] = useState<StageInfo[]>(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+  const [stages, setStages] = useState<StageInfo[]>(
+    effectiveTransactionType === 'Venta' || effectiveTransactionType === 'Captación Alquiler' 
+      ? STAGES_VENTA 
+      : STAGES_COMPRA
+  );
   
   // Edit state
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -47,7 +57,7 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
         }));
         setStages(mappedStages);
       } else {
-        setStages(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+        setStages(effectiveTransactionType === 'Venta' || effectiveTransactionType === 'Captación Alquiler' ? STAGES_VENTA : STAGES_COMPRA);
       }
 
       await loadActivities(false);

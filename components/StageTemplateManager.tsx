@@ -5,7 +5,8 @@ import { Plus, Trash2, Edit2, Save, X, FileText, DollarSign, Loader2, ArrowUp, A
 import { STAGES_COMPRA, STAGES_VENTA } from './ClientProgressBar';
 
 export default function StageTemplateManager() {
-  const [transactionType, setTransactionType] = useState<TransactionType>(TransactionType.VENTA);
+  const [transactionType, setTransactionType] = useState<string>('Venta');
+
   const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -24,7 +25,7 @@ export default function StageTemplateManager() {
       
       // If no templates exist in DB, we should show the default ones so the user can save them
       if (data.length === 0) {
-        const defaultStages = transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA;
+        const defaultStages = (transactionType === 'Venta' || transactionType === 'Captación Alquiler') ? STAGES_VENTA : STAGES_COMPRA;
         const mapped = defaultStages.map((s, index) => ({
           id: `temp_${s.id}`,
           transaction_type: transactionType,
@@ -183,26 +184,46 @@ export default function StageTemplateManager() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-4">
-        <div className="flex bg-slate-100 p-1 rounded-xl">
+        <div className="flex bg-slate-100 p-1 rounded-xl flex-wrap gap-1">
           <button
-            onClick={() => setTransactionType(TransactionType.VENTA)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-              transactionType === TransactionType.VENTA 
+            onClick={() => setTransactionType('Venta')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              transactionType === 'Venta' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            Proceso de Venta
+            Venta
           </button>
           <button
-            onClick={() => setTransactionType(TransactionType.COMPRA)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${
-              transactionType === TransactionType.COMPRA 
+            onClick={() => setTransactionType('Compra')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              transactionType === 'Compra' 
                 ? 'bg-white text-indigo-600 shadow-sm' 
                 : 'text-slate-500 hover:text-slate-700'
             }`}
           >
-            Proceso de Compra
+            Compra
+          </button>
+          <button
+            onClick={() => setTransactionType('Captación Alquiler')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              transactionType === 'Captación Alquiler' 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Ofrecer Alquiler
+          </button>
+          <button
+            onClick={() => setTransactionType('Búsqueda Alquiler')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              transactionType === 'Búsqueda Alquiler' 
+                ? 'bg-white text-indigo-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Buscar Alquiler
           </button>
         </div>
         <button 
