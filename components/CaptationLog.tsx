@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SearchFolder, Activity, ActivityType, TransactionType } from '../types';
 import { dataService } from '../services/dataService';
 import { supabase } from '../services/supabase';
-import { FileText, MessageSquare, CheckSquare, Upload, Plus, Clock, Check, BookOpen, Edit2, Trash2, X, Save } from 'lucide-react';
+import { FileText, MessageSquare, CheckSquare, Upload, Plus, Clock, Check, BookOpen, Edit2, Trash2, X, Save, Eye, EyeOff } from 'lucide-react';
 import { STAGES_VENTA, STAGES_COMPRA, StageInfo } from './ClientProgressBar';
 
 interface CaptationLogProps {
@@ -13,6 +13,7 @@ interface CaptationLogProps {
 export default function CaptationLog({ folder, userId }: CaptationLogProps) {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [newNote, setNewNote] = useState('');
+  const [isPublicNote, setIsPublicNote] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -93,9 +94,11 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
         agentId: userId,
         type: ActivityType.LOG_NOTE,
         content: newNote,
-        metadata: {}
+        metadata: {},
+        isPublic: isPublicNote
       });
       setNewNote('');
+      setIsPublicNote(false);
       loadActivities();
     } catch (error) {
       console.error('Error adding note:', error);
@@ -258,25 +261,37 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
 
         {/* Right Column: Timeline & Inputs */}
         <div className="w-full md:w-2/3 flex flex-col h-full">
-          <div className="flex gap-2 mb-6">
-            <input
-              type="text"
-              placeholder="Agregar una anotación..."
-              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
-            />
-            <button
-              onClick={handleAddNote}
-              disabled={!newNote.trim()}
-              className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nota</span>
-            </button>
-            <label className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer flex items-center gap-2 border border-slate-200">
-              <Upload className="w-4 h-4" /> <span className="hidden sm:inline">{isUploading ? 'Subiendo...' : 'Documento'}</span>
-              <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+          <div className="flex flex-col gap-2 mb-6">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Agregar una anotación..."
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
+              />
+              <button
+                onClick={handleAddNote}
+                disabled={!newNote.trim()}
+                className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nota</span>
+              </button>
+              <label className="bg-slate-100 text-slate-600 px-4 py-2.5 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer flex items-center gap-2 border border-slate-200">
+                <Upload className="w-4 h-4" /> <span className="hidden sm:inline">{isUploading ? 'Subiendo...' : 'Documento'}</span>
+                <input type="file" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+              </label>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer self-start ml-2">
+              <input 
+                type="checkbox" 
+                checked={isPublicNote} 
+                onChange={(e) => setIsPublicNote(e.target.checked)}
+                className="rounded text-indigo-600 focus:ring-indigo-500"
+              />
+              <Eye className="w-3.5 h-3.5" />
+              Compartir esta nota con el cliente
             </label>
           </div>
 
@@ -297,9 +312,16 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
                   </div>
                   <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 relative">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        {activity.type === ActivityType.LOG_NOTE ? 'Anotación' : activity.type === ActivityType.LOG_DOCUMENT ? 'Documento' : 'Checklist'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                          {activity.type === ActivityType.LOG_NOTE ? 'Anotación' : activity.type === ActivityType.LOG_DOCUMENT ? 'Documento' : 'Checklist'}
+                        </span>
+                        {activity.isPublic && (
+                          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <Eye className="w-3 h-3" /> Visible para cliente
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-3">
                         <span className="text-[10px] text-slate-400 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {new Date(activity.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}

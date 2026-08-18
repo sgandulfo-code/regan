@@ -173,6 +173,7 @@ export interface Activity {
   type: ActivityType;
   content: string;
   metadata?: Record<string, any>;
+  isPublic?: boolean;
   createdAt: string;
 }
 

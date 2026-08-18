@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState } from 'react';
-import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, ChevronDown, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb, Heart } from 'lucide-react';
+import { MapPin, Calendar, Clock, CheckCircle2, Star, ExternalLink, MessageSquare, Send, ChevronRight, ChevronDown, Home, Camera, UploadCloud, X, LayoutGrid, Map as MapIcon, DollarSign, ArrowLeftRight, Activity as ActivityIcon, Trash2, Edit2, Plus, Check, History, Image, AlertCircle, Phone, User, CheckSquare, Square, TrendingUp, TrendingDown, ArrowUp, ArrowDown, Filter, List, Compass, Lightbulb, Heart, FileText } from 'lucide-react';
 import { dataService } from '../services/dataService';
 import PropertyMapView from './PropertyMapView';
 import ComparisonTool from './ComparisonTool';
-import { FeedbackItem, FunnelStage, ActivityType, PropertyStatus } from '../types';
+import { FeedbackItem, FunnelStage, ActivityType, PropertyStatus, Activity } from '../types';
 
 import SharedPropertyRow from './SharedPropertyRow';
 import ClientProgressBar from './ClientProgressBar';
@@ -30,6 +30,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
   // Leads State
   const [inboxLinks, setInboxLinks] = useState<any[]>([]);
+  const [publicActivities, setPublicActivities] = useState<Activity[]>([]);
   const [linksText, setLinksText] = useState('');
   const [isSubmittingLinks, setIsSubmittingLinks] = useState(false);
   const [pendingInboxFiles, setPendingInboxFiles] = useState<File[]>([]);
@@ -104,6 +105,10 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
           // Fetch inbox links for this folder
           const links = await dataService.getInboxLinks(result.itinerary.folder.userId, result.itinerary.folderId);
           setInboxLinks(links);
+          
+          // Fetch public activities for this folder
+          const activities = await dataService.getPublicActivities(result.itinerary.folderId);
+          setPublicActivities(activities);
         }
       } catch (error) {
         console.error('Error fetching shared itinerary:', error);
@@ -1277,7 +1282,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
               <div className="bg-slate-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-slate-100">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-5 h-5 md:w-6 md:h-6 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center">
-                    <Activity className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                    <ActivityIcon className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </div>
                   <span className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</span>
                 </div>
@@ -1412,7 +1417,54 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
 
         {activeTab === 'timeline' && (
           <div className="space-y-12">
+            {/* Novedades Section */}
+            {publicActivities.length > 0 && (
+              <div className="space-y-6">
+                <h3 className="text-xs font-bold text-indigo-500 uppercase tracking-[0.3em] flex items-center gap-3">
+                  <ActivityIcon className="w-4 h-4" /> Últimas Novedades
+                </h3>
+                <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                  <div className="p-6 md:p-8 space-y-6">
+                    {publicActivities.map(activity => (
+                      <div key={activity.id} className="flex gap-4 border-b border-slate-100 last:border-0 pb-6 last:pb-0">
+                        <div className="w-10 h-10 shrink-0 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                          {activity.type === ActivityType.LOG_NOTE ? <MessageSquare className="w-5 h-5" /> :
+                           activity.type === ActivityType.LOG_DOCUMENT ? <FileText className="w-5 h-5" /> :
+                           <CheckSquare className="w-5 h-5" />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              {activity.type === ActivityType.LOG_NOTE ? 'Anotación' :
+                               activity.type === ActivityType.LOG_DOCUMENT ? 'Documento' : 'Checklist'}
+                            </span>
+                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" /> {new Date(activity.createdAt).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          </div>
+                          <p className="text-sm md:text-base text-slate-700 whitespace-pre-wrap">{activity.content}</p>
+                          {activity.type === ActivityType.LOG_DOCUMENT && activity.metadata?.fileUrl && (
+                            <a 
+                              href={activity.metadata.fileUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100 transition-colors"
+                            >
+                              <FileText className="w-4 h-4" /> Ver Documento
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-6">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3">
+                <Calendar className="w-4 h-4" /> Próximas Visitas
+              </h3>
               {activeVisits.length > 0 ? (
                 activeVisits.map((visit: any) => renderVisitCard(visit))
               ) : (

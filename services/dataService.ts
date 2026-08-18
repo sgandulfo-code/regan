@@ -1202,7 +1202,8 @@ export const dataService = {
         agent_id: activity.agentId,
         type: activity.type,
         content: activity.content,
-        metadata: metadata
+        metadata: metadata,
+        is_public: activity.isPublic || false
       }]);
 
     if (error) {
@@ -1228,6 +1229,7 @@ export const dataService = {
       type: d.type as ActivityType,
       content: d.content,
       metadata: d.metadata,
+      isPublic: d.is_public,
       createdAt: d.created_at
     }));
   },
@@ -1320,6 +1322,33 @@ export const dataService = {
       type: d.type as ActivityType,
       content: d.content,
       metadata: d.metadata,
+      isPublic: d.is_public,
+      createdAt: d.created_at
+    })) as Activity[];
+  },
+
+  async getPublicActivities(folderId: string) {
+    // This is used for the public shared itinerary view
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*')
+      .eq('folder_id', folderId)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching public activities:', error);
+      return [];
+    }
+    
+    return data.map(d => ({
+      id: d.id,
+      folderId: d.folder_id,
+      agentId: d.agent_id,
+      type: d.type as ActivityType,
+      content: d.content,
+      metadata: d.metadata,
+      isPublic: d.is_public,
       createdAt: d.created_at
     })) as Activity[];
   },
