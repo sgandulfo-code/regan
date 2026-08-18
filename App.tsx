@@ -896,10 +896,20 @@ const App: React.FC = () => {
                     >
                       <option value="">Seleccionar Etapa</option>
                       {(() => {
-                        const dbStages = stageTemplates.filter(t => t.transaction_type === activeFolder.transactionType);
+                        let effectiveTransactionType = 'Compra';
+                        if (activeFolder.operation_type === 'Captación Alquiler') {
+                          effectiveTransactionType = 'Captación Alquiler';
+                        } else if (activeFolder.operation_type === 'Búsqueda Alquiler') {
+                          effectiveTransactionType = 'Búsqueda Alquiler';
+                        } else if (activeFolder.operation_type?.startsWith('Captación') || activeFolder.transactionType === TransactionType.VENTA) {
+                          effectiveTransactionType = 'Venta';
+                        }
+                        
+                        const dbStages = stageTemplates.filter(t => t.transaction_type === effectiveTransactionType);
+                        const fallbackStages = (effectiveTransactionType === 'Venta' || effectiveTransactionType === 'Captación Alquiler') ? STAGES_VENTA : STAGES_COMPRA;
                         const stages = dbStages.length > 0 
                           ? dbStages.map(t => ({ id: t.stage_id, title: t.title }))
-                          : (activeFolder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+                          : fallbackStages;
                         return stages.map(stage => (
                           <option key={stage.id} value={stage.id}>{stage.title}</option>
                         ));
