@@ -15,7 +15,11 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
   const [newNote, setNewNote] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [stages, setStages] = useState<StageInfo[]>(folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+  
+  const isVentaOperation = folder.operation_type?.startsWith('Captación') || folder.transactionType === TransactionType.VENTA;
+  const effectiveTransactionType = isVentaOperation ? TransactionType.VENTA : TransactionType.COMPRA;
+  
+  const [stages, setStages] = useState<StageInfo[]>(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
   
   // Edit state
   const [editingActivityId, setEditingActivityId] = useState<string | null>(null);
@@ -23,13 +27,13 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
 
   useEffect(() => {
     loadData();
-  }, [folder.id, folder.transactionType]);
+  }, [folder.id, effectiveTransactionType]);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       // Load stages
-      const templates = await dataService.getStageTemplates(folder.transactionType || TransactionType.COMPRA);
+      const templates = await dataService.getStageTemplates(effectiveTransactionType);
       if (templates && templates.length > 0) {
         const mappedStages: StageInfo[] = templates.map(t => ({
           id: t.stage_id,
@@ -43,7 +47,7 @@ export default function CaptationLog({ folder, userId }: CaptationLogProps) {
         }));
         setStages(mappedStages);
       } else {
-        setStages(folder.transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+        setStages(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
       }
 
       await loadActivities(false);

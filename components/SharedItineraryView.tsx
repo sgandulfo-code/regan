@@ -1325,6 +1325,7 @@ const SharedItineraryView: React.FC<SharedItineraryViewProps> = ({ sharedId }) =
         {/* Progress Bar */}
         <ClientProgressBar 
           transactionType={itinerary.folder.transactionType} 
+          operationType={itinerary.folder.operationType}
           currentStageId={itinerary.folder.stageId}
         />
 

@@ -162,17 +162,23 @@ export const STAGES_VENTA: StageInfo[] = [
 
 interface ClientProgressBarProps {
   transactionType?: TransactionType;
+  operationType?: string;
   currentStageId?: string;
 }
 
-export default function ClientProgressBar({ transactionType = TransactionType.COMPRA, currentStageId }: ClientProgressBarProps) {
+export default function ClientProgressBar({ transactionType = TransactionType.COMPRA, operationType, currentStageId }: ClientProgressBarProps) {
   const [selectedStage, setSelectedStage] = useState<StageInfo | null>(null);
-  const [baseStages, setBaseStages] = useState<StageInfo[]>(transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+  
+  // Determine actual transaction type for templates based on operation_type if available
+  const isVentaOperation = operationType?.startsWith('Captación') || transactionType === TransactionType.VENTA;
+  const effectiveTransactionType = isVentaOperation ? TransactionType.VENTA : TransactionType.COMPRA;
+  
+  const [baseStages, setBaseStages] = useState<StageInfo[]>(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
   
   useEffect(() => {
     const loadStages = async () => {
       try {
-        const templates = await dataService.getStageTemplates(transactionType);
+        const templates = await dataService.getStageTemplates(effectiveTransactionType);
         if (templates && templates.length > 0) {
           const mappedStages: StageInfo[] = templates.map(t => ({
             id: t.stage_id,
@@ -186,14 +192,14 @@ export default function ClientProgressBar({ transactionType = TransactionType.CO
           }));
           setBaseStages(mappedStages);
         } else {
-          setBaseStages(transactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
+          setBaseStages(effectiveTransactionType === TransactionType.VENTA ? STAGES_VENTA : STAGES_COMPRA);
         }
       } catch (error) {
         console.error('Error loading custom stages:', error);
       }
     };
     loadStages();
-  }, [transactionType]);
+  }, [effectiveTransactionType]);
   
   // Find the index of the current stage. If not found, default to 0.
   const currentIndex = currentStageId 
