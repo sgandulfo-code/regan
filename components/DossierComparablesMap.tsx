@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Property, ValuationComparable } from '../types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { geocodePropertyList, DEFAULT_MAP_CENTER } from '../services/geocodingService';
 
 interface DossierComparablesMapProps {
   subjectProperty: Property;
@@ -53,6 +54,8 @@ const DossierComparablesMap: React.FC<DossierComparablesMapProps> = ({ subjectPr
 
   // Geocoding
   useEffect(() => {
+    let isMounted = true;
+
     const geocodeAll = async () => {
       setIsGeocoding(true);
       
@@ -64,41 +67,23 @@ const DossierComparablesMap: React.FC<DossierComparablesMapProps> = ({ subjectPr
         }).filter(Boolean) as (Property & { type: 'active' | 'sold' })[]
       ];
 
-      const promises = propsToGeocode.map(async (p) => {
-        try {
-          const query = p.exactAddress || p.address;
-          if (!query) return { ...p, lat: 0, lng: 0, geocodeFailed: true };
-
-          let data;
-          try {
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
-            data = await response.json();
-          } catch (e) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
-            const nomData = await response.json();
-            if (nomData && nomData.length > 0) {
-              data = { features: [{ geometry: { coordinates: [parseFloat(nomData[0].lon), parseFloat(nomData[0].lat)] } }] };
-            }
-          }
-          
-          if (data && data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].geometry.coordinates;
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-              return { ...p, lat, lng };
-            }
-          }
-          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
-        } catch (error) {
-          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
+      try {
+        const results = await geocodePropertyList(propsToGeocode);
+        if (isMounted) {
+          setGeocodedProperties(results as GeocodedProperty[]);
         }
-      });
-
-      const results = await Promise.all(promises);
-      setGeocodedProperties(results as GeocodedProperty[]);
-      setIsGeocoding(false);
+      } catch (err) {
+        console.error("Dossier geocode error:", err);
+      } finally {
+        if (isMounted) setIsGeocoding(false);
+      }
     };
 
     geocodeAll();
+
+    return () => {
+      isMounted = false;
+    };
   }, [subjectProperty, comparables, allProperties]);
 
   // Initialize Map
@@ -106,14 +91,15 @@ const DossierComparablesMap: React.FC<DossierComparablesMapProps> = ({ subjectPr
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [40.4168, -3.7038], 
-      zoom: 13,
+      center: DEFAULT_MAP_CENTER, 
+      zoom: 12,
       zoomControl: false,
       attributionControl: false
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19
+      maxZoom: 19,
+      subdomains: 'abcd'
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -121,7 +107,12 @@ const DossierComparablesMap: React.FC<DossierComparablesMapProps> = ({ subjectPr
     markersLayerRef.current = L.featureGroup().addTo(map);
     mapInstanceRef.current = map;
 
+    const t1 = setTimeout(() => map.invalidateSize(), 200);
+    const t2 = setTimeout(() => map.invalidateSize(), 500);
+
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
       map.remove();
       mapInstanceRef.current = null;
     };

@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MapPin, Navigation, Info, ExternalLink, Home, Star, DollarSign, Maximize2, Crosshair, ChevronRight, Search, X, Loader2, AlertTriangle } from 'lucide-react';
 import { Property } from '../types';
 import L from 'leaflet';
+import { geocodePropertyList, DEFAULT_MAP_CENTER } from '../services/geocodingService';
 
 interface PropertyMapViewProps {
   properties: Property[];
@@ -42,66 +43,51 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     popupAnchor: [0, -40]
   });
 
-  // Geocodificación robusta y en paralelo
+  // Geocodificación secuencial con caché y reutilización de coordenadas
   useEffect(() => {
+    let isMounted = true;
+
     const geocodeAll = async () => {
       if (properties.length === 0) {
-        setGeocodedProperties([]);
+        if (isMounted) setGeocodedProperties([]);
         return;
       }
 
-      setIsGeocoding(true);
-      
-      const promises = properties.map(async (p) => {
-        try {
-          const query = p.exactAddress || p.address;
-          if (!query) return { ...p, lat: 0, lng: 0, geocodeFailed: true };
+      if (isMounted) setIsGeocoding(true);
 
-          let data;
-          try {
-            const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
-            data = await response.json();
-          } catch (e) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`);
-            const nomData = await response.json();
-            if (nomData && nomData.length > 0) {
-              data = { features: [{ geometry: { coordinates: [parseFloat(nomData[0].lon), parseFloat(nomData[0].lat)] } }] };
-            }
-          }
-          
-          if (data && data.features && data.features.length > 0) {
-            const [lng, lat] = data.features[0].geometry.coordinates;
-            if (Number.isFinite(lat) && Number.isFinite(lng)) {
-              return { ...p, lat, lng };
-            }
-          }
-          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
-        } catch (error) {
-          return { ...p, lat: 0, lng: 0, geocodeFailed: true };
+      try {
+        const results = await geocodePropertyList(properties);
+        if (isMounted) {
+          setGeocodedProperties(results as GeocodedProperty[]);
         }
-      });
-
-      const results = await Promise.all(promises);
-      setGeocodedProperties(results as GeocodedProperty[]);
-      setIsGeocoding(false);
+      } catch (err) {
+        console.error("Geocoding batch error:", err);
+      } finally {
+        if (isMounted) setIsGeocoding(false);
+      }
     };
 
     geocodeAll();
+
+    return () => {
+      isMounted = false;
+    };
   }, [properties]);
 
-  // Inicializar Mapa
+  // Inicializar Mapa con centro por defecto en Buenos Aires
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [40.4168, -3.7038], 
-      zoom: 13,
+      center: DEFAULT_MAP_CENTER, 
+      zoom: 12,
       zoomControl: false,
       attributionControl: false
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19
+      maxZoom: 19,
+      subdomains: 'abcd'
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -109,13 +95,31 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     markersLayerRef.current = L.featureGroup().addTo(map);
     mapInstanceRef.current = map;
 
+    // Resuelve el problema de baldosas grises calibrando Leaflet tras el montaje y animaciones
+    const timers = [
+      setTimeout(() => map.invalidateSize(), 150),
+      setTimeout(() => map.invalidateSize(), 400),
+      setTimeout(() => map.invalidateSize(), 800)
+    ];
+
+    // Observador para recalibrar Leaflet si cambia el tamaño del contenedor o la ventana
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && mapContainerRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
     return () => {
+      timers.forEach(clearTimeout);
+      if (resizeObserver) resizeObserver.disconnect();
       map.remove();
       mapInstanceRef.current = null;
     };
   }, []);
 
-  // Actualizar Marcadores con validación estricta
+  // Actualizar Marcadores con validación estricta y ajuste de zoom
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
 
@@ -123,7 +127,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
     const validMarkers: L.Marker[] = [];
 
     geocodedProperties.forEach((p, index) => {
-      if (p.geocodeFailed || !Number.isFinite(p.lat) || !Number.isFinite(p.lng)) return;
+      if (p.geocodeFailed || !Number.isFinite(p.lat) || !Number.isFinite(p.lng) || (p.lat === 0 && p.lng === 0)) return;
 
       const isSelected = selectedProperty?.id === p.id;
       const marker = L.marker([p.lat, p.lng], {
@@ -132,7 +136,7 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
 
       marker.on('click', () => {
         setSelectedProperty(p);
-        mapInstanceRef.current?.flyTo([p.lat, p.lng], 16, { duration: 1.5 });
+        mapInstanceRef.current?.flyTo([p.lat, p.lng], 16, { duration: 1.2 });
       });
 
       marker.addTo(markersLayerRef.current!);
@@ -148,7 +152,14 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
       } catch (e) {
         console.warn("Invalid bounds calculation", e);
       }
+    } else {
+      mapInstanceRef.current.setView(DEFAULT_MAP_CENTER, 12);
     }
+
+    // Asegurar redibujado tras colocar marcadores
+    setTimeout(() => {
+      mapInstanceRef.current?.invalidateSize();
+    }, 150);
   }, [geocodedProperties, selectedProperty]);
 
   const handleSelectFromList = (p: GeocodedProperty) => {

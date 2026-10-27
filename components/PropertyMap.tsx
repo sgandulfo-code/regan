@@ -10,6 +10,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+import { geocodePropertyList, DEFAULT_MAP_CENTER } from '../services/geocodingService';
+
 interface PropertyMapProps {
   properties: { id: string; lat?: number; lng?: number; title?: string; address?: string; exactAddress?: string }[];
   height?: string;
@@ -25,6 +27,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' 
 
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current, {
+        center: DEFAULT_MAP_CENTER,
+        zoom: 12,
         zoomControl: false,
         attributionControl: false,
         scrollWheelZoom: false,
@@ -44,6 +48,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' 
     const map = mapRef.current;
     const markersLayer = markersRef.current;
 
+    let isMounted = true;
+
     const plotProperties = async () => {
       if (!markersLayer) return;
       markersLayer.clearLayers();
@@ -58,57 +64,41 @@ const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' 
         iconAnchor: [12, 12]
       });
 
-      for (let i = 0; i < properties.length; i++) {
-        const p = properties[i];
-        let lat = p.lat;
-        let lng = p.lng;
+      try {
+        const geocoded = await geocodePropertyList(properties);
+        if (!isMounted) return;
 
-        // If no coordinates, try to geocode
-        if ((!lat || !lng) && (p.exactAddress || p.address)) {
-          try {
-            const query = p.exactAddress || p.address;
-            let data;
-            try {
-              const resp = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query || '')}&limit=1`);
-              data = await resp.json();
-            } catch (e) {
-              const resp = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query || '')}&format=json&limit=1`);
-              const nomData = await resp.json();
-              if (nomData && nomData.length > 0) {
-                data = { features: [{ geometry: { coordinates: [parseFloat(nomData[0].lon), parseFloat(nomData[0].lat)] } }] };
-              }
-            }
-            if (data && data.features && data.features.length > 0) {
-              [lng, lat] = data.features[0].geometry.coordinates;
-            }
-          } catch (e) {
-            console.error("Geocoding error:", e);
+        geocoded.forEach((p, i) => {
+          if (!p.geocodeFailed && p.lat && p.lng && (p.lat !== 0 || p.lng !== 0)) {
+            L.marker([p.lat, p.lng], { icon: createIcon(i) }).addTo(markersLayer);
+            bounds.extend([p.lat, p.lng]);
+            hasMarkers = true;
           }
-        }
+        });
 
-        if (lat && lng) {
-          L.marker([lat, lng], { icon: createIcon(i) }).addTo(markersLayer);
-          bounds.extend([lat, lng]);
-          hasMarkers = true;
+        if (hasMarkers && bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 16 });
+        } else {
+          map.setView(DEFAULT_MAP_CENTER, 12);
         }
+      } catch (err) {
+        console.error("PropertyMap plotting error:", err);
+        map.setView(DEFAULT_MAP_CENTER, 12);
       }
 
-      if (hasMarkers) {
-        map.fitBounds(bounds, { padding: [50, 50] });
-      } else {
-        map.setView([40.4168, -3.7038], 13); // Default fallback
-      }
-      
-      // Invalidate size to ensure correct rendering
+      // Invalidate size to ensure correct rendering without grey patches
       setTimeout(() => {
-        map.invalidateSize();
+        if (isMounted) map.invalidateSize();
       }, 200);
+      setTimeout(() => {
+        if (isMounted) map.invalidateSize();
+      }, 500);
     };
 
     plotProperties();
 
     return () => {
-      // Cleanup if needed
+      isMounted = false;
     };
   }, [properties]);
 

@@ -38,6 +38,7 @@ import { parseSemanticSearch } from '../services/geminiService';
 import { Property, PropertyStatus, AcquisitionReason, SearchFolder, CriteriaTemplate, getContextualStatuses } from '../types';
 import { dataService, InboxLink } from '../services/dataService';
 import { Layout, ChevronDown } from 'lucide-react';
+import { geocodeAddress, cleanAddressForSearch } from '../services/geocodingService';
 
 interface PropertyFormProps {
   onAdd: (prop: Property) => Promise<void> | void;
@@ -78,6 +79,8 @@ interface PropertyFormData {
   agentWhatsapp?: string;
   folderId: string;
   isPublic: boolean;
+  lat?: number;
+  lng?: number;
 }
 
 type CreationStep = 'inbox' | 'verify';
@@ -206,49 +209,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
 
     setAddressStatus('validating');
     try {
-      let data;
-      try {
-        const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
-        data = await response.json();
-      } catch (e) {
-        // Fallback to Nominatim if Photon fails
-        const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`);
-        const nomData = await response.json();
-        if (nomData && nomData.length > 0) {
-          data = {
-            features: [{
-              properties: {
-                name: nomData[0].display_name.split(',')[0],
-                city: nomData[0].display_name.split(',')[1] || '',
-                country: nomData[0].display_name.split(',').pop() || ''
-              }
-            }]
-          };
-        } else {
-          data = { features: [] };
-        }
-      }
-      
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const props = feature.properties;
-        
-        const parts = [
-          props.name || props.street,
-          props.housenumber,
-          props.district || props.city,
-          props.state || props.country
-        ].filter(Boolean);
-        
-        const displayName = parts.join(', ');
-        
-        if (displayName.length > 3) {
-          setAddressStatus('valid');
-          setResolvedAddress(displayName);
-        } else {
-          setAddressStatus('invalid');
-          setResolvedAddress(null);
-        }
+      const coords = await geocodeAddress(address);
+      if (coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lng)) {
+        const displayName = cleanAddressForSearch(address);
+        setAddressStatus('valid');
+        setResolvedAddress(displayName);
+        setEditedData(prev => ({ ...prev, lat: coords.lat, lng: coords.lng }));
       } else {
         setAddressStatus('invalid');
         setResolvedAddress(null);
@@ -256,6 +222,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
     } catch (err) {
       console.error("Geocoding validation error:", err);
       setAddressStatus('invalid');
+      setResolvedAddress(null);
     }
   }, []);
 
@@ -317,7 +284,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ onAdd, userId, activeFolder
         agentName: propertyToEdit.agentName || '',
         agentWhatsapp: propertyToEdit.agentWhatsapp || '',
         folderId: propertyToEdit.folderId || activeFolderId || '',
-        isPublic: propertyToEdit.isPublic !== undefined ? propertyToEdit.isPublic : true
+        isPublic: propertyToEdit.isPublic !== undefined ? propertyToEdit.isPublic : true,
+        lat: propertyToEdit.lat,
+        lng: propertyToEdit.lng
       });
       setAnalysisResult({ dealScore: (propertyToEdit.rating || 3) * 20 });
     } else {

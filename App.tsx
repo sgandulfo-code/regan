@@ -1145,7 +1145,9 @@ const App: React.FC = () => {
 
         {activeTab === 'properties' && (
           viewMode === 'map' ? (
-            <PropertyMapView properties={displayProperties} onSelectProperty={setSelectedProperty} />
+            <div className="h-[82vh] min-h-[600px] w-full">
+              <PropertyMapView properties={displayProperties} onSelectProperty={setSelectedProperty} />
+            </div>
           ) : (
             <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10" : "flex flex-col gap-3"}>
               {displayProperties.map((p, idx) => (
