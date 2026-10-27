@@ -35,10 +35,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({ properties, height = '500px' 
         dragging: false 
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 20
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri &mdash; StreetMap',
+        maxZoom: 19
       }).addTo(map);
 
       mapRef.current = map;

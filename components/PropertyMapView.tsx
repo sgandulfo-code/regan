@@ -85,9 +85,9 @@ const PropertyMapView: React.FC<PropertyMapViewProps> = ({ properties, onSelectP
       attributionControl: false
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      subdomains: 'abcd'
+      attribution: '&copy; Esri &mdash; StreetMap'
     }).addTo(map);
 
     L.control.zoom({ position: 'topright' }).addTo(map);
